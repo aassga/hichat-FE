@@ -1,274 +1,320 @@
 <template>
   <div class="wrapper">
-    <!-- <div class="search">
-      <el-form ref="searchForm" :inline="true" :model="searchForm" class="demo-form-inline">
-        <el-form-item>
-          <el-input v-model="searchForm.name"  placeholder="请输入 不輸入則顯示所有聊天室" style="width: 250px; margin-right: 10px;"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" @click="onSearch">搜寻</el-button>
-        </el-form-item>
-      </el-form>
-      
-    </div>
-    <div class="search-list">
-      <span>聊天室選擇 :</span>
-      <el-row v-for="item in searchData" :key="item.i">
-        <el-button type="primary" plain round>{{item.chatRoomName}}</el-button>
-      </el-row>
-    </div> -->
     <el-container>
-      <el-aside width="250px">
-        
-        <el-header height="40px">
-          <i class="el-icon-user-solid icon-message"></i>
-          <span class="title">联系人 </span>
-        </el-header>
-
-        <message-group
-          :concats="concats"
-           />
-      </el-aside>
       <el-main>
-        <el-header height="40px"></el-header>
+        <el-header height="55px">
+          <span class="title">聊天室</span>
+          <span>
+            <font-awesome-icon icon="fire" style="color:#F00"/>
+            <span style="color:#d3d3d3;margin-left:5px; font-size:16px;">{{num.length > 99999 ?'9999++': num.length}}</span>
+          </span>
+        </el-header>
+        
         <message-pabel
-          :concats="concats"
-          :nowSwitchId="nowSwitchId"
-          :localInfo="localInfo"
-          @message="message" />
-
-        <message-input
-          :concats="concats"
-          :localInfo="localInfo"
-          :nowSwitchId="nowSwitchId" />
+          :isShowMoreMsg="isShowMoreMsg"
+          :messageData="messageData"
+          :userInfoData="userInfoData"
+          :chatListData="chatListData"
+        />
+        <message-input :roomId="roomId" :deviceId="deviceId" :isGuest="isGuest"/>
       </el-main>
-      <footer class="footer">
-        <a href="https://xiaobaicai.fun/" target="_blank">WeiLin</a> &copy; 2020
-      </footer>
-      <audio id="notify-audio" src="./../../../static/wav/tim.wav"></audio>
     </el-container>
   </div>
 </template>
 
 <script>
-import { mapState } from "vuex";
-
-import MessageGroup from '@/components/message-group'
-import MessagePabel from '@/components/message-pabel'
-import MessageInput from '@/components/message-input'
-import { getSearchChat } from "@/api";
+import Socket from "@/utils/socket";
+import { userinfo,login } from "_api/index.js";
+import { mapState, mapMutations } from "vuex";
+import MessagePabel from "@/components/message-pabel";
+import MessageInput from "@/components/message-input";
+import { getLocal } from "_util/utils.js";
 export default {
-  name: 'Chat',
-  data () {
+  name: "Chat",
+  data() {
     return {
-      concats: [{
-        id: 0,
-        active: false,
-        nickName: '聊天室',
-        avatar: './../../../static/avatar/group.png',
-        message: {
-          time: 1580572800000,
-          content: 'Welcome'
-        }
-      }],
-      nowSwitch: 0,
-      nowSwitchId: 'group',
-      localInfo: {},
-      searchForm: {
-        pageSize: 10,
-        pageNum: 1 ,
-        name: '',
+      // 登入資訊
+      loginForm: {
+        isGuest:this.$route.query.isGuest,
+        username: this.$route.query.id,
+        chatRoomId: this.$route.query.chatRoomId,
+        sign:"",
+        platformCode:"manycaiSport", 
       },
-      searchData:[],
-    }
-  },  
+      num:[],
+      userListId:[],
+      chatListData:[],
+      messageData: [],
+      userInfoData: {
+        toChatId: '',
+        token: '',
+        deviceId: '',
+        platformCode: "manycaiSport",
+        tokenType: 1,
+        username: '',
+      },
+      isShowMoreMsg: true,
+      isGuest: true,
+      userName: getLocal('username'),
+      roomId:"",
+      deviceId:""
+    };
+  },
+  created() {
+    this.userLogin()
+    this.getUserInfo(this.loginForm.username)
+
+  },
+  mounted() {
+    Socket.$on("message", this.handleGetMessage);
+    window.addEventListener("beforeunload", this.closeWebsocket); 
+  },
+  beforeDestroy() {
+    Socket.$off("message", this.handleGetMessage);
+    this.closeWebsocket();
+  },
+  destroyed() {
+    window.removeEventListener("beforeunload", this.closeWebsocket);
+  },
   computed: {
     ...mapState({
-      wsRes: state => state.ws.wsRes
+      wsRes: (state) => state.ws.wsRes,
     }),
   },
   watch: {
-    wsRes(val) {
-      const StatusCode = val;
-      StatusCode === 0 && this.$message({ type: "error", message: "查詢失敗" });
-      console.log('val',val)
-      let chatType = val.chatType
-      switch (chatType) {
-        case "SRV_RECENT_CHAT":
-          console.log(val.recentChat)
-          break;
-      
-        default:
-          break;
-      }
-    }
-  },
-  mounted () {
-    const query = this.$route.query
-    console.log('params',params)
-
-    /**
-     * 判断是否通过路由跳转过来的
-     */
-    if (query.username) {
-      // 保存当前用户信息
-      this.localInfo = {
-        id: query.username,
-      }
-    } else{
-      this.goBack()
+    messageData(val){
+      const set = new Set();
+      this.num = val.filter((item)=>{
+        return !set.has(item.historyId) ? set.add(item.historyId) : false
+      })
     }
   },
   methods: {
-    onSearch(){
-      getSearchChat(this.searchForm)
-      .then((res) => {
-        if(res.code === 200){
-          this.searchData = res.data.list
+    ...mapMutations({
+      setWsRes: "ws/setWsRes",
+    }),
+    // 生成 deviceId 32 编码
+    getUUID() {
+      let number = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+        /[xy]/g,
+        function (c) {
+          var r = (Math.random() * 16) | 0,
+            v = c == "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
         }
-      })
-      .catch((err) => {
-        console.log(err)
-      })
+      );
+      localStorage.setItem("UUID", "hiWeb" + number);
+      this.deviceId = "hiWeb" + number
+      return "hiWeb" + number
     },
-    /**
-     * 接收消息
-     */
-    message (respone) {
-      let type = respone.type
-      let body = respone.body
-      let concats = this.concats
-      let length = concats.length
-      let id = body.gotoId
-      let notifyAudio = document.getElementById('notify-audio')
-
-      // 服务器返回的消息
-      if (type === 'server-message') {
-        if (respone.id === 'robots') {
-          id = 'robots'
-        }
-      }
-
-      // 更新小红点
-      if (this.nowSwitchId !== id) {
-        body.message.isNewMessage = true
-        body.message.newMessageCount = (() => {
-          for (var i = 0; i < length; i++) {
-            if (id === this.concats[i].id) {
-              notifyAudio.play()
-              if (this.concats[i].message.newMessageCount !== undefined) {
-                let count = this.concats[i].message.newMessageCount += 1
-                return count
-              } else {
-                return 1
+    getUserInfo(userId){
+      let params = [...new Set(userId)]
+      userinfo(params).then((res) => {
+        if (res.code === 200) {
+          this.chatListData = res.data  
+          // localStorage.setItem("chatListData",JSON.stringify(res.data))
+          this.chatListData.forEach((name)=>{
+             this.messageData.forEach((res)=>{
+               if(res.username === JSON.stringify(name.id)){
+                res.nickname = name.nickname
+                res.username = name.username
               }
-            }
-          }
-        })()
-      }
-
-      // 更新联系人消息
-      for (let i = 0; i < length; i++) {
-        if (concats[i].id === id) {
-          Object.assign(this.concats[i].message, body.message)
+              if(res.fromChatId === localStorage.getItem("username")){
+                res.typeStyle = "userIdStyle"
+              }  
+             })
+          })
+        } 
+      })
+    },
+    userLogin(){
+      this.loginForm.sign = this.$md5(`code=manycaiSport&username=${ this.loginForm.username }&key=3b6a4512ba3b42f0a1cd2e8b71c06a59`)
+      let params = this.loginForm
+      login(params).then((res) => {
+        if (res.code === 200) {
+          this.userInfoData.deviceId = this.getUUID()
+          this.userInfoData.token = res.data.tokenHead + res.data.token
+          this.isGuest = res.data.isGuest
+          this.userInfoData.username = res.data.username
+          localStorage.setItem('username', res.data.username)
+          localStorage.setItem('isGuest', res.data.username);
+          localStorage.setItem('token',res.data.tokenHead + res.data.token);
+          localStorage.setItem('chatRoomId',this.loginForm.chatRoomId);
+          Socket.connect()
+        }
+      })
+      
+    },    
+    // 訊息統一格式
+    messageList(data,chatType) {
+      this.chatRoomMsg = {
+        chatType: data.chatType,
+        chatRoomId: data.toChatId,
+        platformCode: data.platformCode,
+        historyId: data.historyId,
+        message: {
+          time: data.sendTime,
+          content: data.text = data.chatType === "SRV_JOIN_ROOM" && data.username !== "guest" ? "進入聊天室": data.text
+        },
+        fromChatId:data.fromChatId,
+        username: data.fromChatId = data.username === "guest" ? data.username : data.fromChatId,
+        nickname: data.nickname = data.chatType === "SRV_JOIN_ROOM" ? data.username : data.nickname,
+        typeStyle:data.typeStyle = data.chatType !== "SRV_JOIN_ROOM" && data.fromChatId === localStorage.getItem("username") ? "userIdStyle" :""
+      };
+      if(chatType === "SRV_ROOM_HISTORY_RSP"){
+        if(data.toChatId === this.roomId){
+          this.messageData.unshift(this.chatRoomMsg);
+        }
+      }else if (chatType === "SRV_JOIN_ROOM"){
+        if(data.chatRoomId === this.roomId){
+          this.messageData.push(this.chatRoomMsg);
+        }
+      } else if(chatType === "SRV_ROOM_SEND"){
+        if(data.toChatId === this.roomId){
+          this.messageData.push(this.chatRoomMsg);
         }
       }
     },
-
-    /**
-     * 关闭
-     */
-    goBack() {
-      localStorage.clear()
-    }
+    // 收取 socket 回来讯息 (全局讯息)
+    handleGetMessage(msg) {
+      this.setWsRes(JSON.parse(msg));
+      let userInfo = JSON.parse(msg);
+      switch (userInfo.chatType) {
+        // 验证身份返回
+        case "SRV_RECENT_CHAT":
+          let chatDataKey = {
+            chatType:"CLI_JOIN_ROOM",
+            id:Math.random(),
+            deviceId: this.deviceId,
+            token: localStorage.getItem('token'),
+            tokenType: 1,
+            toChatId:localStorage.getItem('chatRoomId'),
+            platformCode: "manycaiSport",
+          }
+          Socket.send(chatDataKey);
+          break;
+        // 加入房间成功
+        case "SRV_JOIN_ROOM":
+          this.userInfoData.toChatId = userInfo.chatRoomId
+          userInfo.username = userInfo.username
+          userInfo.roomMemberList.forEach((list)=>{
+            this.userListId.push(list.username)
+          })
+          if(userInfo.username !== "guest"){
+            this.getUserInfo(this.userListId)
+          }
+          if(this.roomId === ""){
+            this.roomId = userInfo.chatRoomId
+          } 
+          this.messageList(userInfo,"SRV_JOIN_ROOM")
+        // 发送讯息成功
+        case "SRV_ROOM_SEND":
+          this.chatListData.forEach((userList)=>{
+            if(userInfo.fromChatId === JSON.stringify(userList.id)){
+              userInfo.nickname = userList.nickname
+            }
+          })
+          this.messageList(userInfo,"SRV_ROOM_SEND")
+          break;
+        // 历史讯息
+        case "SRV_ROOM_HISTORY_RSP":
+          this.messageData = []
+          let historyMsgList = userInfo.historyMessage;
+          let historyPageSize = userInfo.pageSize;
+          if (historyMsgList.length < historyPageSize) this.isShowMoreMsg = false;
+          historyMsgList.forEach((el) => {
+            this.messageList(el,"SRV_ROOM_HISTORY_RSP")
+          });
+          
+          const set = new Set();
+          this.newList = historyMsgList.filter((item) =>
+            !set.has(item.fromChatId) ? set.add(item.fromChatId) : false
+          );
+          this.newList.forEach(num => this.userListId.push(num.fromChatId));
+          this.getUserInfo(this.userListId,"SRV_ROOM_HISTORY_RSP")
+          break;  
+      }
+    },
+    // 关闭socket
+    closeWebsocket() {
+      Socket.onClose();
+      window.location.reload();
+    },
   },
   components: {
-    MessageGroup,
     MessagePabel,
-    MessageInput
-  }
-}
+    MessageInput,
+  },
+};
 </script>
 
 <style lang="scss" scoped>
 .wrapper {
   height: 100vh;
-  background-image: url('/static/images/bg.jpg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  .search{
-    display: inline-flex;
-    align-content: center;
-    position: fixed;
-    top: 0px;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 95%;
-    margin: 30px auto;
-  }
-  .search-list{
-    display: inline-flex;
-    align-content: center;
-    align-items: center;
-    position: fixed;
-    top: 45px;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 95%;
-    height: 6%;
-    margin: 30px auto;
-    div{
-      margin-left: 10px;
-    }
-  }
   .el-container {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
-    width: 95%;
-    margin: 30px auto;
+    width: 99%;
+    max-width: 500px;
+    margin: 10px auto;
     .el-aside,
-    .el-main{
+    .el-main {
       display: flex;
       flex-direction: column;
-      border-radius: 6px 0px 6px 6px;
-      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);      
-    }
-    .el-aside{
-      border-radius: 6px 0px 6px 6px;
-    }
-    .el-main {
-      border-radius: 0px 6px 6px 6px;
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+      /deep/.el-row {
+        float: right;
+        .el-button {
+          background-image: linear-gradient(#579fff, #3481e8);
+          color: #ffffff;
+        }
+        .el-checkbox__inner {
+          border-radius: 0;
+          border: 1px solid #dcdfe6;
+          &::after {
+            border: 1px solid #4fba00;
+            border-left: 0;
+            border-top: 0;
+          }
+        }
+        .el-checkbox__input.is-checked .el-checkbox__inner {
+          background-color: #ffffff;
+        }
+        .el-checkbox__label {
+          color: #fff;
+        }
+      }
     }
     .el-aside {
-      background: rgba(235, 233, 232, .8);
+      border-radius: 6px 0px 6px 6px;
+    }
+    .el-aside {
+      background: rgba(235, 233, 232, 0.8);
     }
     .el-main {
       padding: 0;
     }
     .el-header {
       position: relative;
-      line-height: 40px;
-      background: rgb(55, 126, 200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      line-height: 55px;
+      // background-image: linear-gradient(#579fff, #3481e8);
       overflow: hidden;
-      border-right:1px solid #FFFFFF;
-      .title,
-      .icon-message {
-        color: #ffffff;
-      }
-      .icon-message {
-        font-size: 20px;
-        vertical-align: middle;
+      border-bottom: 1px solid #dddddd;
+      img {
+        position: relative;
+        top: 7px;
       }
       .title {
         display: inline-block;
-        margin-left: 5px;
-        font-size: 16px;
+        font-size: 18px;
         letter-spacing: 1px;
+        color: #FF0000;
       }
     }
   }
@@ -289,5 +335,28 @@ export default {
       }
     }
   }
+}
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px grey; 
+
+  // border-radius: 10px;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(180deg,rgb(138, 138, 138), rgb(138, 138, 138));
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(180deg,rgb(138, 138, 138), rgb(138, 138, 138));
+
 }
 </style>

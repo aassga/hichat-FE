@@ -1,198 +1,142 @@
 <template>
   <div class="message-input-box">
-    <div class="input-tools">
-      <i slot="reference" class="el-icon-s-opportunity" title="表情"></i>
+    <div class="no-login" v-if="isGuest">
+      <span>登入后加入讨论</span>
     </div>
+    <div class="text-send-box" v-else> 
+      <el-input
+        type="textarea"
+        resize="none"
+        maxlength="1000"
+        placeholder="请输入文字..."
+        :autosize="{ minRows: 3.5, maxRows: 3.5 }"
+        v-model="textArea"
+        @keyup.native="keyUp" 
+      >
+      </el-input>
 
-    <el-input
-      type="textarea"
-      resize="none"
-      :autosize="{ minRows: 3, maxRows: 3}"
-      v-model="textArea"
-      v-on:keyup.native="keyUp">
-    </el-input>
-
-    <div class="footer-tools">
-      <el-button
-        size="mini"
-        type="primary"
-        @click="sendMessage"
-        class="send-button">
-        发送/Send
-      </el-button>
+      <div class="footer-tools">
+        <el-button size="mini" class="send-button" @click="sendMessage">发送</el-button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-// import Bus from '@/assets/eventBus'
-import { gotoBottom } from '@/assets/tools'
 import Socket from "@/utils/socket";
 export default {
-  data () {
+  name: "MessageInput",
+  data() {
     return {
-      textArea: '',
-      gotoBottom: gotoBottom
-    }
+      textArea: "",
+      
+    };
   },
   props: {
-    // 联系人列表
-    concats: {
-      type: Array
+    isGuest: {
+      type: Boolean,
+    },  
+    roomId:{
+      type: String,
     },
-    // 当前选择的ID
-    nowSwitchId: {
-      type: String
+    deviceId:{
+      type: String,
     },
-    // 当前用户
-    localInfo: {
-      type: Object
-    }
   },
-  // mounted () {
-  //   // 表情
-  //   this.obj = new window.Face({
-  //     el: document.querySelector('.el-icon-s-opportunity'),
-  //     callBack: face => {
-  //       this.textArea += `〖${face.title}〗`
-  //       document.querySelector('.face-warp').style.display = 'none'
-  //     }
-  //   })
-  // },
+
   methods: {
-    /**
-     * 消息类型
-     */
-    nowSwitchType () {
-      if (this.nowSwitchId === 'group') {
-        return 'group-message'
-      } else if (this.nowSwitchId === 'robots') {
-        return 'robots-message'
-      } else {
-        return 'user-message'
+    // 消息过滤
+    textAreaTran() {
+      return this.textArea
+        .replace(/\n/g, "")
+        .replace(new RegExp("<", "gm"), "&lt");
+    },
+    // 按Enter发送消息
+    keyUp(event) {
+      if (event.shiftKey && event.keyCode === 13) {
+        return this.textArea;
+      } else if (event.key === "Enter") {
+        if (this.textArea.replace(/\s+/g, "") === "") {
+          this.$alert("不能发送空白消息", "提示", {
+            confirmButtonText: "确定",
+          }).then(() => {
+            this.textArea = ""
+          });
+          event.target.blur()
+          return false;
+        }
+        this.sendMessage();
       }
     },
-
-    /**
-     * 消息过滤
-     */
-    textAreaTran () {
-      return this.textArea.replace(/\n/g, '').replace(new RegExp('<', 'gm'), '&lt')
-    },
-
-    /**
-     * 检测空白
-     */
-    blankTesting () {
-      if (this.textArea.replace(/\s+/g, '') === '') {
-        this.$alert('不能发送空白消息', '提示', {
-          confirmButtonText: '确定'
-        })
-        return false
-      }
-      return true
-    },
-
-    /**
-     * 按Enter发送消息
-     */
-    keyUp (event) {
-      if (event.key === 'Enter') {
-        this.sendMessage()
-      }
-    },
-
-    /**
-     * 发送消息
-     */
-    // sendMessage () {
-    //   let message = {
-    //     // 类型
-    //     type: this.nowSwitchType(),
-    //     // 发送者ID
-    //     id: this.localInfo.id,
-    //     body: {
-    //       // 消息类型
-    //       type: 'user-message',
-    //       // 收者ID
-    //       gotoId: this.nowSwitchId,
-    //       // 发送者ID
-    //       fromId: this.localInfo.id,
-    //       // 发送者头像
-    //       avatar: this.localInfo.avatar,
-    //       // 发送者昵称
-    //       nickName: this.localInfo.nickName,
-    //       message: {
-    //         // 发送时间
-    //         time: +new Date(),
-    //         // 内容带标签
-    //         content: this.obj.replaceFace(this.textAreaTran()),
-    //         // 纯内容不带标签
-    //         textContent: this.textAreaTran()
-    //       }
-    //     }
-    //   }
-    //   if (this.blankTesting()) {
-    //     // 发送服务器
-    //     this.$socket.emit('MESSAGE', message)
-    //     // 传递至同级
-    //     Bus.$emit('MESSAGE', message)
-    //     // 消息清空
-    //     this.textArea = ''
-    //     // 消息置底
-    //     this.gotoBottom()
-    //   }
-    // }
+    // 发送消息
     sendMessage() {
-      Socket.send(
-        //...一些後端要求要傳的資料request，通常會是一包物件{}。
-      );
+      let sendMessageData= {
+        chatType: "CLI_ROOM_SEND",
+        deviceId: this.deviceId,
+        id: Math.random(),
+        platformCode: "manycaiSport",
+        text: this.textArea,
+        toChatId: this.roomId,
+        token: localStorage.getItem('token'),
+        tokenType: 1,
+      }
+      console.log(this.deviceId)
+      Socket.send(sendMessageData);
+      this.textArea = "";
     },
-  }
-}
+  },
+};
 </script>
 
-<style lang="scss">
+<style lang="scss" >
 .message-input-box {
-  height: 150px;
-  background-color: rgba(255, 255, 255, .85);
+  height: 145px;
+  background-color: rgba(255, 255, 255, 0.85);
   border-top: 1px solid #dddddd;
-  .input-tools {
-    position: relative;
-    padding-left: 10px;
-    padding-top: 10px;
-    .upload-demo {
-      display: inline;
+  .text-send-box {
+    width: 97%;
+    height: 73px;
+    margin: 0 auto;
+    .el-textarea {
+      .el-textarea__inner {
+        padding: 10px !important;
+        border-radius: 0;
+        border: 0;
+        background-color: transparent;
+        font-size: 16px;
+      }
     }
-    i {
-      margin-left: 10px;
-      color: rgb(94, 94, 94);
-      font-size: 20px;
-      cursor: pointer;
+    .footer-tools {
+      text-align: right;
+      img {
+        height: 9px;
+      }
+      .send-button {
+        width: 90px;
+      
+        padding: 7px 10px;
+        margin-right: 20px;
+        color: #ffffff;
+        background-image: linear-gradient(
+          180deg,
+          rgba(67, 141, 255, 0.8),
+          rgba(19, 99, 255, 0.8)
+        );
+        span{
+          font-size: 16px;
+        }
+      }
     }
   }
-  .el-textarea {
-    .el-textarea__inner {
-      padding: 5px 20px;
-      border-radius: 0;
-      border: 0;
-      background-color: transparent;
+  .no-login{
+    width: 100%;
+    height: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    span{
+      font-size:25px;
     }
-  }
-  .footer-tools {
-    text-align: right;
-    .send-button {
-      padding: 7px 10px;
-      margin-right: 20px;
-      background: #377ec8;
-    }
-  }
-}
-.face-pabel {
-  .face {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
   }
 }
 </style>
