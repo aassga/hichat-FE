@@ -8,64 +8,38 @@
               class="home-user"
               :class="[
                 { 'QRcode-img': num === 0 },
+                { 'broadcast-img': num === 1 && activeName === 'address'},
                 { 'promote-img': num === 2 },
               ]"
               @click="
-                num === 0 || num === 2 ? (centerDialogVisible = true) : ''
+                num === 0 || num === 2 ? (centerDialogVisible = true) : $router.push({ name: 'SpreadChange'})
               "
             ></div>
             <span class="home-header-title">{{
               num === 0 ? "通讯录" : num === 1 ? "嗨聊" : "设定"
             }}</span>
-            <template v-if="num === 0">
-              <div>
-                <template v-if="['address', 'contact'].includes(activeName)">
-                  <router-link
-                    :to="'/AddUser'"
-                    :style="
-                      activeName === 'contact' ? 'visibility: hidden' : ''
-                    "
-                  >
-                    <div class="home-add-user address-img"></div>
-                  </router-link>
-                </template>
-                <template v-else-if="activeName === 'group'">
-                  <router-link :to="'/AddGroup'">
-                    <div class="home-add-user hichat-img"></div>
-                  </router-link>
-                </template>
-              </div>
-            </template>
-            <template v-if="num === 1">
-              <div>
-                <template
-                  v-if="['address', 'contact'].includes(hichatNav.type)"
+            <div v-if="num === 0 || num === 1">
+              <template v-if="['address', 'contact'].includes(activeName || hichatNav.type)">
+                <router-link
+                  :to="'/AddUser'"
+                  :style="
+                  ['contact'].includes(activeName || hichatNav.type) ? 'visibility: hidden' : ''
+                  "
                 >
-                  <router-link
-                    :to="'/AddUser'"
-                    :style="
-                      hichatNav.type === 'contact' ? 'visibility: hidden' : ''
-                    "
-                  >
-                    <div class="home-add-user address-img"></div>
-                  </router-link>
-                </template>
-                <template v-else-if="hichatNav.type === 'group'">
-                  <router-link :to="'/AddGroup'">
-                    <div class="home-add-user hichat-img"></div>
-                  </router-link>
-                </template>
-              </div>
-            </template>
-            <template v-if="num === 2">
-              <div>
-                <template>
-                  <router-link :to="'/EditUser'"
-                    ><div class="home-add-user setting-img"></div
-                  ></router-link>
-                </template>
-              </div>
-            </template>
+                  <div class="home-add-user address-img"></div>
+                </router-link>
+              </template>
+              <template v-else-if="['group'].includes(activeName || hichatNav.type)">
+                <router-link :to="'/AddGroup'">
+                  <div class="home-add-user hichat-img"></div>
+                </router-link>
+              </template>
+            </div>
+            <div v-else-if="num === 2">
+              <router-link :to="'/EditUser'"
+                ><div class="home-add-user setting-img"></div
+              ></router-link>
+            </div>
           </div>
           <div class="home-search" v-if="num !== 2">
             <el-input
@@ -107,13 +81,13 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="315px">
         <el-header style="height: 70px">
           <div class="home-header" v-if="num === 2">
             <span class="home-header-title">设定</span>
             <el-dropdown trigger="click">
               <span class="el-dropdown-link">
-                <img src="./../../../static/images/pc/more.png" alt="" />
+                <img src="./../../../static/images/pc/more.svg" alt="" />
               </span>
               <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item>
@@ -133,50 +107,36 @@
               clearable
             >
             </el-input>
-            <template v-if="num === 0">
-              <div>
-                <template v-if="activeName === 'address'">
-                  <router-link :to="'/AddUser'">
-                    <img
-                      src="./../../../static/images/pc/user-plus.png"
-                      alt=""
-                    />
-                  </router-link>
-                </template>
+            <div v-if="num === 0 || num === 1">
+              <template v-if="['address'].includes(activeName || hichatNav.type)">
+                <router-link :to="'/Spread'" class="spread-style" v-if ="num === 1">
+                  <img
+                    src="./../../../static/images/pc/promotion.svg"
+                    alt=""
+                  />
+                </router-link>    
+                <router-link :to="'/AddUser'" :class="{'addimg-style': num === 1}">
+                  <img
+                    src="./../../../static/images/pc/user-plus.svg"
+                    alt=""
+                  />
+                </router-link>
+              </template>
 
-                <template v-else-if="activeName === 'group'">
-                  <router-link :to="'/AddGroup'">
-                    <img
-                      src="./../../../static/images/pc/message-plus.png"
-                      alt=""
-                    />
-                  </router-link>
-                </template>
-              </div>
-            </template>
-            <template v-if="num === 1">
-              <div>
-                <template v-if="hichatNav.type === 'address'">
-                  <router-link :to="'/AddUser'">
-                    <img
-                      src="./../../../static/images/pc/user-plus.png"
-                      alt=""
-                    />
-                  </router-link>
-                </template>
-
-                <template v-else-if="hichatNav.type === 'group'">
-                  <router-link :to="'/AddGroup'">
-                    <img
-                      src="./../../../static/images/pc/message-plus.png"
-                      alt=""
-                    />
-                  </router-link>
-                </template>
-              </div>
-            </template>
+              <template v-else-if="['group'].includes(activeName || hichatNav.type)">
+                <router-link :to="'/AddGroup'">
+                  <img
+                    src="./../../../static/images/pc/message-plus.svg"
+                    alt=""
+                  />
+                </router-link>
+              </template>
+            </div>
           </div>
         </el-header>
+        <div class="home-header" v-if="$route.name === 'Spread'" style="justify-content: center;">
+          <span class="home-header-title" style="color: #b3b3b3; font-weight:normal;">请选择发送对象</span>
+        </div>
         <keep-alive>
           <router-view v-if="$route.meta.keepAlive"></router-view>
         </keep-alive>
@@ -204,7 +164,7 @@
         </el-footer>
       </el-aside>
       <el-main>
-        <template v-if="num === 1">
+        <template v-if="num === 1 && $route.name !== 'Spread'">
           <chat-msg
             v-if="
               hichatNav.type === 'address' && JSON.stringify(chatUser) !== '{}'
@@ -222,17 +182,20 @@
             "
           />
         </template>
-        <template v-if="infoMsg.infoMsgShow && !infoMsg.infoMsgChat">
+        <template v-else-if="infoMsg.infoMsgShow && !infoMsg.infoMsgChat">
           <div class="go-room-style">
-            <img src="./../../../static/images/msg-btn.png" alt="" />
+            <img src="./../../../static/images/msg-btn.svg" alt="" />
             <el-button @click="goChatRoom(chatUser, activeName)"
               >開始聊天</el-button
             >
           </div>
         </template>
+        <template v-else-if="$route.name === 'Spread'">
+          <chat-spread/>
+        </template>
       </el-main>
       <el-aside
-        width="300px"
+        width="315px"
         style="overflow: hidden"
         v-if="infoMsg.infoMsgShow"
       >
@@ -319,6 +282,7 @@
 import VueQr from "vue-qr";
 import urlCopy from "@/utils/urlCopy.js";
 import Socket from "@/utils/socket";
+import AESBase64 from "@/utils/AESBase64.js";
 import { getLocal, getToken } from "_util/utils.js";
 import { mapState, mapMutations } from "vuex";
 import {
@@ -326,12 +290,14 @@ import {
   groupListMember,
   getUserInfo,
   getContactList,
+  getMemberActivity,
   logout,
 } from "@/api";
-import { Encrypt, Decrypt } from "@/utils/AESUtils.js";
+import { Encrypt } from "@/utils/AESUtils.js";
 import ChatMsg from "./../Chat/ChatMsg.vue";
 import ChatGroupMsg from "./../Chat/Chat.vue";
 import ChatContact from "./../Chat/ChatContact.vue";
+import ChatSpread from "./../Chat/ChatSpread.vue";
 import MsgInfoPage from "./../ContactPage/MsgInfoPage.vue";
 
 export default {
@@ -404,15 +370,12 @@ export default {
     this.num =
       this.$route.fullPath === "/Address"
         ? 0
-        : this.$route.fullPath === "/HiChat"
+        : ["/HiChat","/Spread"].includes(this.$route.fullPath)
         ? 1
         : 2;
     Socket.$on("message", this.handleGetMessage);
     this.getContactDataList();
     this.getUserData();
-    // if(localStorage.getItem("nofity") === null){
-    //   this.setNofiy(this.nofity)
-    // }
     if (localStorage.getItem("soundNofiy") === null) {
       this.setSoundNofiy(this.soundNofiy);
     }
@@ -479,6 +442,7 @@ export default {
       setContactListData: "ws/setContactListData",
       setMyContactDataList: "ws/setMyContactDataList",
     }),
+
     goChatRoom(data, type) {
       this.setInfoMsg({
         infoMsgShow: false,
@@ -499,31 +463,23 @@ export default {
     },
     //判斷是否base64
     isBase64(data) {
-      var base64Rejex =
-        /^(?:[A-Z0-9+\/]{4})*(?:[A-Z0-9+\/]{2}==|[A-Z0-9+\/]{3}=|[A-Z0-9+\/]{4})$/i;
-      if (!base64Rejex.test(data)) {
-        return data;
-      }
-      try {
-        return Decrypt(data, this.aesKey, this.aesIv);
-      } catch (err) {
-        return data;
-      }
+      return AESBase64(data, this.aesKey ,this.aesIv)
     },
     getContactDataList() {
       getContactList().then((res) => {
+        let memberActivityData = []
         this.addressDataList = res.data.list;
         this.addressDataList.forEach((el) => {
-          if (el.icon === undefined) {
-            el.icon = require("./../../../static/images/image_user_defult.png");
-          }
           if (el.contactId === localStorage.getItem("id")) {
             el.name = "嗨聊记事本";
             el.icon = require("./../../../static/images/image_savemessage.png");
             el.toChatId = "u" + el.memberId;
-          }
+          } else if (el.icon === undefined) {
+            el.icon = require("./../../../static/images/image_user_defult.png");
+          }    
+         memberActivityData.push(el.contactId)   
         });
-        this.setMyContactDataList(this.addressDataList);        
+        this.getUserMemberActivity(memberActivityData)
       });
       getGroupList().then((res) => {
         this.groupList = res.data.list;
@@ -537,7 +493,24 @@ export default {
         })
       });
     },
+    getUserMemberActivity(data){
+      let memberId = data
+      getMemberActivity({memberId}).then((res) => {
+        if(res.code === 200){
+          this.userTimeData = res.data
+          this.addressDataList.forEach((list)=>{
+            this.userTimeData.forEach((data) => {
+              if(list.contactId === JSON.stringify(data.memberId)){
+                list.currentTime = data.currentTime 
+                list.lastActivityTime = data.lastActivityTime
+              }
 
+            });
+          })
+          this.setMyContactDataList(this.addressDataList);
+        }
+      })
+    },
     getUserData() {
       getUserInfo().then((res) => {
         if (res.data.icon === undefined) {
@@ -551,9 +524,9 @@ export default {
       let groupId = this.groupUser.toChatId.replace("g", "");
       groupListMember({ groupId }).then((res) => {
         this.contactList = res.data.list;
-        this.contactList.forEach((res) => {
-          if (res.icon === undefined) {
-            res.icon = require("./../../../static/images/image_user_defult.png");
+        this.contactList.forEach((item) => {
+          if (item.icon === undefined) {
+            item.icon = require("./../../../static/images/image_user_defult.png");
           }
         });
         this.setContactListData(this.contactList);
@@ -666,11 +639,11 @@ export default {
         }
       }
     },
-    noIconShow(iconData) {
+    noIconShow(iconData, key) {
       if ([undefined, null, ""].includes(iconData.icon)) {
-        return require("./../../../static/images/image_user_defult.png");
+        return require(`./../../../static/images/image_${key}_defult.png`);
       } else {
-        return iconData;
+        return iconData.icon;
       }
     },
     notifyMe(msgInfo, chatType) {
@@ -683,18 +656,15 @@ export default {
       this.chatDataList.forEach((el) => {
         if (el.toChatId === msgInfo.toChatId) {
           if (el.isContact) {
-            notify.icon = this.noIconShow(el.icon);
+            notify.icon = this.noIconShow(el,"user");
             notify.title = "(联络人)";
             notify.type = "address";
           } else if (el.isGroup) {
-            notify.icon =
-              el.icon === ""
-                ? require("./../../../static/images/image_group_defult.png")
-                : el.icon;
+            notify.icon = this.noIconShow(el,"group");
             notify.title = "(群组)";
             notify.type = "group";
           } else if (!el.isBlock && !el.isContact && !el.isGroup) {
-            notify.icon = this.noIconShow(el.icon);
+            notify.icon = this.noIconShow(el,"user");
             notify.title = "(陌生人)";
             notify.type = "contact";
           }
@@ -765,7 +735,7 @@ export default {
     getHistory(type) {
       if (type === "address" || type === "contact") {
         this.getHistoryMessage.chatType = "CLI_HISTORY_REQ";
-        this.getHistoryMessage.toChatId = this.chatUser.toChatId;
+        this.getHistoryMessage.toChatId = type === "address" ? this.chatUser.toChatId : this.contactUser.toChatId;
         this.getHistoryMessage.id = Math.random();
       } else {
         this.getHistoryMessage.chatType = "CLI_GROUP_HISTORY_REQ";
@@ -774,29 +744,21 @@ export default {
       }
       Socket.send(this.getHistoryMessage);
     },
-    // loginOut() {
-    //   logout()
-    //     .then((res) => {
-    //       if (res.code === 200 && res.message === "登出成功") {
-    //         this.$router.push({ path: "/login" });
-    //         localStorage.removeItem("id");
-    //         localStorage.removeItem("token");
-    //         localStorage.removeItem("myUserInfo");
-    //         localStorage.removeItem("myUserList");
-    //         window.location.reload();
-    //       }
-    //     })
-    //     .catch((err) => {
-    //       return false;
-    //     });
-    // },
     loginOut() {
-      this.$router.push({ path: "/login" });
-      localStorage.removeItem("id");
-      localStorage.removeItem("token");
-      localStorage.removeItem("myUserInfo");
-      localStorage.removeItem("myUserList");
-      window.location.reload();
+      logout()
+        .then((res) => {
+          if (res.code === 200 && res.message === "登出成功") {
+            this.$router.push({ path: "/login" });
+            localStorage.removeItem("id");
+            localStorage.removeItem("token");
+            localStorage.removeItem("myUserInfo");
+            localStorage.removeItem("myUserList");
+            window.location.reload();
+          }
+        })
+        .catch((err) => {
+          return false;
+        });
     },
   },
   components: {
@@ -805,6 +767,7 @@ export default {
     ChatGroupMsg,
     ChatContact,
     MsgInfoPage,
+    ChatSpread,
   },
 };
 </script>
@@ -820,6 +783,10 @@ export default {
             background-image: url("./../../../static/images/qrcode.png");
           }
           .promote-img {
+            background-color: #fff;
+            background-image: url("./../../../static/images/icon_share.png");
+          }
+          .broadcast-img{
             background-color: #fff;
             background-image: url("./../../../static/images/icon_promotion.png");
           }
@@ -893,6 +860,25 @@ export default {
     color: #ffffff;
     padding: 1.3em 3em;
     background-color: #fe5f3f;
+  }
+}
+.hichat-pc{
+  .home-wrapper{
+    .el-container{
+      .home-search{
+        .spread-style{
+          img{
+            left: 7px;
+            height:1.4em;
+          }
+        }
+        .addimg-style{
+          img{
+            left: 13px;
+          }
+        }
+      }
+    }
   }
 }
 </style>

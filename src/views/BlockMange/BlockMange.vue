@@ -79,7 +79,7 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'"><img src="./../../../static/images/warn.png" alt="" /></div>
+        <div v-if="device === 'moblie'"><img src="./../../../static/images/warn.svg" alt="" /></div>
         <span>确认是否将所选联络人解除封锁？</span>
       </div>
       <span slot="footer" class="dialog-footer">
@@ -260,7 +260,7 @@ export default {
                 position: absolute;
                 margin-top: 0.5em;
                 width: 100%;
-                border-bottom: 0.1em solid rgba(0, 0, 0, 0.05) ;
+                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
               }
             }
           }
@@ -334,14 +334,14 @@ export default {
   .home-header {
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.png");
+      background-image: url("./../../../static/images/pc/arrow-left.svg");
     }
     .home-header-title{
       margin-left: 5px;
     }
     .home-edit-img{
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/edit_info.png");     
+      background-image: url("./../../../static/images/pc/edit_info.svg");     
     }
     .home-edit-img.hidden {
       visibility: hidden;

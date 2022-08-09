@@ -149,25 +149,25 @@ export default {
       uploadImgShow: false,
       disableEditSubmit: true,
       device: localStorage.getItem("device"),
+      permissionData:{
+        addGroup: false,
+        groupName: "",
+        memberList: [],
+        icon: "",
+        banPostMemberList: [],
+        groupAdminAuthority: {
+          checkUserInfo: false,
+          pin: false,
+          sendMessage: true,
+        },
+        groupDisabledWordList: [],
+        groupManagerAuthority: [],
+      }
     };
   },
   created() {
     this.getAddressList();
-    let groupPermissionData = {
-      addGroup: false,
-      groupName: "",
-      memberList: [],
-      icon: "",
-      banPostMemberList: [],
-      groupAdminAuthority: {
-        checkUserInfo: false,
-        pin: false,
-        sendMessage: true,
-      },
-      groupDisabledWordList: [],
-      groupManagerAuthority: [],
-    };
-    this.setGroupPermissionData(groupPermissionData);
+    this.setGroupPermissionData(this.permissionData);
   },
   watch: {
     checkList(val) {
@@ -270,14 +270,12 @@ export default {
     },
     back() {
       if (this.groupPermissionData.addGroup) {
-        this.$router.push({ path: "/HiChat" });
         this.setChatGroup({});
         this.groupPermissionData.addGroup = false;
         this.setGroupPermissionData(this.groupPermissionData);
         this.setInfoMsg({ infoMsgShow: false, infoMsgChat: false });
-      } else {
-        this.$router.push({ path: "/HiChat" });
-      }
+      } 
+      this.$router.push({ path: "/HiChat" });
     },
   },
 };
@@ -292,7 +290,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.png");
+      background-image: url("./../../../static/images/pc/arrow-left.svg");
       cursor: pointer;
     }
   }
@@ -313,10 +311,6 @@ export default {
         width: 100%;
         padding-left: 0;
         .address-box {
-          background-color: #ffffff;
-          padding: 0.8em 1em;
-          display: flex;
-          align-items: center;
           .msg-box {
             span {
               display: block;
@@ -327,9 +321,9 @@ export default {
                 content: "";
                 display: block;
                 position: absolute;
-                margin-top: 0.5em;
+                margin-top: 0.65em;
                 width: 100%;
-                border-bottom: 0.1em solid rgba(0, 0, 0, 0.05);
+                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
               }
             }
           }
@@ -398,6 +392,7 @@ export default {
       }
     }
     .home-content {
+
       .el-checkbox {
         width: 100%;
       }
@@ -407,7 +402,7 @@ export default {
             span {
               &::after {
                 content: "";
-                margin-top: 1em;
+                margin-top: 0.95em;
               }
             }
           }

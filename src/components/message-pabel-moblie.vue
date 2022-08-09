@@ -1,179 +1,177 @@
 <template>
-  <div
-    class="message-pabel-box"
-    @touchmove="$root.handleTouch"
-  >
+  <div class="message-pabel-box" @touchmove="$root.handleTouch"  >
     <ul class="message-styles-box">
       <div v-for="(item, index) in newMessageData" :key="index">
         <div class="now-time">
           <span>{{ index }}</span>
         </div>
-        <li
-          v-for="(el, index) in item"
-          :key="index"
-          :class="judgeClass(item[index])"
-        >
-          <template v-if="el.chatType !== 'SRV_CHAT_PIN'">
-            <p
-              :class="[
-                {
-                  'reply-aduio':
-                    device === 'moblie' &&
-                    el.isRplay !== null &&
-                    el.isRplay.chatType === 'SRV_USER_AUDIO',
-                },
-                {
-                  reply: el.isRplay !== null,
-                },
-              ]"
-              :id="el.historyId"
-            >
-              <span
-                class="message-classic"
-                v-if="el.chatType === 'SRV_USER_SEND'"
-                @contextmenu.prevent.stop="onContextmenu(el)"
-                @dblclick="dblclick(el)"
-              >
-                <template v-if="el.isRplay !== null">
-                  <div
-                    class="reply-box"
-                    @click="goAnchor(el.isRplay.historyId)"
-                  >
-                    <div class="reply-img">
-                      <img :src="noIconShow(el.isRplay)" alt="" />
-                    </div>
-                    <div class="reply-msg">
-                      <div style="color: rgba(0, 0, 0, 0.4)">
-                        {{ el.isRplay.nickName }}
-                      </div>
-                      <div>
-                        <div class="goAnchor-box">
-                          <span
-                            v-if="el.isRplay.chatType === 'SRV_USER_SEND'"
-                            class="goAnchor"
-                            >{{ isBase64(el.isRplay.text) }}</span
-                          >
-                          <img
-                            v-if="el.isRplay.chatType === 'SRV_USER_IMAGE'"
-                            :src="isBase64(el.isRplay.text)"
-                            style="border-radius: 5px"
-                          />
-                          <span v-if="el.isRplay.chatType === 'SRV_USER_AUDIO'">
-                            <div class="reply-audio-box"></div>
-                            <mini-audio
-                              :audio-source="isBase64(el.isRplay.text)"
-                            ></mini-audio>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-                <div
-                  :class="{
-                    'reply-content': el.isRplay !== null,
-                  }"
+        <el-checkbox-group v-model="checkList">
+          <el-checkbox
+            v-for="(el, index) in item"
+            :key="index"
+            :label="el"
+            :disabled="checkBoxDisabled"
+            :class="judgeClass(item[index])"
+            @scroll="paperScroll(el.message.content)"
+          >
+            <li >
+              <template v-if="el.chatType !== 'SRV_CHAT_PIN'">
+                <p
+                  :class="[
+                    {
+                      'reply-aduio':
+                        device === 'moblie' &&
+                        el.isRplay !== null &&
+                        el.isRplay.chatType === 'SRV_USER_AUDIO',
+                    },
+                    {
+                      reply: el.isRplay !== null,
+                    },
+                  ]"
+                  :id="el.historyId"
                 >
                   <span
-                    v-if="
-                      el.message.content.match(
-                        /(http|https):\/\/([\w.]+\/?)\S*/gi
-                      ) === null
-                    "
-                    @click.prevent.stop="
-                      device === 'moblie' ? onContextmenu(el) : false
-                    "
-                    v-html="el.message.content"
-                  ></span>
-                  <div
-                    v-else-if="
-                      el.message.content.match(
-                        /(http|https):\/\/([\w.]+\/?)\S*/gi
-                      )
-                    "
+                    class="message-classic"
+                    v-if="el.chatType === 'SRV_USER_SEND'"
+                    @contextmenu.prevent.stop="onContextmenu(el)"
+                    @dblclick="dblclick(el)" 
+                  >
+                    <template v-if="el.isRplay !== null">
+                      <div
+                        class="reply-box"
+                        @click="goAnchor(el.isRplay.historyId)"
+                      >
+                        <div class="reply-img">
+                          <img :src="noIconShow(el.isRplay)" alt="" />
+                        </div>
+                        <div class="reply-msg">
+                          <div style="color: rgba(0, 0, 0, 0.4)">
+                            {{ el.isRplay.nickName }}
+                          </div>
+                          <div>
+                            <div class="goAnchor-box">
+                              <span
+                                v-if="el.isRplay.chatType === 'SRV_USER_SEND'"
+                                class="goAnchor"
+                                >{{ isBase64(el.isRplay.text) }}</span
+                              >
+                              <img
+                                v-if="el.isRplay.chatType === 'SRV_USER_IMAGE'"
+                                :src="isBase64(el.isRplay.text)"
+                                style="border-radius: 5px"
+                              />
+                              <span v-if="el.isRplay.chatType === 'SRV_USER_AUDIO'">
+                                <div class="reply-audio-box"></div>
+                                <mini-audio
+                                  :audio-source="isBase64(el.isRplay.text)"
+                                ></mini-audio>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                    <div
+                      :class="{
+                        'reply-content': el.isRplay !== null,
+                      }"
+                    >
+                      <span
+                        v-if="!IsURL(el.message.content)"
+                        @click.prevent.stop="
+                          device === 'moblie' ? onContextmenu(el) : false
+                        "
+                        v-html="el.message.content"
+                      >
+                      </span>
+
+                      <div v-else-if="IsURL(el.message.content)">
+                        <div
+                          v-if="device === 'moblie'"
+                          class="images-more-btn"
+                          style="top: 5px"
+                          @click.prevent.stop="
+                            device === 'moblie' ? onContextmenu(el) : false
+                          "
+                        >
+                          <i class="el-icon-more"></i>
+                        </div>
+                        <vue-markdown
+                          :anchor-attributes="linkAttrs"
+                          :class="device === 'moblie' ? 'link-style' : ''"
+                          >{{ el.message.content }}</vue-markdown
+                        >
+                      </div>
+                      <span v-else v-html="el.message.content"></span>
+                    </div>
+                  </span>
+
+                  <span
+                    class="message-mini-audio"
+                    v-else-if="el.chatType === 'SRV_USER_AUDIO'"
+                    @contextmenu.prevent.stop="onContextmenu(el)"
+                    @dblclick="dblclick(el)"
                   >
                     <div
                       v-if="device === 'moblie'"
                       class="images-more-btn"
-                      style="top: 5px"
                       @click.prevent.stop="
                         device === 'moblie' ? onContextmenu(el) : false
                       "
                     >
                       <i class="el-icon-more"></i>
                     </div>
-                    <div
-                      v-html="el.message.content"
-                      v-linkified
-                      :class="device === 'moblie' ? 'link-style' : ''"
-                    ></div>
-                  </div>
-                  <span v-else v-html="el.message.content"></span>
-                </div>
-              </span>
-              <span
-                class="message-mini-audio"
-                v-else-if="el.chatType === 'SRV_USER_AUDIO'"
-                @contextmenu.prevent.stop="onContextmenu(el)"
-                @dblclick="dblclick(el)"
-              >
-                <div
-                  v-if="device === 'moblie'"
-                  class="images-more-btn"
-                  @click.prevent.stop="
-                    device === 'moblie' ? onContextmenu(el) : false
-                  "
-                >
-                  <i class="el-icon-more"></i>
-                </div>
-                <mini-audio
-                  class="message-audio"
-                  :audio-source="el.message.content"
-                ></mini-audio>
-              </span>
-              <span
-                class="message-image"
-                v-else-if="el.chatType === 'SRV_USER_IMAGE'"
-                @contextmenu.prevent.stop="onContextmenu(el)"
-                @dblclick="dblclick(el)"
-              >
-                <div
-                  v-if="device === 'moblie'"
-                  class="images-more-btn"
-                  @click.prevent.stop="
-                    device === 'moblie' ? onContextmenu(el) : false
-                  "
-                >
-                  <i class="el-icon-more"></i>
-                </div>
-                <el-image
-                  :src="el.message.content"
-                  :preview-src-list="[el.message.content]"
-                />
-              </span>
-              <span class="nickname-time">{{
-                $root.formatTimeSecound(el.message.time)
-              }}</span>
-            </p>
-            <div class="read-check-box">
-              <span class="read-check" v-if="el.isRead"
-                ><img src="./../../static/images/check.png" alt=""
-              /></span>
-              <span class="read-check2"
-                ><img src="./../../static/images/check.png" alt=""
-              /></span>
-            </div>
-          </template>
+                    <mini-audio
+                      class="message-audio"
+                      :audio-source="el.message.content"
+                    ></mini-audio>
+                  </span>
 
-          <template v-else-if="el.chatType === 'SRV_CHAT_PIN'">
-            <div class="top-msg-style">
-              <span>{{ pinUserName(el.message.content) }}置顶了一則訊息</span>
-            </div>
-          </template>
-        </li>
+                  <span
+                    class="message-image"
+                    v-else-if="el.chatType === 'SRV_USER_IMAGE'"
+                    @contextmenu.prevent.stop="onContextmenu(el)"
+                    @dblclick="dblclick(el)"
+                  >
+                    <div
+                      v-if="device === 'moblie'"
+                      class="images-more-btn"
+                      @click.prevent.stop="
+                        device === 'moblie' ? onContextmenu(el) : false
+                      "
+                    >
+                      <i class="el-icon-more"></i>
+                    </div>
+                    <el-image
+                      :src="el.message.content"
+                      :preview-src-list="[el.message.content]"
+                    />
+                  </span>
+                  <span class="nickname-time">{{
+                    $root.formatTimeSecound(el.message.time)
+                  }}</span>
+                </p>
+                <div class="read-check-box">
+                  <span class="read-check" v-if="el.isRead"
+                    ><img src="./../../static/images/check.png" alt=""
+                  /></span>
+                  <span class="read-check2"
+                    ><img src="./../../static/images/check.png" alt=""
+                  /></span>
+                </div>
+              </template>
+
+              <template v-else-if="el.chatType === 'SRV_CHAT_PIN'">
+                <div class="top-msg-style">
+                  <span>{{ pinUserName(el.message.content) }}置顶了一則訊息</span>
+                </div>
+              </template>
+            </li>
+          </el-checkbox>
+        </el-checkbox-group>
       </div>
     </ul>
-    <div style="width: 95%; text-align: right;">
+    <div style="width: 90%; text-align: right;">
       <el-button
         class="scroll-bottom-btn"
         v-show="showScrollBar"
@@ -183,21 +181,19 @@
         @click="$root.gotoBottom()"
       ></el-button>
     </div>
-
   </div>
 </template>
 
 <script>
-import Socket from "@/utils/socket";
 import { mapState, mapMutations } from "vuex";
 import {
   deleteRecentChat,
-  uploadMessageImage,
   pinHistory,
   unpinHistory,
 } from "@/api";
-import { Encrypt, Decrypt } from "@/utils/AESUtils.js";
+import AESBase64 from "@/utils/AESBase64.js";
 
+import VueMarkdown from "vue-markdown";
 export default {
   name: "MessagePabel",
   props: {
@@ -210,23 +206,43 @@ export default {
     timeOut: {
       type: Number,
     },
+    showCheckBoxBtn: {
+      type: Boolean,
+    },    
+    checkDataList:{
+      type: Array,
+    }
   },
   data() {
     return {
       newData: [],
       message: [],
+      checkList:[],
       newMessageData: {},
+      checkBoxDisabled:true,
       fullscreenLoading: false,
 
       device: localStorage.getItem("device"),
       showScrollBar: false,
-
+      linkAttrs: {
+        target: "_blank",
+        class: "linkified",
+      },
       //加解密 key iv
       aesKey: "hichatisachatapp",
       aesIv: "hichatisachatapp",
     };
   },
   watch: {
+    showCheckBoxBtn(val) {
+      this.checkBoxDisabled = val;
+    },
+    checkList(val) {
+      this.$emit("isCheckDataList", val);
+    },
+    checkDataList(val){
+      this.checkList = val
+    },
     messageData(val) {
       //去除重复
       const set = new Set();
@@ -246,29 +262,38 @@ export default {
           newData;
       });
       this.$root.gotoBottom();
+
+      //TODO 至底按鈕出現 移除滾動
+      // if(!this.showScrollBar){
+      //   this.$root.gotoBottom();
+      // } 
     },
   },
   computed: {
     ...mapState({
       chatUser: (state) => state.ws.chatUser,
       soundNofiy: (state) => state.ws.soundNofiy,
-      myUserInfo: (state) => state.ws.myUserInfo,      
+      myUserInfo: (state) => state.ws.myUserInfo,
       goAnchorMessage: (state) => state.ws.goAnchorMessage,
     }),
   },
   created() {
-    this.setMyUserInfo(JSON.parse(localStorage.getItem("myUserInfo")))
+    this.setMyUserInfo(JSON.parse(localStorage.getItem("myUserInfo")));
   },
   mounted() {
     window.addEventListener(
       "scroll",
       () => {
-        let scrollTop =  document.querySelector(".message-pabel-box")
-        this.showScrollBar = !(scrollTop.scrollHeight -  scrollTop.scrollTop ===  scrollTop.clientHeight)
+        let scrollTop = document.querySelector(".message-pabel-box");
+        this.showScrollBar = !(
+          (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.199951171875 : 0.60009765625)  <=
+          scrollTop.clientHeight
+        );
+        // console.log(document.querySelector(".el-checkbox__label"))
       },
       true
     );
-    if(this.goAnchorMessage.historyId !== undefined) {
+    if (this.goAnchorMessage.historyId !== undefined) {
       let newTime = this.timeOut + 1000;
       setTimeout(() => {
         this.goAnchor(this.goAnchorMessage.historyId);
@@ -278,9 +303,22 @@ export default {
   methods: {
     ...mapMutations({
       setEditMsg: "ws/setEditMsg",
-      setMyUserInfo:"ws/setMyUserInfo",
       setReplyMsg: "ws/setReplyMsg",
+      setMyUserInfo: "ws/setMyUserInfo",
     }),
+    paperScroll(event){
+      console.log(event)
+    },
+    IsURL(str_url) {
+      var strRegex =
+        /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
+      var re = new RegExp(strRegex);
+      if (re.test(str_url)) {
+        return true;
+      } else {
+        return false;
+      }
+    },
     pinUserName(data) {
       if (data === this.myUserInfo.username) {
         return (data = "你");
@@ -296,17 +334,9 @@ export default {
         document.getElementById(data).classList.remove("blink");
       }, 3000);
     },
+    //判斷是否base64
     isBase64(data) {
-      var base64Rejex =
-        /^(?:[A-Z0-9+\/]{4})*(?:[A-Z0-9+\/]{2}==|[A-Z0-9+\/]{3}=|[A-Z0-9+\/]{4})$/i;
-      if (!base64Rejex.test(data)) {
-        return data;
-      }
-      try {
-        return Decrypt(data, this.aesKey, this.aesIv);
-      } catch (err) {
-        return data;
-      }
+      return AESBase64(data, this.aesKey ,this.aesIv)
     },
     noIconShow(iconData) {
       if ([undefined, null, ""].includes(iconData.icon)) {
@@ -314,33 +344,6 @@ export default {
       } else {
         return iconData.icon;
       }
-    },
-    // 上傳圖片
-    submitAvatarUpload() {
-      let formData = new FormData();
-      formData.append("file", this.fileList[0].raw);
-      this.fullscreenLoading = true;
-      uploadMessageImage(formData).then((res) => {
-        if (res.code === 200) {
-          let message = this.userInfoData;
-          message.chatType = "CLI_USER_IMAGE";
-          message.id = Math.random();
-          message.fromChatId = "u" + localStorage.getItem("id");
-          message.toChatId = this.chatUser.toChatId;
-          (message.text = Encrypt(res.data, this.aesKey, this.aesIv)), //TODO 加密
-            // message.text = res.data,
-            this.soundNofiy.forEach((res) => {
-              if (res.key === "private" && res.isNofity) this.audioAction();
-            });
-          Socket.send(message);
-          this.fileList = [];
-          this.uploadImgShow = false;
-          this.fullscreenLoading = false;
-        } else if (res.code === 40001) {
-          this.fileList = [];
-          this.fullscreenLoading = false;
-        }
-      });
     },
     audioAction() {
       let audioEl = document.getElementById("notify-send-audio");
@@ -392,7 +395,7 @@ export default {
       let item = [
         {
           name: "edit",
-          label: "編輯",
+          label: "编辑",
           onClick: () => {
             this.setReplyMsg({
               chatType: data.chatType,
@@ -407,11 +410,12 @@ export default {
         },
         {
           name: "copy",
-          label: "複製",
+          label: "复制",
           onClick: () => {
             this.copyPaste(data);
           },
         },
+
         {
           name: "reply",
           label: "回覆",
@@ -428,21 +432,21 @@ export default {
         },
         {
           name: "download",
-          label: "下載",
+          label: "下载",
           onClick: () => {
             this.downloadImages(data);
           },
         },
         {
           name: "upDown",
-          label: data.isPing ? "取消置頂" : "置顶訊息",
+          label: data.isPing ? "取消置顶" : "置顶訊息",
           onClick: () => {
             this.topMsgAction(data, data.isPing);
           },
         },
         {
           name: "deleteAllChat",
-          label: "在所有人的對話紀錄中刪除",
+          label: "在所有人的对话纪录中删除",
           divided: true,
           onClick: () => {
             this.deleteRecent(data, "all");
@@ -450,70 +454,56 @@ export default {
         },
         {
           name: "deleteMyChat",
-          label: "只在我的對話紀錄中刪除",
+          label: "只在我的对话纪录中删除",
           divided: true,
           onClick: () => {
             this.deleteRecent(data, "only");
           },
         },
+        {
+          name: "choose",
+          label: this.checkBoxDisabled ? "选择" : "取消选择",
+          onClick: () => {
+            this.checkList = [];
+            this.checkBoxDisabled = !this.checkBoxDisabled;
+            this.$emit("checkBoxDisabled", this.checkBoxDisabled);
+          },
+        },        
       ];
       if (data.userChatId !== "u" + localStorage.getItem("id")) {
-        if (
-          data.chatType === "SRV_USER_IMAGE" ||
-          data.chatType === "SRV_USER_AUDIO"
-        ) {
-          if (data.chatType === "SRV_USER_AUDIO") {
-            this.newItem = item.filter((list) => {
-              return (
-                list.name !== "deleteAllChat" &&
-                list.name !== "edit" &&
-                list.name !== "copy" &&
-                list.name !== "download"
-              );
-            });
-          } else {
-            this.newItem = item.filter((list) => {
-              return (
-                list.name !== "deleteAllChat" &&
-                list.name !== "edit" &&
-                list.name !== "copy"
-              );
-            });
-          }
-        } else  {
-          this.newItem = item.filter((list) => {
-            return (
-              list.name !== "deleteAllChat" &&
-              list.name !== "edit" &&
-              list.name !== "download"
-            );
-          });
+        if (data.chatType === "SRV_USER_IMAGE") {
+          this.newItem = item.filter(
+            (list) => !["deleteAllChat", "edit", "copy"].includes(list.name)
+          );
+        } else if (data.chatType === "SRV_USER_AUDIO") {
+          this.newItem = item.filter(
+            (list) => !["deleteAllChat", "edit", "copy", "download"].includes(list.name)
+          );
+        } else {
+          this.newItem = item.filter(
+            (list) => !["deleteAllChat", "edit", "download"].includes(list.name)
+          );
         }
       } else {
-        if (
-          data.chatType === "SRV_USER_IMAGE" ||
-          data.chatType === "SRV_USER_AUDIO"
-        ) {
-          if (data.chatType === "SRV_USER_IMAGE") {
-            this.newItem = item.filter((list) => {
-              return list.name !== "edit" && list.name !== "copy";
-            });
-          } else {
-            this.newItem = item.filter((list) => {
-              return (
-                list.name !== "edit" &&
-                list.name !== "copy" &&
-                list.name !== "download"
-              );
-            });
-          }
+        if (data.chatType === "SRV_USER_IMAGE") {
+          this.newItem = item.filter(
+            (list) => !["edit", "copy"].includes(list.name)
+          );
+        } else if (data.chatType === "SRV_USER_AUDIO") {
+          this.newItem = item.filter(
+            (list) => !["edit", "copy", "download"].includes(list.name)
+          );
         } else {
-          this.newItem = item.filter((list) => {
-            return list.name !== "download";
-          });
+          this.newItem = item.filter(
+            (list) => !["download"].includes(list.name)
+          );
         }
       }
-
+      if(!this.checkBoxDisabled){
+        this.newItem = item.filter(
+          (list) => list.name === "choose"
+        );
+      }
       this.$contextmenu({
         items: this.newItem,
         // event,
@@ -607,6 +597,9 @@ export default {
         });
     },
   },
+  components: {
+    VueMarkdown,
+  },
 };
 </script>
 
@@ -651,6 +644,25 @@ export default {
           background-color: #ffffff;
         }
       }
+      .message-layout-left,
+      .message-layout-right {
+        /deep/.el-checkbox__input {
+          .el-checkbox__inner {
+            width: 20px;
+            height: 20px;
+            &:after{
+              height: 12px;
+              width: 6px;
+              left: 5px;
+            }
+          }
+        }
+      }  
+      .el-checkbox.is-disabled{
+        /deep/.el-checkbox__label{
+          cursor: auto;
+        }
+      }    
       .message-audio {
         width: 190px;
         display: flex;
@@ -709,6 +721,21 @@ export default {
     .message-layout-right {
       margin-top: 20px;
       width: 100%;
+      //TODO 
+      display: flex;
+      align-items: center;
+      /deep/.el-checkbox__input{
+        .el-checkbox__inner{
+          border-radius:10px;
+        }
+      }
+      /deep/.el-checkbox__label{
+        width: 100%;
+        white-space: normal;
+      }
+      /deep/.is-disabled{
+        display:none;
+      }
     }
 
     .message-layout-left {
@@ -724,7 +751,7 @@ export default {
         }
         .el-image {
           width: -webkit-fill-available !important;
-          height: 11em !important;
+          height: 9em !important;
           top: 0;
           /deep/.el-image__inner {
             height: unset;
@@ -791,7 +818,7 @@ export default {
         }
         .el-image {
           width: -webkit-fill-available !important;
-          height: 11em !important;
+          height: 9em !important;
           top: 0;
           /deep/.el-image__inner {
             height: unset;
@@ -850,7 +877,7 @@ export default {
       padding: 9px 12px;
       font-size: 14px;
       color: #333333;
-      white-space: pre-line;
+      // white-space: pre-line;
       word-break: break-all;
       .red {
         height: 1.5em;
@@ -862,13 +889,13 @@ export default {
     .message-audio {
       width: 190px;
       height: 2.5em;
-      // margin-top: 1em;
+      
       display: inline-block;
       // border: 1px solid #eeeeee;
     }
     .message-image {
       position: relative;
-      // margin-top: 1em;
+      
       display: inline-block;
       padding: 5px 6px 2px 6px;
       color: #333333;
@@ -881,7 +908,7 @@ export default {
     }
     .message-mini-audio {
       position: relative;
-      // margin-top: 1em;
+      
       display: inline-block;
       border-radius: 10px;
     }
@@ -1052,7 +1079,7 @@ export default {
   z-index: 9;
 }
 .link-style {
-  padding: 10px 0;
+  padding: 15px 0 7px 0;
 }
 /deep/.linkified {
   color: #10686e;
@@ -1062,7 +1089,8 @@ export default {
   width: 100%;
   font-size: 12px;
   text-align: center;
-  margin: 2em 0;
+  margin: 0.5em 0;
+  color: #000000;
   span {
     background-color: rgba(0, 0, 0, 0.05);
     padding: 4px 15px;

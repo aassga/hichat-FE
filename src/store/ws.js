@@ -11,8 +11,8 @@ export const state = {
   activeName:"address",
   infoMsg:{
     infoMsgShow:false,
-    infoMsgNav:"ContactPage",
     infoMsgChat:false,
+    infoMsgNav:"ContactPage",
   },
   hichatNav:{
     type:"address",
@@ -86,19 +86,30 @@ export const state = {
     groupAdminAuthority: {
       checkUserInfo: false,
       pin: false,
-      sendMessage: true
+      sendMessage: true,
+      sendImage: true,
+      sendLink: true,
     },
     groupDisabledWordList: [],
     groupManagerAuthority: [],    
   },
   topMsgShow:true,
+  checkBoxBtn:false,
   authority:{},
   goAnchorMessage:{},
   authorityGroupData:{},
+  spreadDataList:[],
+  
 };
 export const actions = {};
 
 export const mutations = {
+  setCheckBoxBtn(state, payload) {
+    state.checkBoxBtn = payload;
+  },     
+  setSpreadDataList(state, payload) {
+    state.spreadDataList = payload;
+  },     
   setAuthority(state, payload) {
     state.authority = payload;
     localStorage.setItem("authority",JSON.stringify(payload))
@@ -179,6 +190,7 @@ export const mutations = {
   },
   //聯絡人 List
   setMyContactDataList(state, payload) {
+    state.myContactDataList = []
     state.myContactDataList = payload;
     localStorage.setItem("myContactDataList", JSON.stringify(payload));
   },

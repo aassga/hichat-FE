@@ -8,126 +8,132 @@
       <div class="input-tools-right">
         <div>
           <!-- <img src="./../../static/images/plus.png" alt=""> -->
-          <img
-            src="./../../static/images/image.png"
-            alt=""
-            @click="uploadImgShow = true"
-          />
+          <template v-if="groupData.isAdmin || (groupData.isManager && (authority.sendImage || authorityGroupData.sendImage)) || authorityGroupData.sendImage">
+            <img
+              src="./../../static/images/image.png"
+              alt=""
+              @click="uploadImgShow = true"
+            />
+          </template>
           <!-- <img src="./../../static/images/camera.png" alt=""> -->
         </div>
       </div>
+
       <div class="text-send-box">
-        <el-input
-          type="textarea"
-          resize="none"
-          :autosize="{ minRows: 1, maxRows: 1 }"
-          placeholder="Aa"
-          v-model="textArea"
-          maxlength="500"
-          @keyup.native="callout"
+        <div
+          class="disable-box"
+          v-if="(groupData.isManager && !authority.sendMessage) || 
+                (!groupData.isAdmin && !groupData.isManager) && 
+                !authorityGroupData.sendMessage 
+          "
+          @click="disableTouch"
         >
-        </el-input>
-        <div class="footer-tools"  @touchmove="$root.handleTouch">
-          <emoji-picker @emoji="insert" :search="search">
-            <div
-              slot="emoji-invoker"
-              slot-scope="{ events: { click: clickEvent } }"
-              @click.stop="clickEvent"
-            >
-              <div class="face-other-btn">
-                <img src="./../../static/images/emoji.png" alt="" />
-              </div>
-            </div>
-            <div
-              slot="emoji-picker"
-              slot-scope="{ emojis, insert }"
-              class="face-icon"
-            >
-              <div class="face-icon-box">
-                <div>
-                  <div
-                    v-for="(emojiGroup, category) in emojis"
-                    :key="category"
-                    class="face-box"
-                  >
-                    <h5>{{ emojiChine(category) }}</h5>
-                    <div>
-                      <span
-                        v-for="(emoji, emojiName) in emojiGroup"
-                        :key="emojiName"
-                        @click="insert(emoji)"
-                        >{{ emoji }}</span
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </emoji-picker>
+          已禁止發言
         </div>
+        <template v-else>
+          <el-input
+            type="textarea"
+            resize="none"
+            :autosize="{ minRows: 1, maxRows: 1 }"
+            placeholder="Aa"
+            v-model="textArea"
+            maxlength="500"
+            @keyup.native="callout"
+          >
+          </el-input>
+          <div class="footer-tools" @touchmove="$root.handleTouch">
+            <div class="face-other-btn" @click.stop="showDialog = !showDialog">
+              <img v-if="!showDialog" src="./../../static/images/emoji.png" alt="" />
+              <img v-else src="./../../static/images/keyboard.svg" alt="" />
+            </div> 
+            <div class="face-icon" v-show="showDialog">
+              <VEmojiPicker :showSearch="false" :showCategories="false" :emojisByRow="10" @select="selectEmoji"/>
+            </div>
+          </div>
+        </template>
       </div>
+
       <div class="input-tools-left">
-        <div v-if="textArea === ''" @click="sendAduio">
-          <img src="./../../static/images/audio.png" alt="" />
-        </div>
-        <div v-else @click="editMsg.innerText === '' ? sendMessage() : editMessage()">
-          <img src="./../../static/images/send.png" alt="" />
-        </div>
+        <template v-if="groupData.isAdmin">
+          <div v-if="textArea === ''" @click="sendAduio">
+            <img src="./../../static/images/audio.png" alt="" />
+          </div>
+          <div
+            v-else
+            @click="editMsg.innerText === '' ? sendMessage() : editMessage()"
+          >
+            <img src="./../../static/images/send.png" alt="" />
+          </div>
+        </template>
+        <template v-else-if="groupData.isManager">
+          <div
+            v-if="
+              textArea === '' &&
+              (authorityGroupData.sendImage || authority.sendImage)
+            "
+            @click="sendAduio"
+          >
+            <img src="./../../static/images/audio.png" alt="" />
+          </div>
+          <div
+            v-else-if="authorityGroupData.sendMessage || authority.sendMessage"
+            @click="editMsg.innerText === '' ? sendMessage() : editMessage()"
+          >
+            <img src="./../../static/images/send.png" alt="" />
+          </div>
+        </template>
+        <template v-else>
+          <div
+            v-if="textArea === '' && authorityGroupData.sendImage"
+            @click="sendAduio"
+          >
+            <img src="./../../static/images/audio.png" alt="" />
+          </div>
+          <div
+            v-else-if="authorityGroupData.sendMessage"
+            @click="editMsg.innerText === '' ? sendMessage() : editMessage()"
+          >
+            <img src="./../../static/images/send.png" alt="" />
+          </div>
+        </template>
       </div>
     </template>
     <template v-else>
       <div class="text-send-box">
-        <el-input
-          type="textarea"
-          resize="none"
-          :autosize="{ minRows: 1, maxRows: 1 }"
-          placeholder="Aa"
-          v-model="textArea"
-          maxlength="500"
-          @keyup.native="keyUp"
+        <div
+          class="disable-box"
+          v-if="(groupData.isManager && !authority.sendMessage) || 
+                (!groupData.isAdmin && !groupData.isManager) && 
+                !authorityGroupData.sendMessage 
+          "
+          @click="disableTouch"
         >
-        </el-input>
-        <div class="footer-tools">
-          <emoji-picker @emoji="insert" :search="search">
-            <div
-              slot="emoji-invoker"
-              slot-scope="{ events: { click: clickEvent } }"
-              @click.stop="clickEvent"
-            >
-              <div class="face-other-btn">
-                <img src="./../../static/images/pc/smile.png" alt="" />
-              </div>
-            </div>
-            <div
-              slot="emoji-picker"
-              slot-scope="{ emojis, insert }"
-              class="face-icon"
-            >
-              <div class="face-icon-box">
-                <div>
-                  <div
-                    v-for="(emojiGroup, category) in emojis"
-                    :key="category"
-                    class="face-box"
-                  >
-                    <h5>{{ emojiChine(category) }}</h5>
-                    <div>
-                      <span
-                        v-for="(emoji, emojiName) in emojiGroup"
-                        :key="emojiName"
-                        @click="insert(emoji)"
-                        >{{ emoji }}</span
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </emoji-picker>
+          已禁止發言
         </div>
+        <template v-else>
+          <el-input
+            type="textarea"
+            resize="none"
+            :autosize="{ minRows: 1, maxRows: 1 }"
+            placeholder="Aa"
+            v-model="textArea"
+            maxlength="500"
+            @keyup.native="keyUp"
+          >
+          </el-input>
+          <div class="footer-tools">
+            <div class="face-other-btn" @click.stop="showDialog = !showDialog">
+              <img v-if="!showDialog" src="./../../static/images/emoji.png" alt="" />
+              <img v-else src="./../../static/images/keyboard.svg" alt="" />
+            </div> 
+            <div class="face-icon" v-show="showDialog">
+              <VEmojiPicker :showSearch="false" :showCategories="false" :emojisByRow="10" @select="selectEmoji"/>
+            </div>
+          </div>
+        </template>
       </div>
       <div class="input-tools-left">
-        <div>
+        <template v-if="groupData.isAdmin || (groupData.isManager && (authorityGroupData.sendImage || authority.sendImage)) || authorityGroupData.sendImage">
           <img
             src="./../../static/images/image.png"
             alt=""
@@ -138,15 +144,21 @@
             alt=""
             @click="takePictureShow = true"
           />
-        </div>
+        </template>
       </div>
     </template>
+
     <div
       class="callout-message"
       v-show="calloutShow && searchContactData.length > 0"
     >
       <ul>
-        <li @click="markPeople(searchContactData)" v-if="groupData.isAdmin || groupData.isManager "><div class="callout-message-box"><span>標記所有成員</span></div></li>
+        <li
+          @click="markPeople(searchContactData)"
+          v-if="groupData.isAdmin || groupData.isManager"
+        >
+          <div class="callout-message-box"><span>標記所有成員</span></div>
+        </li>
         <li
           v-for="(item, index) in searchContactData"
           :key="index"
@@ -161,21 +173,38 @@
     </div>
     <el-dialog
       title="上传图片"
+      :before-close="closeModel"
       :visible.sync="uploadImgShow"
-      :append-to-body="device !== 'pc'"
+      :close-on-click-modal="false"
+      :modal-append-to-body="false"
+      :append-to-body="false"
       :class="{ 'el-dialog-loginOut': device === 'pc' }"
-      width="100%"
       v-loading.fullscreen.lock="fullscreenLoading"
+      width="100%"
+      class="el-upload-img"
       element-loading-text="圖片上传中"
       center
     >
+      <div
+        id="preview"
+        class="preview-img"
+        v-if="copyPicture"
+        v-on:paste="onPasteUpload"
+      >
+        <span>将图片按Ctrl+V 粘贴至此处</span>
+      </div>
       <el-upload
         class="upload-demo"
         action="#"
         :on-change="uploadImg"
+        :on-remove="handleRemove"
+        :on-exceed="limitCheck"
         :auto-upload="false"
         :file-list="fileList"
         list-type="picture"
+        multiple
+        :limit="10"
+        v-else
       >
         <el-button type="primary">点击上传</el-button>
         <div slot="tip" class="el-upload__tip">
@@ -184,14 +213,20 @@
       </el-upload>
       <span slot="footer" class="dialog-footer">
         <template v-if="device === 'moblie'">
-          <el-button type="success" @click="submitAvatarUpload">确认</el-button>
-          <el-button @click="uploadImgShow = false">取消</el-button>
+          <el-button
+            type="success"
+            @click="copyPicture ? copySubmitAvatar() : submitAvatar()"
+            >确认</el-button
+          >
+          <el-button @click="closeModel()">取消</el-button>
         </template>
         <template v-else>
-          <el-button class="background-gray" @click="uploadImgShow = false"
+          <el-button class="background-gray" @click="closeModel()"
             >取消</el-button
           >
-          <el-button class="background-orange" @click="submitAvatarUpload"
+          <el-button
+            class="background-orange"
+            @click="copyPicture ? copySubmitAvatar() : submitAvatar()"
             >确认</el-button
           >
         </template>
@@ -205,7 +240,7 @@
       :before-close="closeAduioShow"
       center
       v-loading.fullscreen.lock="fullscreenLoading"
-      element-loading-text="录音上传中"          
+      element-loading-text="录音上传中"
     >
       <div class="record-play">
         <div class="record-time">
@@ -231,7 +266,7 @@
     <el-dialog
       title="照相"
       :visible.sync="takePictureShow"
-      :close-on-click-modal="false"      
+      :close-on-click-modal="false"
       width="100%"
       class="el-dialog-takePicture"
       center
@@ -241,20 +276,27 @@
         v-on:closePictureShow="pictureShow"
       ></Photo>
     </el-dialog>
-    <audio id="notify-send-audio" src="./../../static/wav/send.mp3" preload="none"></audio>
+    <audio
+      id="notify-send-audio"
+      src="./../../static/wav/send.mp3"
+      preload="none"
+    ></audio>
   </div>
 </template>
 
 <script>
 import Socket from "@/utils/socket";
-import EmojiPicker from "vue-emoji-picker";
-
+import { VEmojiPicker } from "v-emoji-picker";
 import Record from "./../../static/js/record-sdk";
 import Photo from "./Photo.vue";
-import { getLocal, getToken } from "_util/utils.js";
+import { getToken } from "_util/utils.js";
 import { mapState, mapMutations } from "vuex";
-import { uploadMessageImage, uploadMessageFile,getGroupDisabledWord } from "@/api";
-import { Decrypt,Encrypt} from '@/utils/AESUtils.js'
+import {
+  uploadMessageImage,
+  uploadMessageFile,
+  getGroupDisabledWord,
+} from "@/api";
+import { Decrypt, Encrypt } from "@/utils/AESUtils.js";
 
 export default {
   name: "MessageInput",
@@ -262,14 +304,17 @@ export default {
     return {
       textArea: "",
       search: "",
+      showDialog: false,
       calloutShow: false,
       sendAduioShow: false,
       uploadImgShow: false,
       takePictureShow: false,
-      fullscreenLoading:false, 
-      banMessage:[],     
+      fullscreenLoading: false,
+      banMessage: [],
       checkName: [],
       fileList: [],
+      file: {},
+      copyPicture: false,
       targetArray: [],
       searchContactData: [],
       device: localStorage.getItem("device"),
@@ -293,8 +338,8 @@ export default {
       efg: 0, // 時的計數
 
       //加解密 key iv
-      aesKey:"hichatisachatapp",
-      aesIv:"hichatisachatapp",      
+      aesKey: "hichatisachatapp",
+      aesIv: "hichatisachatapp",
     };
   },
   props: {
@@ -306,15 +351,22 @@ export default {
     groupData: {
       type: Object,
     },
-    unGroupDisabledWord:{
+    unGroupDisabledWord: {
       type: Boolean,
-    }
+    },
+    authorityGroupData: {
+      type: Object,
+    },
+    authority: {
+      type: Object,
+    },
   },
   computed: {
     ...mapState({
       replyMsg: (state) => state.ws.replyMsg,
       editMsg: (state) => state.ws.editMsg,
-      soundNofiy: (state) => state.ws.soundNofiy,      
+      groupUser: (state) => state.ws.groupUser,
+      soundNofiy: (state) => state.ws.soundNofiy,
       contactListData: (state) => state.ws.contactListData,
     }),
   },
@@ -322,10 +374,11 @@ export default {
     textArea: {
       immediate: true,
       handler(val) {
-        if(val === '') this.calloutShow = false;
+        if (val === "") this.calloutShow = false;
         let textAreaSearchData = val.split(" ");
         textAreaSearchData.forEach((el) => {
           this.searchContactData = this.contactListData.filter((item) => {
+            console.log(item)
             return item.name.indexOf(el.replace("@", "")) !== -1;
           });
         });
@@ -334,53 +387,129 @@ export default {
     editMsg(val) {
       this.textArea = val.innerText;
     },
-
   },
   created() {
     Socket.$on("message", this.handleGetMessage);
-    this.getDisabledWord()
+    this.getDisabledWord();
+  },
+  mounted() {
+    document.addEventListener("paste", this.onPasteUpload);
+    document.addEventListener("click", (e) => {
+      if (e.target.className !== "emoji border") {
+        this.showDialog = false;
+      }
+    });
   },
   methods: {
     ...mapMutations({
-      setEditMsg:"ws/setEditMsg",
+      setEditMsg: "ws/setEditMsg",
       setReplyMsg: "ws/setReplyMsg",
     }),
-    markPeople(data){
-      data.forEach((el)=>{
+    // 选择的文件超出限制的文件总数量时触发
+    limitCheck() {
+      this.$message({ message: "最多只能上传10张图片", type: "warning" });
+    },
+    selectEmoji(emoji) {
+      // 选择emoji后调用的函数
+      this.textArea += emoji.data;
+    },
+    disableTouch() {
+      this.$message({ message: "已禁止發言", type: "warning" });
+    },
+    markPeople(data) {
+      data.forEach((el) => {
         this.targetArray.push("u" + el.memberId);
-      })
-      this.textArea = "@所有成員"
+      });
+      this.textArea = "@所有成員";
     },
     checkCallout(data) {
       this.calloutShow = false;
       this.targetArray.push("u" + data.memberId);
       this.textArea = this.textArea + data.name;
-    },   
+    },
     handleGetMessage(msg) {
       let userInfo = JSON.parse(msg);
-      if(userInfo.chatType === "SRV_GROUP_DISABLE_WORD"){
-        this.getDisabledWord()
+      if (userInfo.chatType === "SRV_GROUP_DISABLE_WORD") {
+        this.getDisabledWord();
       }
     },
-    getDisabledWord(){
+    getDisabledWord() {
       let groupId = this.groupData.groupId;
-      getGroupDisabledWord({groupId}).then((res)=>{
-        if(res.code === 200){
-          this.banMessage = res.data
+      getGroupDisabledWord({ groupId }).then((res) => {
+        if (res.code === 200) {
+          this.banMessage = res.data;
         }
-      })
-    },    
+      });
+    },
     pictureShow(val) {
       this.takePictureShow = val;
+    },
+    handleRemove(file, fileList) {
+      this.fileList = fileList;
     },
     // 取得圖片
     uploadImg(file, fileList) {
       this.fileList = fileList;
     },
+    closeModel() {
+      this.fileList = [];
+      this.copyPicture = false;
+      this.uploadImgShow = false;
+      this.fullscreenLoading = false;
+    },
+    //貼上上傳圖片
+    onPasteUpload(event) {
+      const items = (event.clipboardData || window.clipboardData).items;
+      let file = null;
+      if (!items || items.length === 0) {
+        this.$message.error("当前浏览器不支持本地");
+        return;
+      }
+      // 搜索剪切板items
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          file = items[i].getAsFile();
+          break;
+        }
+      }
+      if (!file) {
+        return;
+      } else {
+        this.uploadImgShow = true;
+        this.copyPicture = true;
+      }
+      // 此时file就是我们的剪切板中的图片对象
+      // 如果需要预览，可以执行下面代码
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        preview.innerHTML = `<img src="${event.target.result}">`;
+      };
+      reader.readAsDataURL(file);
+      this.file = file;
+    },
+    copySubmitAvatar() {
+      this.submitAvatarUpload(this.file);
+    },
+    submitAvatar() {
+      if (
+        ((!this.groupData.isAdmin && !this.groupData.isManager) ||
+        (this.groupData.isManager && !this.authority.sendImage)) && 
+        !this.authorityGroupData.sendImage
+      ) {
+        this.$message({ message: "群組已禁止發送圖片訊息", type: "error" });
+        this.fileList = [];
+        this.uploadImgShow = false;
+        this.fullscreenLoading = false;
+        return false;
+      }
+      this.fileList.forEach((data) => {
+        this.submitAvatarUpload(data.raw);
+      });
+    },
     // 上傳圖片
-    submitAvatarUpload() {
+    submitAvatarUpload(data) {
       let formData = new FormData();
-      formData.append("file", this.fileList[0].raw);
+      formData.append("file", data);
       this.fullscreenLoading = true;
       uploadMessageImage(formData).then((res) => {
         if (res.code === 200) {
@@ -389,21 +518,21 @@ export default {
           message.id = Math.random();
           message.fromChatId = "u" + localStorage.getItem("id");
           message.toChatId = "g" + this.groupData.groupId;
-          message.text = Encrypt(res.data,this.aesKey,this.aesIv),//TODO 加密
-          // message.text = res.data,
-          // 发送服务器
-          this.soundNofiy.forEach((res)=>{
-            if(res.key === "group" && res.isNofity) this.audioAction()
-          })          
+          (message.text = Encrypt(res.data, this.aesKey, this.aesIv)), //TODO 加密
+            // message.text = res.data,
+            // 发送服务器
+            this.soundNofiy.forEach((res) => {
+              if (res.key === "group" && res.isNofity) this.audioAction();
+            });
           Socket.send(message);
           this.fileList = [];
           this.uploadImgShow = false;
-          this.fullscreenLoading = false;          
-        }else if(res.code === 40001){
+          this.fullscreenLoading = false;
+        } else if (res.code === 40001) {
           this.fileList = [];
           this.fullscreenLoading = false;
         }
-      })
+      });
     },
 
     // 開始計時
@@ -523,45 +652,43 @@ export default {
       this.sendAduioShow = false;
       this.audioMessageData = {};
     },
+
     // 上傳錄音
     onAudioFile() {
+      if (
+        ((!this.groupData.isAdmin && !this.groupData.isManager) ||
+        (this.groupData.isManager && !this.authority.sendImage)) && 
+        !this.authorityGroupData.sendImage
+      ) {
+        this.$message({ message: "群组已禁止发送语音讯息", type: "error" });
+        this.sendAduioShow = false;
+        this.fullscreenLoading = false;
+        this.audioMessageData = {};
+        return false;
+      }
       let formData = new FormData();
       formData.append("file", this.audioMessageData, `${Date.now()}.mp3`);
       formData.append("type", "AUDIO");
-      this.fullscreenLoading = true;      
+      this.fullscreenLoading = true;
       uploadMessageFile(formData).then((res) => {
         if (res.code === 200) {
           let message = this.userInfoData;
           message.chatType = "CLI_GROUP_AUDIO";
           message.id = Math.random();
           message.fromChatId = "u" + localStorage.getItem("id");
-          message.toChatId = "g" + this.groupData.groupId,
-          message.text = Encrypt(res.data,this.aesKey,this.aesIv),//TODO 加密
-          // message.text = res.data,
-          // 发送服务器
-          this.soundNofiy.forEach((res)=>{
-            if(res.key === "group" && res.isNofity) this.audioAction()
-          })          
+          (message.toChatId = "g" + this.groupData.groupId),
+            (message.text = Encrypt(res.data, this.aesKey, this.aesIv)), //TODO 加密
+            // message.text = res.data,
+            // 发送服务器
+            this.soundNofiy.forEach((res) => {
+              if (res.key === "group" && res.isNofity) this.audioAction();
+            });
           Socket.send(message);
           this.sendAduioShow = false;
-          this.fullscreenLoading = false;          
+          this.fullscreenLoading = false;
           this.audioMessageData = {};
         }
       });
-    },
-    // 表情符号转简中
-    emojiChine(category) {
-      if (category === "Frequently used") return "经常使用";
-      if (category === "People") return "笑脸与人物";
-      if (category === "Nature") return "动物与大自然";
-      if (category === "Objects") return "活动与美食";
-      if (category === "Places") return "旅游与地标";
-      if (category === "Symbols") return "符号";
-    },
-
-    // 表情符号
-    insert(emoji) {
-      this.textArea += emoji;
     },
     // 消息过滤
     textAreaTran() {
@@ -571,19 +698,19 @@ export default {
     },
 
     callout() {
-      this.textArea.split(" ").forEach((res)=>{
-        if(res.startsWith('@')){
+      this.textArea.split(" ").forEach((res) => {
+        if (res.startsWith("@")) {
           this.calloutShow = true;
-        } else{
+        } else {
           this.calloutShow = false;
         }
-      })
+      });
     },
-    
+
     keyUp(event) {
-      this.textArea.split(" ").forEach((res)=>{
-        this.calloutShow = res.startsWith('@')
-      })
+      this.textArea.split(" ").forEach((res) => {
+        this.calloutShow = res.startsWith("@");
+      });
       if (event.shiftKey && event.keyCode === 13) {
         return this.textArea;
       } else if (event.key === "Enter") {
@@ -607,23 +734,44 @@ export default {
     },
     closeReplyMessage() {
       this.setReplyMsg({
-        name:"",
-        icon:"",
-        chatType:"",
-        clickType:"",
-        innerText:"",
-        replyHistoryId:"",
+        name: "",
+        icon: "",
+        chatType: "",
+        clickType: "",
+        innerText: "",
+        replyHistoryId: "",
       });
-      this.setEditMsg({ innerText:""});
+      this.setEditMsg({ innerText: "" });
     },
     // 发送消息
     sendMessage() {
-      this.banMessageData = this.banMessage.filter((el)=>this.textArea.replace(/(\s*$)/g, "").includes(el.word))
-      if(this.banMessageData.length !== 0){
-        this.$message({ message: "訊息含有禁用字詞，無法傳送", type: "error" });
-        this.textArea = this.textArea.replace(/(\s*$)/g, "")
-        return false
-      }else{
+      if (this.textArea.replace(/\s+/g, "") === "") {
+        this.$message({ message: "不能发送空白消息", type: "error" });
+        this.textArea = "";
+        return false;
+      }
+      if (
+          ((!this.groupData.isAdmin && !this.groupData.isManager) ||
+          (this.groupData.isManager && !this.authority.sendLink)) && 
+          !this.authorityGroupData.sendLink
+      ) {
+        var strRegex =
+          /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
+        var re = new RegExp(strRegex);
+        if (re.test(this.textArea.replace(/(\s*$)/g, ""))) {
+          this.$message({ message: "无法发送超连结", type: "error" });
+          this.textArea = "";
+          return false;
+        }
+      }
+      this.banMessageData = this.banMessage.filter((el) =>
+        this.textArea.replace(/(\s*$)/g, "").includes(el.word)
+      );
+      if (this.banMessageData.length !== 0) {
+        this.$message({ message: "讯息含有禁用字词，无法传送", type: "error" });
+        this.textArea = this.textArea.replace(/(\s*$)/g, "");
+        return false;
+      } else {
         let message = {
           chatType: "CLI_GROUP_SEND",
           id: Math.random(),
@@ -633,38 +781,43 @@ export default {
               ? this.replyMsg.replyHistoryId
               : "",
           targetArray: this.targetArray,
-          text: Encrypt(this.textArea.replace(/(\s*$)/g, ""),this.aesKey,this.aesIv),//TODO 加密
+          text: Encrypt(
+            this.textArea.replace(/(\s*$)/g, ""),
+            this.aesKey,
+            this.aesIv
+          ), //TODO 加密
           // text: this.textArea,
           token: getToken("token"),
           deviceId: localStorage.getItem("UUID"),
           tokenType: 0,
         };
         // 发送服务器
-        this.soundNofiy.forEach((res)=>{
-          if(res.key === "group" && res.isNofity) this.audioAction()
-        })
+        this.soundNofiy.forEach((res) => {
+          if (res.key === "group" && res.isNofity) this.audioAction();
+        });
         Socket.send(message);
         this.closeReplyMessage();
         // 消息清空
         this.targetArray = [];
         this.checkName = [];
         this.textArea = "";
+        this.showDialog = false;
       }
-      
     },
-    audioAction(){
-      let audioEl = document.getElementById("notify-send-audio")  
+    audioAction() {
+      let audioEl = document.getElementById("notify-send-audio");
       var playPromise = audioEl.play();
       if (playPromise !== undefined) {
-        playPromise.then(_ => {
-          audioEl.pause();
-        })
-        .catch(error => {
-        });
+        playPromise
+          .then((_) => {
+            audioEl.pause();
+          })
+          .catch((error) => {});
       }
-      audioEl.src= "" // 移除src, 防止之后播放空白音频  
-      setTimeout(() => { // 用setTimeout模拟一个2秒的延迟
-        audioEl.src = require("./../../static/wav/send.mp3")
+      audioEl.src = ""; // 移除src, 防止之后播放空白音频
+      setTimeout(() => {
+        // 用setTimeout模拟一个2秒的延迟
+        audioEl.src = require("./../../static/wav/send.mp3");
         audioEl.play();
       }, 150);
     },
@@ -675,7 +828,11 @@ export default {
         tokenType: 0,
         fromChatId: this.groupData.lastChat.fromChatId,
         targetId: this.replyMsg.replyHistoryId,
-        text: Encrypt(this.textArea.replace(/(\s*$)/g, ""),this.aesKey,this.aesIv),//TODO 加密
+        text: Encrypt(
+          this.textArea.replace(/(\s*$)/g, ""),
+          this.aesKey,
+          this.aesIv
+        ), //TODO 加密
         // text: this.textArea,
         toChatId: this.groupData.lastChat.toChatId,
         token: getToken("token"),
@@ -689,7 +846,7 @@ export default {
     },
   },
   components: {
-    EmojiPicker,
+    VEmojiPicker,
     Photo,
   },
 };
@@ -716,9 +873,21 @@ export default {
     height: 35px;
     display: flex;
     align-items: center;
-    // margin: 0 auto;
     background-color: #f4f4f4;
     border-radius: 20px;
+    .disable-box {
+      width: 280px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      background-color: #f4f4f4;
+      color: #959393;
+      font-size: 14px;
+      border-radius: 20px;
+      position: absolute;
+      justify-content: center;
+      z-index: 1;
+    }
     .el-textarea {
       .el-textarea__inner {
         padding: 10px !important;
@@ -728,14 +897,6 @@ export default {
       }
     }
     .footer-tools {
-      // text-align: right;
-      .face-other-btn {
-        margin-right: 10px;
-        img {
-          height: 1.2em;
-        }
-      }
-
       .send-button {
         width: 90px;
         padding: 7px 10px;
@@ -748,16 +909,6 @@ export default {
         );
       }
       .face-icon {
-        position: absolute;
-        bottom: 57px;
-        left: 0;
-        background-color: #fff;
-        width: 100%;
-        border-radius: 15px 15px 0 0;
-        box-shadow: 0px 0 7px #ccc;
-        height: 20em;
-        overflow: auto;
-        line-height: 2em;
         .face-icon-box {
           padding: 20px;
           .face-box {
@@ -826,12 +977,6 @@ export default {
         display: block;
       }
       .upload-demo {
-        line-height: 1.5em;
-        .el-upload-list {
-          .el-upload-list__item {
-            margin-top: -72px;
-          }
-        }
         .hidden {
           visibility: hidden;
         }
@@ -885,6 +1030,18 @@ export default {
       }
     }
   }
+  .el-dialog__wrapper.el-upload-img {
+    .el-dialog {
+      width: 500px !important;
+      .el-dialog__body {
+        .preview-img {
+          img {
+            width: 30em;
+          }
+        }
+      }
+    }
+  }
 }
 .hichat-moblie {
   .callout-message {
@@ -897,6 +1054,25 @@ export default {
             line-height: 20px;
             color: #363636;
             word-wrap: break-word;
+          }
+        }
+      }
+    }
+  }
+  .el-dialog__wrapper.el-upload-img {
+    .el-dialog {
+      .el-dialog__body {
+        .upload-demo {
+          .el-upload-list {
+            .el-upload-list__item {
+              width: 90%;
+              float: none;
+            }
+          }
+        }
+        .preview-img {
+          img {
+            width: 9em;
           }
         }
       }

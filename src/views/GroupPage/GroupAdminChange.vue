@@ -78,7 +78,7 @@
     >
       <div class="loginOut-box">
         <div v-if="device === 'moblie'">
-          <img src="./../../../static/images/warn.png" alt="" />
+          <img src="./../../../static/images/warn.svg" alt="" />
         </div>
         <span>确认是否將管理者权限轉移給 {{ checkMember.name }} ？</span>
       </div>
@@ -172,12 +172,12 @@ export default {
       groupListMember({ groupId })
         .then((res) => {
           this.contactList = res.data.list;
-          this.contactList.forEach((res) => {
-            if (res.icon === undefined) {
-              res.icon = require("./../../../static/images/image_user_defult.png");
+          this.contactList.forEach((item) => {
+            if (item.icon === undefined) {
+              item.icon = require("./../../../static/images/image_user_defult.png");
             }
-            if (res.memberId === this.groupData.memberId) {
-              this.checkList = res.memberId;
+            if (item.memberId === this.groupData.memberId) {
+              this.checkList = item.memberId;
             }
           });
           this.newContactList = this.contactList
@@ -275,7 +275,7 @@ export default {
                 position: absolute;
                 margin-top: 0.5em;
                 width: 100%;
-                border-bottom: 0.1em solid rgba(0, 0, 0, 0.05);
+                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
               }
             }
           }
@@ -347,7 +347,7 @@ export default {
         .home-header {
           .home-user-pc {
             background-color: #fff;
-            background-image: url("./../../../static/images/pc/arrow-left.png");
+            background-image: url("./../../../static/images/pc/arrow-left.svg");
             cursor: pointer;
           }
         }

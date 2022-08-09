@@ -1,6 +1,7 @@
 import Vue from "vue";
-var wsUrl = process.env.VUE_APP_SOCKET_URL;//動態環境
-// const wsUrl = `wss://${location.host}/ws/im/echo`;//動態環境
+const baseWsUrl = process.env.NODE_ENV === 'test' ? 'test.hailiao.net':location.host
+const wsUrl = `wss://${baseWsUrl}/ws/im/echo`;//動態環境
+// const wsUrl = `wss://www.hailiao.info/ws/im/echo`;//動態環境
 var socket = new WebSocket(wsUrl);
 const emitter = new Vue({
   data() {
@@ -55,13 +56,7 @@ const emitter = new Vue({
       };
       socket.onclose = function (e) {
         console.log("<--【连线斷開】------自動重新連線-->",e);
-        setTimeout(() => {
-          joinChatKey.chatType = "CLI_AUTH";
-          joinChatKey.id = Math.random();
-          emitter.connect(); 
-          socket.send(JSON.stringify(joinChatKey));
-        }, 1500);
-        
+        setTimeout(() => emitter.connect(), 3000);
       };
     },
   }

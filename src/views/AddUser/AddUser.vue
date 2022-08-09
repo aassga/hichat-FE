@@ -169,6 +169,8 @@ export default {
       addContactUser(parmas).then((res) => {
         if (res.code === 200) {
           this.successDialogShow = true
+        }else if(res.code === 20002){
+          this.disabled = false
         }
       });
     },
@@ -192,7 +194,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.png");
+      background-image: url("./../../../static/images/pc/arrow-left.svg");
     }
   }
   .home-search {

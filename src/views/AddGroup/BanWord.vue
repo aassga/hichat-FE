@@ -48,7 +48,7 @@
                 "
               >
                 <span style="padding-right: 10px" :style="groupPermissionData.addGroup ? 'margin-top:2px; margin-left:4px':''" @click="back()"
-                  ><img src="./../../../static/images/pc/arrow-left.png" alt=""
+                  ><img src="./../../../static/images/pc/arrow-left.svg" alt=""
                 /></span>
                 <span>禁用詞設定</span>
               </div>
@@ -113,7 +113,7 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'"><img src="./../../../static/images/warn.png" alt="" /></div>
+        <div v-if="device === 'moblie'"><img src="./../../../static/images/warn.svg" alt="" /></div>
         <span>是否確定要刪除該則禁用字詞？</span>
       </div>
       <span slot="footer" class="dialog-footer">
@@ -275,7 +275,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.png");
+      background-image: url("./../../../static/images/pc/arrow-left.svg");
       cursor: pointer;
     }
     .home-add-user {

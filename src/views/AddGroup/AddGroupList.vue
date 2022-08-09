@@ -166,7 +166,6 @@
 
 <script>
 import { mapState,mapMutations } from "vuex";
-import { developmentMessage } from "@/assets/tools";
 import { uploadGroupIcon } from "@/api";
 
 export default {
@@ -185,7 +184,6 @@ export default {
       uploadImgShow: false,
       settingGroupShow: false,
       disableEditSubmit: true,
-      developmentMessage: developmentMessage,
       device: localStorage.getItem("device"),
     };
   },
@@ -271,7 +269,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.png");
+      background-image: url("./../../../static/images/pc/arrow-left.svg");
       cursor: pointer;
     }
   }
@@ -292,10 +290,6 @@ export default {
         width: 100%;
         padding-left: 0;
         .address-box {
-          background-color: #ffffff;
-          padding: 0.8em 1em;
-          display: flex;
-          align-items: center;
           .msg-box {
             span {
               display: block;
@@ -306,9 +300,9 @@ export default {
                 content: "";
                 display: block;
                 position: absolute;
-                margin-top: 0.5em;
+                margin-top: 0.65em;
                 width: 100%;
-                border-bottom: 0.1em solid rgba(0, 0, 0, 0.05) ;
+                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
               }
             }
           }

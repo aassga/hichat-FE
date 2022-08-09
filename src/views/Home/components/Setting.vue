@@ -2,7 +2,7 @@
   <div class="home-content" @touchmove="$root.handleTouch">
     <div class="user-data">
       <div class="icon_promotion-img" v-if="device === 'pc'" @click="promotionDialogShow = true">
-        <img src="./../../../../static/images/icon_promotion.png" alt="">
+        <img src="./../../../../static/images/icon_share.png" alt="">
       </div>
       <el-image
         v-if="myUserInfo.icon !== undefined"
@@ -87,7 +87,7 @@
       append-to-body
     >
       <div class="loginOut-box">
-        <div><img src="./../../../../static/images/warn.png" alt="" /></div>
+        <div><img src="./../../../../static/images/warn.svg" alt="" /></div>
         <span>确认要登出嗎？</span>
       </div>
       <span slot="footer" class="dialog-footer">
@@ -135,12 +135,15 @@
 </template>
 
 <script>
+import Socket from "@/utils/socket";
+import { getToken } from "_util/utils.js";
+
 import VueQr from "vue-qr";
 import urlCopy from "@/utils/urlCopy.js";
 import { logout } from "@/api";
-import { Decrypt,Encrypt} from "@/utils/AESUtils.js";
+import { Encrypt} from "@/utils/AESUtils.js";
 
-import { mapState, mapMutations } from "vuex";
+import { mapState } from "vuex";
 import { developmentMessage } from "@/assets/tools";
 
 export default {
@@ -151,19 +154,19 @@ export default {
         {
           name: "密码管理",
           icon: require("./../../../../static/images/safe.png"),
-          pcIcon: require("./../../../../static/images/pc/shield.png"),
+          pcIcon: require("./../../../../static/images/pc/shield.svg"),
           path: "/PasswordMange",
         },
         {
           name: "封锁名单",
           icon: require("./../../../../static/images/blockade_green.png"),
-          pcIcon: require("./../../../../static/images/pc/slash.png"),
+          pcIcon: require("./../../../../static/images/pc/slash.svg"),
           path: "/BlockMange",
         },
         {
           name: "提醒",
           icon: require("./../../../../static/images/notification.png"),
-          pcIcon: require("./../../../../static/images/pc/bell.png"),
+          pcIcon: require("./../../../../static/images/pc/bell.svg"),
           path: "/Notify",
         },
         // {
@@ -210,7 +213,7 @@ export default {
         icon: "",
         name: "编辑个人资料",
         path: "/EditUser",
-        pcIcon: require("./../../../../static/images/pc/edit.png"),
+        pcIcon: require("./../../../../static/images/pc/edit.svg"),
       };
       this.settingData.unshift(this.editMyList);
       this.settingData.forEach((el) => {
@@ -226,6 +229,10 @@ export default {
         this.promoteIv
       )
     )}`; 
+    Socket.$on("message", this.handleGetMessage);
+  },
+  beforeDestroy() {
+    Socket.$off("message", this.handleGetMessage);
   },
   methods: {
     copyUrl() {
@@ -245,29 +252,45 @@ export default {
         duration: 1000,
       });
     },
-    // loginOut() {
-    //   logout().then((res) => {
-    //     if(res.code === 200 && res.message === "登出成功"){
-    //       this.$router.push({ path: "/login" });
-    //       localStorage.removeItem("id");
-    //       localStorage.removeItem("token");
-    //       localStorage.removeItem("myUserInfo");
-    //       localStorage.removeItem("myUserList");
-    //       window.location.reload();
-    //     }
-    //   })
-    //   .catch((err)=>{
-    //     return false
-    //   })
-    // },
     loginOut() {
-      this.$router.push({ path: "/login" });
-      localStorage.removeItem("id");
-      localStorage.removeItem("token");
-      localStorage.removeItem("myUserInfo");
-      localStorage.removeItem("myUserList");
-      window.location.reload();
-    },    
+      logout().then((res) => {
+        if(res.code === 200 && res.message === "登出成功"){
+          this.$router.push({ path: "/login" });
+          localStorage.removeItem("id");
+          localStorage.removeItem("token");
+          localStorage.removeItem("myUserInfo");
+          localStorage.removeItem("myUserList");
+          window.location.reload();
+        }
+      })
+      .catch((err)=>{
+        return false
+      })
+    },
+    // 收取 socket 回来讯息 (全局讯息)
+    handleGetMessage(msg) {
+      let userInfo = JSON.parse(msg);
+      switch (userInfo.chatType) {
+        case "SRV_USER_IMAGE":
+        case "SRV_USER_AUDIO":
+        case "SRV_USER_SEND":
+        case "SRV_GROUP_IMAGE":
+        case "SRV_GROUP_AUDIO":
+        case "SRV_GROUP_SEND":
+          this.getHiChatDataList();
+          break;
+      }
+    },
+    getHiChatDataList() {
+      let chatMsgKey = {
+        chatType: "CLI_RECENT_CHAT",
+        id: Math.random(),
+        tokenType: 0,
+        token: getToken("token"),
+        deviceId: localStorage.getItem("UUID"),
+      };
+      Socket.send(chatMsgKey);
+    },        
   },
   components: {
     VueQr,

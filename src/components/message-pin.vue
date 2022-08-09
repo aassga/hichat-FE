@@ -116,7 +116,7 @@
         </li>
       </div>
     </ul>
-    <div style="width: 95%; text-align: right;">
+    <div style="width: 90%; text-align: right;">
       <el-button
         class="scroll-bottom-btn"
         v-show="showScrollBar"
@@ -130,10 +130,10 @@
 </template>
 
 <script>
-import Socket from "@/utils/socket";
 import { mapState, mapMutations } from "vuex";
 import { unpinHistory, pinList } from "@/api";
-import { Encrypt, Decrypt } from "@/utils/AESUtils.js";
+import AESBase64 from "@/utils/AESBase64.js";
+
 
 export default {
   name: "MessagePabel",
@@ -176,7 +176,10 @@ export default {
       "scroll",
       () => {
         let scrollTop =  document.querySelector(".message-pabel-box")
-        this.showScrollBar = !(scrollTop.scrollHeight -  scrollTop.scrollTop ===  scrollTop.clientHeight)
+        this.showScrollBar = !(
+          (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.199951171875 : 0.60009765625)  <=
+          scrollTop.clientHeight
+        );
       },
       true
     );
@@ -221,17 +224,9 @@ export default {
         }
       });
     },
+    //判斷是否base64
     isBase64(data) {
-      var base64Rejex =
-        /^(?:[A-Z0-9+\/]{4})*(?:[A-Z0-9+\/]{2}==|[A-Z0-9+\/]{3}=|[A-Z0-9+\/]{4})$/i;
-      if (!base64Rejex.test(data)) {
-        return data;
-      }
-      try {
-        return Decrypt(data, this.aesKey, this.aesIv);
-      } catch (err) {
-        return data;
-      }
+      return AESBase64(data, this.aesKey ,this.aesIv)
     },
     noIconShow(iconData) {
       if ([undefined, null, ""].includes(iconData.icon)) {
@@ -269,14 +264,14 @@ export default {
       let item = [
         {
           name: "copy",
-          label: "複製",
+          label: "复制",
           onClick: () => {
             this.copyPaste(data);
           },
         },
         {
           name: "download",
-          label: "下載",
+          label: "下载",
           onClick: () => {
             this.downloadImages(data);
           },
@@ -647,13 +642,13 @@ export default {
     .message-audio {
       width: 190px;
       height: 2.5em;
-      // margin-top: 1em;
+      
       display: inline-block;
       // border: 1px solid #eeeeee;
     }
     .message-image {
       position: relative;
-      // margin-top: 1em;
+      
       display: inline-block;
       padding: 5px 6px 2px 6px;
       color: #333333;
@@ -666,7 +661,7 @@ export default {
     }
     .message-mini-audio {
       position: relative;
-      // margin-top: 1em;
+      
       display: inline-block;
       border-radius: 10px;
     }

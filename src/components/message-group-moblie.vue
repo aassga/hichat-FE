@@ -5,252 +5,279 @@
         <div class="now-time">
           <span>{{ index }}</span>
         </div>
-        <li
-          v-for="(el, index) in item"
-          :key="index"
-          :class="judgeClass(item[index])"
-        >
-          <template
-            v-if="
-              el.chatType !== 'SRV_CHAT_PIN' && 
-              el.chatType !== 'SRV_GROUP_DEL' && 
-              el.chatType !== 'SRV_GROUP_JOIN' &&
-              el.chatType !== 'SRV_GROUP_REMOVE_MANAGER_HISTORY' &&
-              el.chatType !== 'SRV_GROUP_ADD_MANAGER_HISTORY' &&
-              el.chatType !== 'SRV_GROUP_CHANGE_ADMIN_HISTORY' 
-            "
+        <el-checkbox-group v-model="checkList">
+          <el-checkbox
+            v-for="(el, index) in item"
+            :key="index"
+            :label="el"
+            :disabled="showCheckBtn(checkBoxDisabled, el)"
+            :class="judgeClass(item[index])"
           >
-            <img class="message-avatar" :src="el.icon" />
-            <p
-              :class="[
-                {
-                  'reply-aduio':
-                    device === 'moblie' &&
-                    el.isRplay !== null &&
-                    el.isRplay.chatType === 'SRV_GROUP_AUDIO',
-                },
-                {
-                  reply: el.isRplay !== null,
-                },
-              ]"
-              :id="el.historyId"
-            >
-              <span
-                class="message-classic"
-                v-if="el.chatType === 'SRV_GROUP_SEND'"
-                @contextmenu.prevent.stop="onContextmenu(el)"
-                @dblclick="dblclick(el)"
-                :id="el.historyId"
+            <li>
+              <template
+                v-if="
+                  ![
+                    'SRV_CHAT_PIN',
+                    'SRV_GROUP_DEL',
+                    'SRV_GROUP_JOIN',
+                    'SRV_GROUP_REMOVE_MANAGER_HISTORY',
+                    'SRV_GROUP_ADD_MANAGER_HISTORY',
+                    'SRV_GROUP_CHANGE_ADMIN_HISTORY',
+                  ].includes(el.chatType)
+                "
               >
-                <div class="message-box">
-                  <div class="message-name">{{ el.name }}</div>
-                  <template v-if="el.isRplay !== null">
-                    <div
-                      class="reply-box"
-                      @click="goAnchor(el.isRplay.historyId)"
-                    >
-                      <div class="reply-img">
-                        <img :src="noIconShow(el.isRplay)" alt="" />
+                <img class="message-avatar" :src="el.icon" />
+                <p
+                  :class="[
+                    {
+                      'reply-aduio':
+                        device === 'moblie' &&
+                        el.isRplay !== null &&
+                        el.isRplay.chatType === 'SRV_GROUP_AUDIO',
+                    },
+                    {
+                      reply: el.isRplay !== null,
+                    },
+                  ]"
+                  :id="el.historyId"
+                >
+                  <span
+                    v-if="el.chatType === 'SRV_GROUP_SEND'"
+                    class="message-classic"
+                    @contextmenu.prevent.stop="onContextmenu(el)"
+                    @dblclick="dblclick(el)"
+                  >
+                    <div class="message-box">
+                      <div
+                        class="message-name"
+                        :style="
+                          IsURL(isBase64(el.message.content))
+                            ? 'padding-right:36px'
+                            : ''
+                        "
+                      >
+                        {{ el.name }}
                       </div>
-                      <div class="reply-msg">
-                        <div style="color: rgba(0, 0, 0, 0.4)">
-                          {{ el.isRplay.nickName }}
-                        </div>
-                        <div>
-                          <div class="goAnchor-box">
-                            <span
-                              v-if="el.isRplay.chatType === 'SRV_GROUP_SEND'"
-                              class="goAnchor"
-                              >{{ isBase64(el.isRplay.text) }}</span
-                            >
-                            <img
-                              v-if="el.isRplay.chatType === 'SRV_GROUP_IMAGE'"
-                              :src="isBase64(el.isRplay.text)"
-                              style="border-radius: 5px"
-                            />
-                            <div class="reply-audio-box"></div>
-                            <mini-audio
-                              v-if="el.isRplay.chatType === 'SRV_GROUP_AUDIO'"
-                              :audio-source="isBase64(el.isRplay.text)"
-                            ></mini-audio>
+                      <template v-if="el.isRplay !== null">
+                        <div
+                          class="reply-box"
+                          @click="goAnchor(el.isRplay.historyId)"
+                        >
+                          <div class="reply-img">
+                            <img :src="noIconShow(el.isRplay)" alt="" />
+                          </div>
+                          <div class="reply-msg">
+                            <div style="color: rgba(0, 0, 0, 0.4)">
+                              {{ el.isRplay.nickName }}
+                            </div>
+                            <div>
+                              <div class="goAnchor-box">
+                                <span
+                                  v-if="
+                                    el.isRplay.chatType === 'SRV_GROUP_SEND'
+                                  "
+                                  class="goAnchor"
+                                  >{{ isBase64(el.isRplay.text) }}</span
+                                >
+                                <img
+                                  v-if="
+                                    el.isRplay.chatType === 'SRV_GROUP_IMAGE'
+                                  "
+                                  :src="isBase64(el.isRplay.text)"
+                                  style="border-radius: 5px"
+                                />
+                                <div class="reply-audio-box"></div>
+                                <mini-audio
+                                  v-if="
+                                    el.isRplay.chatType === 'SRV_GROUP_AUDIO'
+                                  "
+                                  :audio-source="isBase64(el.isRplay.text)"
+                                ></mini-audio>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </template>
-                  <div
-                    class="message-box-content"
-                    :class="{
-                      'reply-content': el.isRplay !== null,
-                    }"
-                  >
-                    <div v-if="device === 'pc'">
-                      <span
-                        v-for="(item, index) in el.newContent"
-                        :key="index"
+                      </template>
+
+                      <div
+                        v-if="device === 'pc'"
                         :class="{
-                          'message-touch-carte':
-                            item.startsWith('@') && item.length > 1,
+                          'reply-content': el.isRplay !== null,
                         }"
                       >
                         <span
-                          v-html="item"
-                          v-linkified
-                        ></span>
-                          <!-- @click="
-                            item.startsWith('@')
-                              ? carteMsgShow(item.replace(/[\@|\s*]/g, ''))
-                              : false
-                          " -->
-                      </span>
-                    </div>
-
-                    <div v-else>
-                      <div
-                        v-for="(item, index) in el.newContent"
-                        :key="index"
-                        :class="{
-                          'message-touch-carte':
-                            item.startsWith('@') && item.length > 1,
-                        }"
-                      >
-                        <div
-                          v-if="
-                            item.match(/(http|https):\/\/([\w.]+\/?)\S*/gi) ===
-                            null
-                          "
-                          @click.prevent.stop="
-                            !item.startsWith('@') ? onContextmenu(el) : false
-                          "
+                          v-for="(item, index) in el.newContent"
+                          :key="index"
+                          :class="{
+                            'message-touch-carte':
+                              item.startsWith('@') && item.length > 1,
+                          }"
                         >
-                          <span
-                            v-html="item"
-                          ></span>
-                            <!-- @click="
+                          <vue-markdown :anchor-attributes="linkAttrs">{{
+                            item
+                          }}</vue-markdown>
+
+                          <!-- @click="
                               item.startsWith('@')
                                 ? carteMsgShow(item.replace(/[\@|\s*]/g, ''))
                                 : false
                             " -->
-                        </div>
+                        </span>
+                      </div>
+
+                      <div
+                        v-else
+                        :class="{
+                          'reply-content': el.isRplay !== null,
+                        }"
+                      >
                         <div
-                          v-else-if="
-                            item.match(/(http|https):\/\/([\w.]+\/?)\S*/gi)
-                          "
+                          v-for="(item, index) in el.newContent"
+                          :key="index"
+                          :class="{
+                            'message-touch-carte':
+                              item.startsWith('@') && item.length > 1,
+                          }"
                         >
                           <div
-                            v-if="device === 'moblie'"
-                            class="images-more-btn"
-                            style="top: 5px"
+                            v-if="!IsURL(item)"
                             @click.prevent.stop="
-                              device === 'moblie' ? onContextmenu(el) : false
+                              !item.startsWith('@') ? onContextmenu(el) : false
                             "
                           >
-                            <i class="el-icon-more"></i>
+                            <span v-html="item"></span>
+                            <!-- @click="
+                                item.startsWith('@')
+                                  ? carteMsgShow(item.replace(/[\@|\s*]/g, ''))
+                                  : false
+                              " -->
                           </div>
-                          <div
-                            v-html="item"
-                            v-linkified
-                            :class="device === 'moblie' ? 'link-style' : ''"
-                          ></div>
+                          <div v-else-if="IsURL(item)">
+                            <div
+                              v-if="device === 'moblie'"
+                              class="images-more-btn"
+                              style="top: 5px"
+                              @click.prevent.stop="
+                                device === 'moblie' ? onContextmenu(el) : false
+                              "
+                            >
+                              <i class="el-icon-more"></i>
+                            </div>
+                            <vue-markdown
+                              :class="device === 'moblie' ? 'link-style' : ''"
+                              :anchor-attributes="linkAttrs"
+                              >{{ item }}</vue-markdown
+                            >
+                          </div>
+                          <span v-else v-html="item"></span>
                         </div>
-                        <span v-else v-html="item"></span>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </span>
-              <span
-                class="message-audio"
-                v-else-if="el.chatType === 'SRV_GROUP_AUDIO'"
-                @contextmenu.prevent.stop="onContextmenu(el)"
-                @dblclick="dblclick(el)"
-              >
-                <div class="message-box">
-                  <div class="message-name">{{ el.name }}</div>
-                  <div
-                    v-if="device === 'moblie'"
-                    class="images-more-btn"
-                    @click.prevent.stop="
-                      device === 'moblie' ? onContextmenu(el) : false
-                    "
+                  </span>
+                  <span
+                    class="message-audio"
+                    v-else-if="el.chatType === 'SRV_GROUP_AUDIO'"
+                    @contextmenu.prevent.stop="onContextmenu(el)"
+                    @dblclick="dblclick(el)"
                   >
-                    <i class="el-icon-more"></i>
-                  </div>
-                  <mini-audio :audio-source="isBase64(el.message.content)"></mini-audio>
-                </div>
-              </span>
-              <span
-                class="message-image"
-                v-else-if="el.chatType === 'SRV_GROUP_IMAGE'"
-                @contextmenu.prevent.stop="onContextmenu(el)"
-                @dblclick="dblclick(el)"
-              >
-                <div class="message-box">
-                  <div class="message-name">{{ el.name }}</div>
-                  <div
-                    v-if="device === 'moblie'"
-                    class="images-more-btn"
-                    @click.prevent.stop="
-                      device === 'moblie' ? onContextmenu(el) : false
-                    "
+                    <div class="message-box">
+                      <div class="message-name">{{ el.name }}</div>
+                      <div
+                        v-if="device === 'moblie'"
+                        class="images-more-btn"
+                        @click.prevent.stop="
+                          device === 'moblie' ? onContextmenu(el) : false
+                        "
+                      >
+                        <i class="el-icon-more"></i>
+                      </div>
+                      <mini-audio
+                        :audio-source="isBase64(el.message.content)"
+                      ></mini-audio>
+                    </div>
+                  </span>
+                  <span
+                    class="message-image"
+                    v-else-if="el.chatType === 'SRV_GROUP_IMAGE'"
+                    @contextmenu.prevent.stop="onContextmenu(el)"
+                    @dblclick="dblclick(el)"
                   >
-                    <i class="el-icon-more"></i>
-                  </div>
-                  <el-image
-                    :src="isBase64(el.message.content)"
-                    :preview-src-list="[isBase64(el.message.content)]"
-                  ></el-image>
+                    <div class="message-box">
+                      <div class="message-name" style="padding-right: 36px">
+                        {{ el.name }}
+                      </div>
+                      <div
+                        v-if="device === 'moblie'"
+                        class="images-more-btn"
+                        @click.prevent.stop="
+                          device === 'moblie' ? onContextmenu(el) : false
+                        "
+                      >
+                        <i class="el-icon-more"></i>
+                      </div>
+                      <el-image
+                        :src="isBase64(el.message.content)"
+                        :preview-src-list="[isBase64(el.message.content)]"
+                      ></el-image>
+                    </div>
+                  </span>
+
+                  <span class="nickname-time">{{
+                    $root.formatTimeSecound(el.message.time)
+                  }}</span>
+                </p>
+
+                <div class="read-check-box">
+                  <span class="read-check" v-if="el.isRead"
+                    ><img src="./../../static/images/check.png" alt=""
+                  /></span>
+                  <span class="read-check2"
+                    ><img src="./../../static/images/check.png" alt=""
+                  /></span>
                 </div>
-              </span>
-
-              <span class="nickname-time">{{
-                $root.formatTimeSecound(el.message.time)
-              }}</span>
-            </p>
-
-            <div class="read-check-box">
-              <span class="read-check" v-if="el.isRead"
-                ><img src="./../../static/images/check.png" alt=""
-              /></span>
-              <span class="read-check2"
-                ><img src="./../../static/images/check.png" alt=""
-              /></span>
-            </div>
-          </template>
-          <template v-else-if="el.chatType === 'SRV_CHAT_PIN'">
-            <div class="top-msg-style">
-              <span>{{ pinUserName(el) }}置顶了一則訊息</span>
-            </div>
-          </template>
-          <template v-else-if="el.chatType === 'SRV_GROUP_DEL'">
-            <div class="top-msg-style">
-              <span>{{ pinUserName(el) }}離開了聊天室</span>
-            </div>
-          </template>
-          <template v-else-if="el.chatType === 'SRV_GROUP_JOIN'">
-            <div class="top-msg-style">
-              <span>{{ pinUserName(el) }}加入了聊天室</span>
-            </div>
-          </template>
-          <template v-else-if="el.chatType === 'SRV_GROUP_ADD_MANAGER_HISTORY'">
-            <div class="top-msg-style">
-              <span>{{ pinUserName(el) }}已被指定為管理員</span>
-            </div>
-          </template>          
-          <template v-else-if="el.chatType === 'SRV_GROUP_REMOVE_MANAGER_HISTORY'">
-            <div class="top-msg-style">
-              <span>{{ pinUserName(el) }}已被解除管理員身份</span>
-            </div>
-          </template>
-          <template v-else-if="el.chatType === 'SRV_GROUP_CHANGE_ADMIN_HISTORY'">
-            <div class="top-msg-style">
-              <span>群主變更為{{ pinUserName(el) }}</span>
-            </div>
-          </template>
-        </li>
+              </template>
+              <template v-else-if="el.chatType === 'SRV_CHAT_PIN'">
+                <div class="top-msg-style">
+                  <span>{{ pinUserName(el) }}置顶了一則訊息</span>
+                </div>
+              </template>
+              <template v-else-if="el.chatType === 'SRV_GROUP_DEL'">
+                <div class="top-msg-style">
+                  <span>{{ pinUserName(el) }}離開了聊天室</span>
+                </div>
+              </template>
+              <template v-else-if="el.chatType === 'SRV_GROUP_JOIN'">
+                <div class="top-msg-style">
+                  <span>{{ pinUserName(el) }}加入了聊天室</span>
+                </div>
+              </template>
+              <template
+                v-else-if="el.chatType === 'SRV_GROUP_ADD_MANAGER_HISTORY'"
+              >
+                <div class="top-msg-style">
+                  <span>{{ pinUserName(el) }}已被指定為管理員</span>
+                </div>
+              </template>
+              <template
+                v-else-if="el.chatType === 'SRV_GROUP_REMOVE_MANAGER_HISTORY'"
+              >
+                <div class="top-msg-style">
+                  <span>{{ pinUserName(el) }}已被解除管理員身份</span>
+                </div>
+              </template>
+              <template
+                v-else-if="el.chatType === 'SRV_GROUP_CHANGE_ADMIN_HISTORY'"
+              >
+                <div class="top-msg-style">
+                  <span>群主變更為{{ pinUserName(el) }}</span>
+                </div>
+              </template>
+            </li>
+          </el-checkbox>
+        </el-checkbox-group>
       </div>
     </ul>
-    <div style="width: 95%; text-align: right">
+    <div style="width: 90%; text-align: right">
       <el-button
         class="scroll-bottom-btn"
         v-show="showScrollBar"
@@ -260,40 +287,6 @@
         @click="$root.gotoBottom()"
       ></el-button>
     </div>
-    <el-dialog
-      title="上傳圖片"
-      :visible.sync="uploadShow"
-      class="el-dialog-takePicture"
-      center
-      :close-on-click-modal="false"
-      style="600px"
-    >
-      <el-upload
-        center
-        drag
-        :limit="1"
-        action="#"
-        multiple
-        :on-change="uploadImg"
-        :auto-upload="false"
-        :file-list="fileList"
-        list-type="picture"
-      >
-        <i class="el-icon-upload"></i>
-        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-        <div class="el-upload__tip" slot="tip">
-          只能上传jpg/png文件，且不超过500kb
-        </div>
-      </el-upload>
-      <span slot="footer" class="dialog-footer">
-        <el-button class="background-gray" @click="uploadShow = false"
-          >取消</el-button
-        >
-        <el-button class="background-orange" @click="submitAvatarUpload"
-          >确认</el-button
-        >
-      </span>
-    </el-dialog>
   </div>
 </template>
 
@@ -301,12 +294,13 @@
 import { mapState, mapMutations } from "vuex";
 import {
   deleteRecentChat,
-  uploadMessageImage,
   pinHistory,
   unpinHistory,
   getGroupAuthoritySetting,
 } from "@/api";
-import { Decrypt } from "@/utils/AESUtils.js";
+import AESBase64 from "@/utils/AESBase64.js";
+
+import VueMarkdown from "vue-markdown";
 
 export default {
   name: "MessagePabel",
@@ -320,18 +314,28 @@ export default {
     timeOut: {
       type: Number,
     },
+    showCheckBoxBtn: {
+      type: Boolean,
+    },
+    checkDataList: {
+      type: Array,
+    },
   },
   data() {
     return {
       newData: [],
       message: [],
+      checkList: [],
       newMessageData: {},
+      checkBoxDisabled: true,
       fullscreenLoading: false,
       fileList: [],
       device: localStorage.getItem("device"),
       showScrollBar: false,
-      uploadShow: false,
-
+      linkAttrs: {
+        target: "_blank",
+        class: "linkified",
+      },
       //加解密 key iv
       aesKey: "hichatisachatapp",
       aesIv: "hichatisachatapp",
@@ -339,18 +343,27 @@ export default {
   },
   created() {
     this.groupData = JSON.parse(localStorage.getItem("groupData"));
-    this.setMyUserInfo(JSON.parse(localStorage.getItem("myUserInfo")))
+    this.setMyUserInfo(JSON.parse(localStorage.getItem("myUserInfo")));
     this.getGroupAuthority();
   },
   computed: {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
-      myUserInfo: (state) => state.ws.myUserInfo,      
+      myUserInfo: (state) => state.ws.myUserInfo,
       contactListData: (state) => state.ws.contactListData,
       goAnchorMessage: (state) => state.ws.goAnchorMessage,
     }),
   },
   watch: {
+    showCheckBoxBtn(val) {
+      this.checkBoxDisabled = val;
+    },
+    checkList(val) {
+      this.$emit("isCheckDataList", val);
+    },
+    checkDataList(val) {
+      this.checkList = val;
+    },
     messageData(val) {
       //去除重复
       const set = new Set();
@@ -368,6 +381,7 @@ export default {
         });
         this.newMessageData[this.$root.formatTimeDay(el.message.time)] =
           newData;
+          
       });
       this.$root.gotoBottom();
     },
@@ -378,7 +392,7 @@ export default {
       () => {
         let scrollTop = document.querySelector(".message-pabel-box");
         this.showScrollBar = !(
-          scrollTop.scrollHeight - scrollTop.scrollTop ===
+          (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.2001953125 : 0.60009765625)  <=
           scrollTop.clientHeight
         );
       },
@@ -398,9 +412,34 @@ export default {
       setEditMsg: "ws/setEditMsg",
       setChatUser: "ws/setChatUser",
       setReplyMsg: "ws/setReplyMsg",
-      setMyUserInfo:"ws/setMyUserInfo",
+      setMyUserInfo: "ws/setMyUserInfo",
       setGoAnchorMessage: "ws/setGoAnchorMessage",
     }),
+    showCheckBtn(status, data) {
+      if (status) {
+        return status;
+      } else if (!status) {
+        if (
+          ["SRV_GROUP_SEND", "SRV_GROUP_IMAGE", "SRV_GROUP_AUDIO"].includes(
+            data.chatType
+          )
+        ) {
+          return status;
+        } else {
+          return !status;
+        }
+      }
+    },
+    IsURL(str_url) {
+      var strRegex =
+        /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
+      var re = new RegExp(strRegex);
+      if (re.test(str_url)) {
+        return true;
+      } else {
+        return false;
+      }
+    },
     uploadImg(file, fileList) {
       this.fileList = fileList;
     },
@@ -428,17 +467,9 @@ export default {
         document.getElementById(data).classList.remove("blink");
       }, 3000);
     },
+    //判斷是否base64
     isBase64(data) {
-      var base64Rejex =
-        /^(?:[A-Z0-9+\/]{4})*(?:[A-Z0-9+\/]{2}==|[A-Z0-9+\/]{3}=|[A-Z0-9+\/]{4})$/i;
-      if (!base64Rejex.test(data)) {
-        return data;
-      }
-      try {
-        return Decrypt(data, this.aesKey, this.aesIv);
-      } catch (err) {
-        return data;
-      }
+      return AESBase64(data, this.aesKey ,this.aesIv)
     },
     noIconShow(iconData) {
       if ([undefined, null, ""].includes(iconData.icon)) {
@@ -447,33 +478,7 @@ export default {
         return iconData.icon;
       }
     },
-    // 上傳圖片
-    submitAvatarUpload() {
-      let formData = new FormData();
-      formData.append("file", this.fileList[0].raw);
-      this.fullscreenLoading = true;
-      uploadMessageImage(formData).then((res) => {
-        if (res.code === 200) {
-          let message = this.userInfoData;
-          message.chatType = "CLI_GROUP_IMAGE";
-          message.id = Math.random();
-          message.fromChatId = "u" + localStorage.getItem("id");
-          message.toChatId = this.chatUser.toChatId;
-          (message.text = Encrypt(res.data, this.aesKey, this.aesIv)), //TODO 加密
-            // message.text = res.data,
-            this.soundNofiy.forEach((res) => {
-              if (res.key === "group" && res.isNofity) this.audioAction();
-            });
-          Socket.send(message);
-          this.fileList = [];
-          this.uploadImgShow = false;
-          this.fullscreenLoading = false;
-        } else if (res.code === 40001) {
-          this.fileList = [];
-          this.fullscreenLoading = false;
-        }
-      });
-    },
+
     audioAction() {
       let audioEl = document.getElementById("notify-send-audio");
       var playPromise = audioEl.play();
@@ -508,20 +513,14 @@ export default {
         return;
       } else {
         this.carteContact[0].toChatId = "u" + this.carteContact[0].memberId;
-        if (this.device === "moblie") {
-          if (
-            data === JSON.parse(localStorage.getItem("myUserInfo")).username
-          ) {
-            this.$message({ message: "此即为您的帐号", type: "warning" });
-          } else {
-            this.$router.push({ name: "ContactPage" });
-          }
+        if (
+          data === JSON.parse(localStorage.getItem("myUserInfo")).username
+        ) {
+          this.$message({ message: "此即为您的帐号", type: "warning" });
         } else {
-          if (
-            data === JSON.parse(localStorage.getItem("myUserInfo")).username
-          ) {
-            this.$message({ message: "此即为您的帐号", type: "warning" });
-          } else {
+          if (this.device === "moblie"){
+            this.$router.push({ name: "ContactPage" });
+          } else{
             this.carteContact[0].type = "address";
             this.setInfoMsg({
               infoMsgShow: true,
@@ -531,7 +530,6 @@ export default {
           }
         }
       }
-
       this.setChatUser(this.carteContact[0]);
     },
     dblclick(event) {
@@ -548,7 +546,7 @@ export default {
       let item = [
         {
           name: "edit",
-          label: "編輯",
+          label: "编辑",
           onClick: () => {
             this.setReplyMsg({
               chatType: data.chatType,
@@ -563,11 +561,12 @@ export default {
         },
         {
           name: "copy",
-          label: "複製",
+          label: "复制",
           onClick: () => {
             this.copyPaste(data);
           },
         },
+
         {
           name: "reply",
           label: "回覆",
@@ -584,14 +583,14 @@ export default {
         },
         {
           name: "download",
-          label: "下載",
+          label: "下载",
           onClick: () => {
             this.downloadImages(data);
           },
         },
         {
           name: "upDown",
-          label: data.isPing ? "取消置頂" : "置顶訊息",
+          label: data.isPing ? "取消置顶" : "置顶訊息",
           onClick: () => {
             this.topMsgAction(data, data.isPing);
           },
@@ -612,123 +611,97 @@ export default {
             this.deleteRecent(data, "only");
           },
         },
+        {
+          name: "choose",
+          label: this.checkBoxDisabled ? "选择" : "取消选择",
+          onClick: () => {
+            this.checkList = [];
+            this.checkBoxDisabled = !this.checkBoxDisabled;
+            this.$emit("checkBoxDisabled", this.checkBoxDisabled);
+          },
+        },
       ];
+      let isAdmin = JSON.parse(localStorage.getItem("groupData")).isAdmin;
+      let isManager = JSON.parse(localStorage.getItem("groupData")).isManager;
+
       if (data.userChatId !== "u" + localStorage.getItem("id")) {
-        if (
-          data.chatType === "SRV_GROUP_IMAGE" ||
-          data.chatType === "SRV_GROUP_AUDIO"
-        ) {
-          if (data.chatType === "SRV_GROUP_AUDIO") {
-            if(JSON.parse(localStorage.getItem("groupData")).isAdmin){
-              this.newItem = item.filter((list) => {
-                return (
-                  list.name !== "edit" &&
-                  list.name !== "copy" &&
-                  list.name !== "download"
-                );
-              });
-            }else if(JSON.parse(localStorage.getItem("groupData")).isManager){
-              if (JSON.parse(localStorage.getItem("authority")).delUserMessage) {
-                this.newItem = item.filter((list) => {
-                  return (
-                    list.name !== "edit" &&
-                    list.name !== "copy" &&
-                    list.name !== "download"
-                  );
-                });
-              }
-            }else{
-              this.newItem = item.filter((list) => {
-                return (
-                  list.name !== "deleteAllChat" &&
-                  list.name !== "edit" &&
-                  list.name !== "copy" &&
-                  list.name !== "download"
-                );
-              });
-            }
-          } else {
-            if(JSON.parse(localStorage.getItem("groupData")).isAdmin){
-              this.newItem = item.filter((list) => {
-                return (
-                  list.name !== "edit" &&
-                  list.name !== "copy"
-                );
-              });
-            }else if(JSON.parse(localStorage.getItem("groupData")).isManager){
-              if (JSON.parse(localStorage.getItem("authority")).delUserMessage) {
-                this.newItem = item.filter((list) => {
-                  return list.name !== "edit" && list.name !== "copy";
-                });
-              }
-            }else{
-              this.newItem = item.filter((list) => {
-                return (
-                  list.name !== "deleteAllChat" &&
-                  list.name !== "edit" &&
-                  list.name !== "copy"
-                );
-              });
-            }
-          }
-        } else if(JSON.parse(localStorage.getItem("groupData")).isAdmin){
-          this.newItem = item.filter((list) => {
-            return (
-              list.name !== "edit" &&
-              list.name !== "download"
+        if (data.chatType === "SRV_GROUP_AUDIO") {
+          if (
+            isAdmin ||
+            (isManager &&
+              JSON.parse(localStorage.getItem("authority")).delUserMessage)
+          ) {
+            this.newItem = item.filter(
+              (list) => !["edit", "copy", "download"].includes(list.name)
             );
-          });
-        } else if (JSON.parse(localStorage.getItem("groupData")).isManager) {
-          if (JSON.parse(localStorage.getItem("authority")).delUserMessage) {
-            this.newItem = item.filter((list) => {
-              return list.name !== "edit" && list.name !== "download";
-            });
           } else {
-            this.newItem = item.filter((list) => {
-              return (
-                list.name !== "edit" &&
-                list.name !== "download" &&
-                list.name !== "deleteAllChat"
-              );
-            });
+            this.newItem = item.filter(
+              (list) =>
+                !["deleteAllChat", "edit", "copy", "download"].includes(
+                  list.name
+                )
+            );
+          }
+        } else if (data.chatType === "SRV_GROUP_IMAGE") {
+          if (
+            isAdmin ||
+            (isManager &&
+              JSON.parse(localStorage.getItem("authority")).delUserMessage)
+          ) {
+            this.newItem = item.filter(
+              (list) => !["edit", "copy"].includes(list.name)
+            );
+          } else {
+            this.newItem = item.filter(
+              (list) => !["deleteAllChat", "edit", "copy"].includes(list.name)
+            );
           }
         } else {
-          this.newItem = item.filter((list) => {
-            return (
-              list.name !== "deleteAllChat" &&
-              list.name !== "edit" &&
-              list.name !== "download"
+          if (
+            isAdmin ||
+            (isManager &&
+              JSON.parse(localStorage.getItem("authority")).delUserMessage)
+          ) {
+            this.newItem = item.filter(
+              (list) => !["edit", "download"].includes(list.name)
             );
-          });
+          } else {
+            this.newItem = item.filter(
+              (list) =>
+                !["deleteAllChat", "edit", "download"].includes(list.name)
+            );
+          }
         }
       } else {
-        if (
-          data.chatType === "SRV_GROUP_IMAGE" ||
-          data.chatType === "SRV_GROUP_AUDIO"
-        ) {
-          if (data.chatType === "SRV_GROUP_IMAGE") {
-            this.newItem = item.filter((list) => {
-              return list.name !== "edit" && list.name !== "copy";
-            });
-          } else {
-            this.newItem = item.filter((list) => {
-              return (
-                list.name !== "edit" &&
-                list.name !== "copy" &&
-                list.name !== "download"
-              );
-            });
-          }
+        if (data.chatType === "SRV_GROUP_IMAGE") {
+          this.newItem = item.filter(
+            (list) => !["edit", "copy"].includes(list.name)
+          );
+        } else if (data.chatType === "SRV_GROUP_AUDIO") {
+          this.newItem = item.filter(
+            (list) => !["edit", "copy", "download"].includes(list.name)
+          );
         } else {
           this.newItem = item.filter((list) => {
             return list.name !== "download";
           });
         }
       }
-      if (
-        !JSON.parse(localStorage.getItem("groupData")).isAdmin &&
-        !JSON.parse(localStorage.getItem("groupData")).isManager
-      ) {
+
+      if (isManager) {
+        if (
+          JSON.parse(localStorage.getItem("groupAuthority")).pin ||
+          JSON.parse(localStorage.getItem("authority")).pin
+        ) {
+          this.newItem = this.newItem.filter((list) => {
+            return list.name !== "edit";
+          });
+        } else {
+          this.newItem = this.newItem.filter((list) => {
+            return list.name !== "edit" && list.name !== "upDown";
+          });
+        }
+      } else if (!isAdmin && !isManager) {
         if (!JSON.parse(localStorage.getItem("groupAuthority")).pin) {
           this.newItem = this.newItem.filter((list) => {
             return list.name !== "upDown";
@@ -736,21 +709,8 @@ export default {
         }
       }
 
-      if(JSON.parse(localStorage.getItem("groupData")).isManager){
-        if(JSON.parse(localStorage.getItem("groupAuthority")).pin || JSON.parse(localStorage.getItem("authority")).pin){
-          this.newItem = this.newItem.filter((list)=>{
-            return (
-                list.name !== "edit" 
-              );
-          })
-        }else {
-          this.newItem = this.newItem.filter((list)=>{
-            return (
-              list.name !== "edit" &&
-              list.name !== "upDown" 
-            );
-          })
-        }
+      if (!this.checkBoxDisabled) {
+        this.newItem = item.filter((list) => list.name === "choose");
       }
 
       this.$contextmenu({
@@ -817,7 +777,6 @@ export default {
       let url = document.createElement("textarea");
       document.body.appendChild(url);
       url.value = this.isBase64(data.message.content).replace(/(\s*$)/g, "");
-      console.log(url.value)
       url.select();
       document.execCommand("copy");
       document.body.removeChild(url);
@@ -847,10 +806,33 @@ export default {
         });
     },
   },
+  components: {
+    VueMarkdown,
+  },
 };
 </script>
 
 <style lang="scss" scoped>
+.hichat-pc {
+  .message-pabel-box {
+    .message-styles-box {
+      .message-layout-left,
+      .message-layout-right {
+        /deep/.el-checkbox__input {
+          .el-checkbox__inner {
+            width: 20px;
+            height: 20px;
+            &:after {
+              height: 12px;
+              width: 6px;
+              left: 5px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
 .message-pabel-box {
   padding: 0 10px 0 20px;
   flex: 1;
@@ -873,6 +855,22 @@ export default {
     .message-layout-right {
       margin-top: 20px;
       width: 100%;
+      //TODO
+      display: flex;
+      align-items: center;
+      /deep/.el-checkbox__input {
+        .el-checkbox__inner {
+          border-radius: 10px;
+        }
+      }
+      /deep/.el-checkbox__label {
+        width: 100%;
+        white-space: normal;
+        cursor: initial;
+      }
+      /deep/.is-disabled {
+        display: none;
+      }
     }
 
     .message-layout-left {
@@ -938,14 +936,15 @@ export default {
       }
       .message-image {
         position: relative;
-        // margin-top: 1em;
         display: inline-block;
         padding: 9px 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
         background-color: rgba(0, 0, 0, 0.05);
-        border-radius: 10px;
+        border-radius: 0 8px 8px 8px;
         .message-box {
           .message-name {
-            padding: 10px 0;
+            padding: 0 0 10px 0;
           }
           .el-image {
             width: -webkit-fill-available !important;
@@ -1018,12 +1017,12 @@ export default {
       }
       .message-image {
         position: relative;
-        // margin-top: 1em;
+
         display: inline-block;
         padding: 5px 6px 2px 6px;
         color: #333333;
         background-color: #e5e4e4;
-        border-radius: 10px;
+        border-radius: 8px 0 8px 8px;
         .el-image {
           width: -webkit-fill-available !important;
           height: 9em !important;
@@ -1057,12 +1056,10 @@ export default {
     .message-disabled {
       position: relative;
       max-width: 100%;
-      // margin-top: 5px;
       display: inline-block;
       padding: 9px 12px;
       font-size: 14px;
       color: #333333;
-      white-space: pre-line;
       word-break: break-all;
       .red {
         height: 1.5em;
@@ -1074,12 +1071,8 @@ export default {
     .message-audio {
       width: 190px;
       height: 2.5em;
-      // margin-top: 1em;
       display: inline-block;
       position: relative;
-      // margin-top: 1em;
-      display: inline-block;
-      // border: 1px solid #eeeeee;
       .images-more-btn {
         top: 10px !important;
       }
@@ -1117,10 +1110,10 @@ export default {
             .message-box {
               .el-image {
                 width: 15em !important;
-                height: 9em !important;
+                height: 11em !important;
                 top: 0;
                 /deep/.el-image__inner {
-                  height: unset;
+                  height: 100%;
                 }
               }
             }
@@ -1134,31 +1127,31 @@ export default {
             height: 11em !important;
             top: 0;
             /deep/.el-image__inner {
-              height: unset;
+              height: 100%;
             }
           }
+        }
+      }
+      .message-layout-left,
+      .message-layout-right {
+        /deep/.el-checkbox__label {
+          cursor: pointer;
+        }
+      }
+      .el-checkbox.is-disabled {
+        /deep/.el-checkbox__label {
+          cursor: auto;
         }
       }
     }
   }
 }
-.message-box-content {
-  display: flex;
-  span {
-    margin-right: 3px;
-  }
-  .message-touch-carte {
-    color: #10686e;
-    cursor: pointer;
-  }
+
+.message-touch-carte {
+  color: #10686e;
+  cursor: pointer;
 }
-.hichat-moblie {
-  .message-box-content {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.5em;
-  }
-}
+
 .reply-aduio {
   .message-classic {
     max-width: 100% !important;
@@ -1175,6 +1168,7 @@ export default {
   // border:1px solid #ebebeb;
   text-align: center;
   background-color: #fff;
+  color: #000;
   .el-icon-more {
     font-size: 20px;
   }
@@ -1302,7 +1296,7 @@ export default {
   z-index: 9;
 }
 .link-style {
-  padding: 10px 0;
+  padding: 15px 0 7px 0;
 }
 /deep/.linkified {
   color: #10686e;
@@ -1312,7 +1306,8 @@ export default {
   width: 100%;
   font-size: 12px;
   text-align: center;
-  margin: 2em 0;
+  margin: 0.5em 0;
+  color: #000000;
   span {
     background-color: rgba(0, 0, 0, 0.05);
     padding: 4px 15px;

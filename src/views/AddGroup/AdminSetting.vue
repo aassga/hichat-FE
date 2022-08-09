@@ -24,7 +24,7 @@
             <div class="setting-button mt10">
               <div class="setting-box">
                 <div class="setting-button-left" @click="addAdmin(item)">
-                   <div style="display: flex; align-items: center;">
+                  <div style="display: flex; align-items: center">
                     <div class="el-image">
                       <img :src="item.icon" alt="" class="el-image__inner" />
                     </div>
@@ -48,14 +48,21 @@
         <el-header height="70px">
           <div class="home-header">
             <span class="home-header-title">
-              <div style="display: flex; align-items: center; cursor: pointer; ">
-                <span style="padding-right: 10px" :style="groupPermissionData.addGroup ? 'margin-top:2px; margin-left:4px':''" @click="back()"
-                  ><img src="./../../../static/images/pc/arrow-left.png" alt=""
+              <div style="display: flex; align-items: center; cursor: pointer">
+                <span
+                  style="padding-right: 10px"
+                  :style="
+                    groupPermissionData.addGroup
+                      ? 'margin-top:2px; margin-left:4px'
+                      : ''
+                  "
+                  @click="back()"
+                  ><img src="./../../../static/images/pc/arrow-left.svg" alt=""
                 /></span>
                 <span>管理员设定</span>
               </div>
             </span>
-            <div @click="goAdminSetting(groupData,'AdminSettingPage')">
+            <div @click="goAdminSetting(groupData, 'AdminSettingPage')">
               <div class="home-add-user"></div>
             </div>
           </div>
@@ -75,8 +82,11 @@
           <div v-for="(item, index) in newManagerList" :key="index">
             <div class="setting-button mt10">
               <div class="setting-box">
-                <div class="setting-button-left" @click="goAdminSetting(item,'AdminSettingDetail')">
-                  <div style="display: flex; align-items: center;">
+                <div
+                  class="setting-button-left"
+                  @click="goAdminSetting(item, 'AdminSettingDetail')"
+                >
+                  <div style="display: flex; align-items: center">
                     <div class="el-image">
                       <img :src="item.icon" alt="" class="el-image__inner" />
                     </div>
@@ -105,11 +115,15 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'"><img src="./../../../static/images/warn.png" alt="" /></div>
+        <div v-if="device === 'moblie'">
+          <img src="./../../../static/images/warn.svg" alt="" />
+        </div>
         <span>是否確定要移除 {{ unAdminData.name }} 管理員</span>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button :class="device === 'moblie' ? 'border-red' : 'background-gray'" @click="unAdminShow = false"
+        <el-button
+          :class="device === 'moblie' ? 'border-red' : 'background-gray'"
+          @click="unAdminShow = false"
           >取消</el-button
         >
         <el-button class="background-red" @click="unAdminAction"
@@ -122,7 +136,7 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { groupListMember,delManager } from "@/api";
+import { groupListMember, delManager } from "@/api";
 
 export default {
   name: "AdminSetting",
@@ -131,19 +145,19 @@ export default {
       searchKey: "",
       unAdminShow: false,
       isManagerList: [],
-      newManagerList:[],
+      newManagerList: [],
       unAdminData: {},
       device: localStorage.getItem("device"),
     };
   },
   created() {
-    if(this.device === "moblie"){
+    if (this.device === "moblie") {
       this.groupData = JSON.parse(localStorage.getItem("groupData"));
-    }else{
-      this.groupData = this.groupUser
+    } else {
+      this.groupData = this.groupUser;
     }
   },
-  watch:{
+  watch: {
     searchKey(val) {
       let searchKeyData = val.split(" ");
       searchKeyData.forEach((el) => {
@@ -152,12 +166,11 @@ export default {
           return item.name.indexOf(el.replace("@", "")) !== -1;
         });
       });
-      this.newManagerList = this.searchData
+      this.newManagerList = this.searchData;
     },
   },
   mounted() {
-    this.getGroupListMember()
-    
+    this.getGroupListMember();
   },
   computed: {
     ...mapState({
@@ -167,83 +180,80 @@ export default {
   },
   methods: {
     ...mapMutations({
-      setMsgInfoPage:"ws/setMsgInfoPage",
+      setMsgInfoPage: "ws/setMsgInfoPage",
     }),
-    goAdminSetting(data,key){
-      if(this.groupPermissionData.addGroup){
-        this.$router.push({ path: key,});
-      }else{
+    goAdminSetting(data, key) {
+      if (this.groupPermissionData.addGroup) {
+        this.$router.push({ name: key, params: data });
+      } else {
         this.setMsgInfoPage({ pageShow: false, type: key, data });
-      }   
+      }
     },
     getGroupListMember() {
-      if(!this.groupPermissionData.addGroup){
+      if (!this.groupPermissionData.addGroup) {
         let groupId = this.groupData.groupId;
         groupListMember({ groupId }).then((res) => {
           this.contactList = res.data.list;
-          this.contactList.forEach((res) => {
-            if (res.icon === undefined) {
-              res.icon = require("./../../../static/images/image_user_defult.png");
+          this.contactList.forEach((item) => {
+            if (item.icon === undefined) {
+              item.icon = require("./../../../static/images/image_user_defult.png");
             }
           });
-          this.isManagerList = this.contactList.filter(
-            (el) => el.isManager
-          );
-          this.newManagerList = this.isManagerList
+          this.isManagerList = this.contactList.filter((el) => el.isManager);
+          this.newManagerList = this.isManagerList;
         });
-      } else{
-        this.contactList = this.groupPermissionData.peopleData
-        this.isManagerList = this.contactList.filter(
-          (el) => el.isManager
-        );
-        this.newManagerList = this.isManagerList
+      } else {
+        this.contactList = this.groupPermissionData.peopleData;
+        this.isManagerList = this.contactList.filter((el) => el.isManager);
+        this.newManagerList = this.isManagerList;
       }
-      
-    },    
+    },
     unAdmin(data) {
       this.unAdminShow = true;
       this.unAdminData = data;
     },
     unAdminAction() {
-      if(!this.groupPermissionData.addGroup){
+      if (!this.groupPermissionData.addGroup) {
         let params = {
-          groupId:this.unAdminData.groupId,
-          memberId:this.unAdminData.memberId,
-        }
-        delManager(params).then((res)=>{
-          if(res.code === 200){
+          groupId: this.unAdminData.groupId,
+          memberId: this.unAdminData.memberId,
+        };
+        delManager(params).then((res) => {
+          if (res.code === 200) {
             this.unAdminShow = false;
-            this.getGroupListMember()
+            this.getGroupListMember();
           }
-        })
-      }else{
-        this.groupPermissionData.peopleData.forEach((res)=>{
-          if(res.contactId === this.unAdminData.contactId){
-            delete res.authority
-            delete res.isManager
+        });
+      } else {
+        this.groupPermissionData.peopleData.forEach((res) => {
+          if (res.contactId === this.unAdminData.contactId) {
+            delete res.authority;
+            delete res.isManager;
           }
-        })
-        this.newAuthorityVOData = this.groupPermissionData.groupManagerAuthority.filter((el)=>{
-          return el.memberId !== this.unAdminData.contactId
-        })
-        this.groupPermissionData.groupManagerAuthority = this.newAuthorityVOData
+        });
+        this.newAuthorityVOData =
+          this.groupPermissionData.groupManagerAuthority.filter((el) => {
+            return el.memberId !== this.unAdminData.contactId;
+          });
+        this.groupPermissionData.groupManagerAuthority =
+          this.newAuthorityVOData;
         this.unAdminShow = false;
-        this.getGroupListMember() 
+        this.getGroupListMember();
       }
     },
-    addAdmin(data){
-      this.$router.push({ name: "AdminSettingDetail",params:data });
+    addAdmin(data) {
+      this.$router.push({ name: "AdminSettingDetail", params: data });
     },
     back() {
       if (this.device === "moblie") {
-        this.$router.push({ name: "SettingGroup"});
+        this.$router.push({ name: "SettingGroup" });
       } else {
-        if(this.groupPermissionData.addGroup){
-          this.$router.push({ path: "/SettingGroup",});
-        }else{
+        if (this.groupPermissionData.addGroup) {
+          this.$router.push({ path: "/SettingGroup" });
+        } else {
           this.setMsgInfoPage({ pageShow: false, type: "SettingGroup" });
         }
-      } 
+      }
     },
   },
 };
@@ -258,7 +268,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.png");
+      background-image: url("./../../../static/images/pc/arrow-left.svg");
       cursor: pointer;
     }
     .home-add-user {
@@ -267,7 +277,7 @@ export default {
     }
     .home-add-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/edit_info.png");
+      background-image: url("./../../../static/images/pc/edit_info.svg");
     }
   }
   .home-content {
@@ -333,7 +343,7 @@ export default {
           border: 1px solid #fe5f3f;
           cursor: pointer;
         }
-        a{
+        a {
           cursor: pointer;
         }
       }
@@ -392,7 +402,7 @@ export default {
     .home-header {
       .home-add-user {
         background-color: #fff;
-        background-image: url("./../../../static/images/pc/add.png");
+        background-image: url("./../../../static/images/pc/add.svg");
       }
     }
     .home-search {
@@ -414,6 +424,4 @@ export default {
     }
   }
 }
-
-
 </style>
