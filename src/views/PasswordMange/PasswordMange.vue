@@ -18,7 +18,6 @@
             v-for="(item, index) in aboutData"
             :key="index"
             :class="{ 'border-bottom': item.name === '修改登录密码' }"
-            @click="developmentMessage(item.name)"
           >
             <router-link :to="item.path">
               <div class="setting-button-left">
@@ -49,8 +48,6 @@
 </template>
 
 <script>
-import { developmentMessage } from "@/assets/tools";
-
 export default {
   name: "PasswordMange",
   data() {
@@ -65,7 +62,6 @@ export default {
         //   path: "",
         // },
       ],
-      developmentMessage: developmentMessage,
       notification: false,
     };
   },

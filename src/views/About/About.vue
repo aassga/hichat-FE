@@ -15,7 +15,6 @@
             v-for="(item, index) in aboutData"
             :key="index"
             :class="{ 'mt10 border-bottom': item.name === '服务条款' }"
-            @click="developmentMessage(item.name)"
           >
             <router-link :to="item.path">
               <div class="setting-button-left">
@@ -40,8 +39,6 @@
 </template>
 
 <script>
-import { developmentMessage } from "@/assets/tools";
-
 import { getAndroidVersion } from '@/api/version'
 
 export default {
@@ -63,7 +60,6 @@ export default {
         //   path: "",
         // },
       ],
-      developmentMessage: developmentMessage,
     };
   },
   created() {

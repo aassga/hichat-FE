@@ -65,7 +65,6 @@
               class="setting-button"
               v-for="(item, index) in settingData"
               :key="index"
-              @click="developmentMessage(item.name)"
             >
               <a @click="goChatRoom(chatUser, item.path)">
                 <div class="setting-button-left">
@@ -78,7 +77,6 @@
 
             <!-- <div
               class="setting-notification"
-              @click="developmentMessage('提醒通知')"
             >
               <div class="setting-button-left">
                 <img src="./../../../static/images/notification.png" alt="" />
@@ -261,7 +259,6 @@
 </template>
 
 <script>
-import { developmentMessage } from "@/assets/tools";
 import { copyPaste } from "@/utils/urlCopy.js";
 import { mapState, mapMutations } from "vuex";
 import { deleteRecentChat } from '@/api/chatController'
@@ -305,7 +302,6 @@ export default {
       successDialogShow: false,
       settingDialogShow: false,
       addContactDialogShow: false,
-      developmentMessage: developmentMessage,
     };
   },
   computed: {

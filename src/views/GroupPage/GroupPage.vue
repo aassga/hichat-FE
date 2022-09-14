@@ -37,7 +37,6 @@
             class="setting-button"
             v-for="(item, index) in settingData"
             :key="index"
-            @click="developmentMessage(item.name)"
             :class="{'mb10':item.name ==='成員'}"
           >
             <a @click="goChatRoom(groupData, item.path)">
@@ -51,7 +50,6 @@
 
           <!-- <div
             class="setting-notification"
-            @click="developmentMessage('提醒通知')"
           >
             <div class="setting-button-left">
               <img src="./../../../static/images/notification.png" alt="" />
@@ -88,7 +86,7 @@
           <div class="setting-button" v-if="groupData.isAdmin">
             <a @click="goChatRoom(groupData, 'GroupAdminChange')">
               <div class="setting-button-left">
-                <img src="./../../../static/images/shield.svg" alt="" />
+                <img src="./../../../static/images/shield.png" alt="" />
                 <span>转移群主权限</span>
               </div>
             </a>
@@ -161,7 +159,6 @@
 
 <script>
 import { mapState,mapMutations } from "vuex";
-import { developmentMessage } from "@/assets/tools";
 import { deleteRecentChat } from '@/api/chatController'
 import { leaveGroup } from '@/api/groupController'
 
@@ -197,7 +194,6 @@ export default {
       notification: true,
       isDialogShow:false,
       leaveGroupDialogShow: false,
-      developmentMessage: developmentMessage,
     };
   },
   computed: {

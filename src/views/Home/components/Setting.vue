@@ -30,7 +30,6 @@
             item.name === '关于嗨聊' ||
             item.name === '提醒' 
         }"
-        @click="developmentMessage(item.name)"
       >
         <router-link :to="item.path">
           <div class="setting-button-left">
@@ -64,7 +63,6 @@
           { bor_mt10: item.name === '提醒' },
           { hidden: item.name === '关于嗨聊' },
         ]"
-        @click="developmentMessage(item.name)"
       >
         <router-link :to="item.path">
           <div class="setting-button-left">
@@ -135,16 +133,14 @@
 </template>
 
 <script>
+import VueQr from "vue-qr";
 import Socket from "@/utils/socket";
 import { getToken } from "_util/utils.js";
+import { mapState } from "vuex";
 
-import VueQr from "vue-qr";
 import { urlCopy,copyPaste } from "@/utils/urlCopy.js";
 import { logout } from "@/api";
 import { Encrypt} from "@/utils/AESUtils.js";
-
-import { mapState } from "vuex";
-import { developmentMessage } from "@/assets/tools";
 
 export default {
   name: "Setting",
@@ -194,7 +190,6 @@ export default {
       notification: true,
       logoutDialogShow: false,
       promotionDialogShow:false,
-      developmentMessage: developmentMessage,
       device: localStorage.getItem("device"),
 
       //推廣 key iv

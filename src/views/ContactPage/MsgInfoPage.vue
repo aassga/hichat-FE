@@ -116,7 +116,6 @@
                 v-for="(item, index) in settingContactData"
                 :key="index"
                 class="setting-button"
-                @click="developmentMessage(item.name)"
               >
                 <a @click="goChatRoom(userData, item.path, 'address')">
                   <div class="setting-button-left">
@@ -263,7 +262,7 @@
                 class="setting-button"
                 v-for="(item, index) in settingGroupData"
                 :key="index"
-                @click="developmentMessage(item.name)"
+
               >
                 <a @click="goChatRoom(groupUser, item.path, 'group')">
                   <div class="setting-button-left">
@@ -366,7 +365,6 @@
 <script>
 import Socket from "@/utils/socket";
 import { mapState, mapMutations } from "vuex";
-import { developmentMessage } from "@/assets/tools";
 import { getToken } from "_util/utils.js";
 import { copyPaste } from "@/utils/urlCopy.js";
 import { getSearchById } from "@/api/memberProfileController";
@@ -432,7 +430,6 @@ export default {
       notification: true,
       successDialogShow: false,
       settingDialogShow: false,
-      developmentMessage: developmentMessage,
     };
   },
   computed: {
