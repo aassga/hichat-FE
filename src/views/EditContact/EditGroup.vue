@@ -86,9 +86,9 @@
         list-type="picture"
       >
         <el-button type="primary">点击上传</el-button>
-        <div slot="tip" class="el-upload__tip">
+        <!-- <div slot="tip" class="el-upload__tip">
           只能上传 jpg / png 圖片，且不超过500kb
-        </div>
+        </div> -->
       </el-upload>
       <span slot="footer" class="dialog-footer">
         <template v-if="device === 'moblie'">
@@ -111,8 +111,9 @@
 <script>
 import Socket from "@/utils/socket";
 import { mapState, mapMutations } from "vuex";
-import { getLocal, getToken } from "_util/utils.js";
-import { uploadGroupIcon, updateGroup } from "@/api";
+import { getToken } from "_util/utils.js";
+import { uploadGroupIcon } from '@/api/uploadController'
+import { updateGroup } from '@/api/groupController'
 
 export default {
   name: "EditContact",
@@ -136,17 +137,15 @@ export default {
       },
       deep: true,
     },
-    // groupUser(val){
-    //   this.groupForm.name = val.groupName
-    // }
   },
   computed: {
     ...mapState({
       groupList: (state) => state.ws.groupList,
+      groupUser: (state) => state.ws.groupUser,
     }),
   },
   created() {
-    this.groupData = JSON.parse(localStorage.getItem("groupData"));
+    this.groupData = this.groupUser;
     this.groupForm.name = this.groupData.groupName;
   },
   methods: {

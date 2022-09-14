@@ -8,30 +8,6 @@
           <div class="home-add-user"></div>
         </div>
         <div class="home-content">
-          <!-- <div class="setting-title">通知</div>
-          <div
-            class="setting-button"
-            v-for="(item, index) in nofityData"
-            :key="index"
-            :class="{
-              mb10: item.key === 'nofity'
-            }"
-          >
-            <div class="setting-box">
-              <div class="setting-button-left">
-                <span>{{ item.name }}</span>
-              </div>
-              <div class="setting-button-right">
-                <el-switch
-                  v-model="item.isNofity"
-                  active-color="#fd5f3f"
-                  inactive-color="#666666"
-                  @change="chengeNofiy(item)"
-                >
-                </el-switch>
-              </div>
-            </div>
-          </div> -->
           <div class="setting-title">應用內提醒</div>
           <div
             class="setting-button"
@@ -68,27 +44,21 @@
           </div>
         </el-header>
         <div class="home-content">
-          <!-- <div class="setting-title">通知</div>
-          <div
-            class="setting-button"
-            v-for="(item, index) in nofityData"
-            :key="index"
-          >
-            <div class="setting-box">
-              <div class="setting-button-left">
-                <span>{{ item.name }}</span>
+          <!-- 靜音 -->
+          <!-- <div class="setting-title">靜音</div>
+          <router-link :to="'/MuteSound'">
+            <div class="setting-button">
+              <div class="setting-box">
+                <div class="setting-button-left">
+                  <span>編輯名單</span>
+                </div>
+                <div class="setting-button-right">
+                  <img src="./../../../static/images/next.png" alt="" />
+                </div>
               </div>
-              <div class="setting-button-right">
-                <el-switch
-                  v-model="item.isNofity"
-                  active-color="#fd5f3f"
-                  inactive-color="#666666"
-                  @change="chengeNofiy(item)"
-                >
-                </el-switch>
-              </div>
-            </div>
-          </div> -->
+            </div>      
+          </router-link> -->
+          <!-- 提醒 -->
           <div class="setting-title">應用內提醒</div>
           <div
             class="setting-button"
@@ -124,7 +94,7 @@ export default {
   data() {
     return {
       device: localStorage.getItem("device"),
-      nofityData: JSON.parse(localStorage.getItem("nofity")),
+      // nofityData: JSON.parse(localStorage.getItem("nofity")),
       soundNofiyData: JSON.parse(localStorage.getItem("soundNofiy")),
     };
   },
@@ -141,7 +111,6 @@ export default {
     // if(localStorage.getItem("soundNofiy") === null){
     //   this.setSoundNofiy(this.soundNofiy)
     // }
-    // console.log(JSON.parse(localStorage.getItem("nofity")))
   },
   methods: {
     ...mapMutations({
@@ -225,6 +194,7 @@ export default {
         .home-content {
           .setting-title {
             padding: 12px 0 16px 18px;
+            text-decoration: none;
           }
           .setting-button {
             .setting-button-left {
@@ -246,10 +216,15 @@ export default {
     }
   }
   .home-content {
+    
+    a{
+      text-decoration: none;
+    }
     .setting-title {
       padding: 30px 0 5px 33px;
       color: rgba(0, 0, 0, 0.4);
       font-size: 15px;
+      
     }
     .setting-button {
       padding: 0.5em 0 0.5em 0.5em;

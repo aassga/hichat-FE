@@ -69,8 +69,8 @@
           <!-- 置頂訊息 -->
           <div
             class="top-msg"
-            v-if="pinMsg !== '' && showCheckBoxBtn"
-            @click="goTopMsgShow"
+            v-if="pinMsg !== '' && showCheckBoxBtn && pinDataList.length !==0"
+            @click="setTopMsgShow(false)"
           >
             <div class="top-msg-left">
               <img src="./../../../static/images/pin.png" alt="" />
@@ -86,15 +86,17 @@
             />
           </div>
           <message-pabel
-            :timeOut="timeOut"
             :messageData="messageData"
             :userInfoData="userInfoData"
             :checkDataList="checkDataList"
             :showCheckBoxBtn="showCheckBoxBtn"
+            :historyMsgLength="historyMsgLength"
             @deleteMsgHistoryData="deleteMsgData"
             @checkBoxDisabled="checkBoxDisabled"
             @isCheckDataList="isCheckDataList"
-            @resetPinMsg="resetPinMsg"
+            @resetPinMsg="getPinList"
+            @scrollBar="scrollBar"       
+            @scrollHistory="scrollHistory"                         
           />
           <div
             class="reply-message"
@@ -124,8 +126,15 @@
               <span v-else-if="replyMsg.chatType === 'SRV_USER_AUDIO'"
                 >回復語音訊息</span
               >
+              <div
+                v-else-if="replyMsg.chatType === 'SRV_USER_FILE'"
+                class="replyMsg-file"
+              >
+                <span>{{fileData(replyMsg.innerText,'content')}}</span>
+                <span>档案大小　: {{ fileData(replyMsg.fileSize,'size') }}</span>                       
+              </div>
             </div>
-            <div class="reply-close-btn" @click="closeReplyMessage">
+            <div class="reply-close-btn" @click="$root.closeReplyMessage">
               <i class="el-icon-close"></i>
             </div>
           </div>
@@ -183,7 +192,7 @@
         <message-pin
           :contactUser="contactUser"
           :userInfoData="userInfoData"
-          @resetPinMsg="resetPinMsg"
+          @resetPinMsg="getPinList"
         />
         <div class="top-msg-bottom" @click="isTopMsgShow = true">
           <span>取消所有置顶讯息(共 {{ pinDataList.length }} 則)</span>
@@ -364,21 +373,14 @@
 
 <script>
 import Socket from "@/utils/socket";
-import {
-  addContactUser,
-  addBlockContactUser,
-  unBlockContactUser,
-  deleteRecentChat,
-  deleteContactUser,
-  pinList,
-  unpinHistory,
-  getMemberActivity,
-  deleteRecentChatMul,
-} from "@/api";
-import AESBase64 from "@/utils/AESBase64.js";
-
+import { getMemberActivity } from "@/api/memberProfileController";
+import { addContactUser,deleteContactUser,getContactList } from "@/api/memberContactController";
+import { addBlockContactUser,unBlockContactUser } from '@/api/memberBlockController'
+import { pinList,deleteRecentChatMul,getChatHistory,unpinHistory,deleteRecentChat } from '@/api/chatController'
+import { fileBoxName, formatFileSize } from "@/utils/FileSizeName.js";
 import { mapState, mapMutations } from "vuex";
-import { getLocal, getToken } from "_util/utils.js";
+import { getToken } from "_util/utils.js";
+import AESBase64 from "@/utils/AESBase64.js";
 import MessagePabel from "@/components/message-pabel-moblie";
 import MessageInput from "@/components/message-input-moblie";
 import MessagePin from "@/components/message-pin";
@@ -394,15 +396,17 @@ export default {
         deviceId: localStorage.getItem("UUID"),
         tokenType: 0,
       },
+
       userData: {},
       readMsgData: [],
       pinDataList: [],
       checkDataList: [],
+      historyMsgLength:0,
       onlineTime: "",
       pinMsg: "",
-      timeOut: 0,
       loading: false,
       isTopMsgShow: false,
+      isScrollbar:false,      
       showCheckBoxBtn: true,
       isChooseDeleteShow: false,
       allHistoruShow: false,
@@ -433,21 +437,26 @@ export default {
       });
     },
     contactUser(val) {
+      this.messageData = []
+      this.pinMsg = "";
+      this.getPinList();      
       this.getUserMemberActivity(val);
+      this.getChatHistoryMessage()
     },
     checkBoxBtn(val) {
       this.showCheckBoxBtn = val;
     },
     showCheckBoxBtn(val){
       if(val) this.isChooseDeleteShow = false
-    }
+    },
+
   },
   created() {
     this.userData = JSON.parse(localStorage.getItem("contactUser"));
     this.setContactUser(this.userData);
-    Socket.$on("message", this.handleGetMessage);
     this.getPinList();
     this.getUserMemberActivity(this.contactUser);
+    Socket.$on("message", this.handleGetMessage);
   },
   mounted() {
     this.memberTime = setInterval(() => {
@@ -472,27 +481,64 @@ export default {
     ...mapMutations({
       setWsRes: "ws/setWsRes",
       setInfoMsg: "ws/setInfoMsg",
-      setEditMsg: "ws/setEditMsg",
-      setReplyMsg: "ws/setReplyMsg",
+
       setChatUser: "ws/setChatUser",
       setHichatNav: "ws/setHichatNav",
       setContactUser: "ws/setContactUser",
       setMsgInfoPage: "ws/setMsgInfoPage",
       setTopMsgShow: "ws/setTopMsgShow",
       setCheckBoxBtn: "ws/setCheckBoxBtn",
+      setMyContactDataList: "ws/setMyContactDataList",
     }),
+    scrollHistory(val){
+      this.getChatHistoryMessage(val)
+    },
+    //獲取歷史訊息
+    getChatHistoryMessage(data){
+      this.loading = true      
+      let params={
+        toChatId:this.contactUser.toChatId,
+        historyId:data === undefined ? "":data,
+        order:0,
+        pageSize: 200,
+      }
+      getChatHistory(params).then((res) => {
+        if(res.code === 200 ){
+          
+          let historyMsgList = Object.freeze(res.data)
+          this.readMsg = historyMsgList.filter((el) => el.chat.toChatId === "u" + localStorage.getItem("id"));
+          this.historyMsgLength = historyMsgList.length
+          if (historyMsgList.length > 0 && this.readMsg.length > 0) this.readMsgShow(this.readMsg[0]);
+          this.getHiChatDataList();
+          historyMsgList.forEach((el) => {
+            this.messageList(el);
+            this.messageReorganization(this.chatRoomMsg)
+            this.messageData.unshift(this.chatRoomMsg);
+          });
+          this.loading = false
+        }
+      })
+    },    
+    fileData(data,type){
+      if(type === "content"){
+        return fileBoxName(data)
+      }else{
+        return formatFileSize(data)
+      }
+    },     
     closeChooseAction() {
       this.showCheckBoxBtn = true;
       this.$root.gotoBottom();
     },
-    chooseDeleteAction() {
-      if (this.checkDataList.length === 0) {
+    //勾選訊息   
+    chooseDeleteAction(){
+      if(this.checkDataList.length === 0){
         this.$message({ message: "請勾選訊息", type: "error" });
-        return false;
-      } else {
+        return false
+      }else{
         this.isChooseDeleteShow = true;
       }
-    },
+    },  
     checkBoxDisabled(data) {
       this.showCheckBoxBtn = data;
       this.setCheckBoxBtn(data);
@@ -529,9 +575,6 @@ export default {
         }
       });
     },
-    goTopMsgShow() {
-      this.setTopMsgShow(false);
-    },
     untopMsgAction() {
       let param = {
         toChatId: this.contactUser.toChatId,
@@ -540,12 +583,13 @@ export default {
         if (res.code === 200) {
           this.setTopMsgShow(true);
           this.isTopMsgShow = false;
+          this.getPinList()
         }
       });
     },
-    resetPinMsg() {
-      this.getPinList();
-    },
+    scrollBar(val){
+      this.isScrollbar = val
+    },    
     getPinList() {
       let params = {
         toChatId: this.contactUser.toChatId,
@@ -570,7 +614,7 @@ export default {
               this.pinMsg = this.pinDataList[0].chat.text;
             }
           }
-          this.$root.gotoBottom();
+          !this.isScrollbar ? this.$root.gotoBottom() : false
         }
       });
     },
@@ -587,24 +631,13 @@ export default {
         return iconData.icon;
       }
     },
-    closeReplyMessage() {
-      this.setReplyMsg({
-        name: "",
-        icon: "",
-        chatType: "",
-        clickType: "",
-        innerText: "",
-        replyHistoryId: "",
-      });
-      this.setEditMsg({ innerText: "" });
-    },
     // 訊息統一格式
     messageList(data) {
       this.chatRoomMsg = {
         chatType: data.chat.chatType,
         historyId: data.chat.historyId,
         message: {
-          time: data.chat.sendTime,
+          time: this.$root.formatTimeS(data.chat.sendTime),
           content: this.isBase64(data.chat.text),
         },
         isRead: data.isRead,
@@ -613,7 +646,8 @@ export default {
         icon: data.chat.icon,
         name: data.chat.name,
         nickName: data.chat.nickName,
-        isRplay: data.replyChat === null ? null : data.replyChat,
+        isRplay: [null,undefined].includes(data.replyChat) ? null : data.replyChat,
+        fileSize:data.chat.fileSize !== undefined ? data.chat.fileSize : "",   
       };
     },
     // 訊息過濾比對名稱
@@ -641,19 +675,6 @@ export default {
     //判斷是否base64
     isBase64(data) {
       return AESBase64(data, this.aesKey ,this.aesIv)
-    },
-    // 獲取歷史訊息
-    getChatHistoryMessage() {
-      let historyMessageData = this.userInfoData;
-      historyMessageData.chatType = "CLI_HISTORY_REQ";
-      historyMessageData.id = Math.random();
-      historyMessageData.toChatId =
-        this.userData.toChatId === undefined
-          ? "u" + this.userData.contactId
-          : this.userData.toChatId;
-      historyMessageData.targetId = "";
-      historyMessageData.pageSize = 1000;
-      Socket.send(historyMessageData);
     },
     infoMsgShow() {
       this.setMsgInfoPage({ pageShow: true, type: "" });
@@ -693,12 +714,13 @@ export default {
     handleGetMessage(msg) {
       this.setWsRes(JSON.parse(msg));
       let userInfo = JSON.parse(msg);
-      switch (userInfo.chatType) {
+      switch (userInfo.chatType) {    
         // 发送影片照片讯息成功
         // 发送讯息成功
         case "SRV_USER_IMAGE":
         case "SRV_USER_AUDIO":
         case "SRV_USER_SEND":
+        case "SRV_USER_FILE":            
         case "SRV_CHAT_PIN":
           if (userInfo.toChatId === this.contactUser.toChatId) {
             this.getHiChatDataList();
@@ -711,35 +733,14 @@ export default {
             }
           }
           break;
+        // 移除置頂  
         case "SRV_CHAT_UNPIN":
-          this.getChatHistoryMessage();
-          break;
-        // 历史讯息
-        case "SRV_HISTORY_RSP":
-          if(JSON.stringify(this.contactUser) !== '{}'){
-            this.pinMsg = "";
-            this.getPinList();
-          } 
-          this.loading = true;
-          this.messageData = [];
-          let historyMsgList = userInfo.historyMessage.list;
-          this.$nextTick(() => {
-            setTimeout(() => {
-              historyMsgList.forEach((el) => {
-                this.messageList(el);
-                this.messageReorganization(this.chatRoomMsg)
-                this.messageData.unshift(this.chatRoomMsg);
-              });
-              this.readMsg = historyMsgList.filter((el) => {
-                return el.chat.toChatId === "u" + localStorage.getItem("id");
-              });
-              if (historyMsgList.length > 0 && this.readMsg.length > 0)
-                this.readMsgShow(this.readMsg[0]);
-              this.getHiChatDataList();
-              this.loading = false;
-            }, 1000);
+          this.messageData.forEach((res) => {
+            if (res.historyId === userInfo.replyHistoryId) {
+              res.isPing = false;
+            }
           });
-          break;
+          break;          
         // 已讀
         case "SRV_MSG_READ":
           this.messageData.forEach((res) => (res.isRead = true));
@@ -768,11 +769,13 @@ export default {
           this.checkDataList = this.checkDataList.filter(item => !userInfo.targetArray.includes(item.historyId))
           this.getHiChatDataList();
           break           
-        // 撈取歷史訊息
-        case "SRV_NEED_AUTH":
-          this.getChatHistoryMessage();
-          break;
       }
+    },
+    getAddressList() {
+      getContactList().then((res) => {
+        this.contactList = res.data.list
+        this.setMyContactDataList(this.contactList)
+      });
     },
     addUser(data) {
       let parmas = {
@@ -787,10 +790,11 @@ export default {
             this.setChatUser(data);
             this.setContactUser({});
             if (this.device === "pc") {
-              this.getHistory(data);
               this.getHiChatDataList();
               this.setHichatNav({ type: "address", num: 1 });
+              this.getAddressList()
             }
+            this.$root.getMaybeKnow()
           } else {
             this.$message({ message: res.message, type: "error" });
           }
@@ -810,9 +814,12 @@ export default {
         .then((res) => {
           if (res.code === 200) {
             this.deleteDialogShow = false;
-            localStorage.removeItem("userData");
+            localStorage.removeItem("contactUser");
             if (this.device === "pc") {
-              this.setHichatNav({ type: "contact", num: 1 });
+              
+              this.setHichatNav({ type: "address", num: 1 });
+              
+              this.setContactUser({})
               window.location.reload();
               this.getHiChatDataList();
             }
@@ -912,19 +919,7 @@ export default {
     back() {
       this.$router.back(-1);
     },
-    getHistory(data) {
-      (this.getHistoryMessage = {
-        chatType: "CLI_HISTORY_REQ",
-        toChatId: data.toChatId,
-        id: Math.random(),
-        tokenType: 0,
-        targetId: "",
-        pageSize: 1000,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      }),
-        Socket.send(this.getHistoryMessage);
-    },
+
   },
   components: {
     MessagePabel,

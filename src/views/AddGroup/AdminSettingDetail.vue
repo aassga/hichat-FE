@@ -92,13 +92,12 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { addManager, groupListMember, setManagerAuthority } from "@/api";
+import { listMember,addManager,setManagerAuthority } from '@/api/groupController'
 
 export default {
   name: "AdminSetting",
   data() {
     return {
-      searchKey: "",
       groupManagerAuthorityVO: [
         {
           name: "传送文字讯息",
@@ -111,7 +110,7 @@ export default {
           isCheck:true,
         },
         {
-          name:"传送链接或网址",
+          name:"传送档案或链接网址",
           key: "sendLink",
           isCheck:true,
         },    
@@ -236,6 +235,7 @@ export default {
             res.authority = this.newManagerAuthorityData;
           }
         });
+        this.setGroupPermissionData(this.groupPermissionData)
         this.$router.push({ path: "/AdminSetting" });
       }
     },
@@ -253,7 +253,7 @@ export default {
     getGroupListMember() {
       if (!this.groupPermissionData.addGroup) {
         let groupId = this.groupData.groupId;
-        groupListMember({ groupId }).then((res) => {
+        listMember({ groupId }).then((res) => {
           let parmaMemberId =
             this.device === "moblie"
               ? this.$route.params.memberId

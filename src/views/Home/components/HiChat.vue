@@ -22,15 +22,20 @@
           <div class="contont-box">
             <div class="msg-box">
               <div>
-                <span>{{ item.name }}</span>
+                <span>{{ item.name }} 
+                  <!-- <img :src="muteImg" v-if="device ==='pc' && item.setting.prompt" style="padding-left:5px;"/> -->
+                </span>
                 <span class="content-text">
                   <span v-if="item.lastChat === null"></span>
                   <span
                     v-else-if="item.lastChat.chatType === 'SRV_USER_SEND'"
-                    >{{ isBase64(item.lastChat.text) }}</span
+                    >{{ judgeTextMarking(isBase64(item.lastChat.text)) }}</span
                   >
                   <span v-else-if="item.lastChat.chatType === 'SRV_CHAT_PIN'"
                     >{{ item.lastChat.text }}置顶了消息</span
+                  >
+                  <span v-else-if="item.lastChat.chatType === 'SRV_USER_FILE'"
+                    >传送了档案</span
                   >
                   <span v-else-if="item.lastChat.chatType === 'SRV_USER_AUDIO'"
                     >传送了语音</span
@@ -56,7 +61,7 @@
         </div>
       </el-tab-pane>
       <el-tab-pane label="群组" name="group">
-        <span slot="label" v-if="groupDataList.length > 0">
+        <span slot="label" v-if="newGroupDataList.length > 0">
           <span>群组</span>
           <el-badge
             v-if="groupNumBadge > 0"
@@ -65,7 +70,7 @@
           ></el-badge>
         </span>
         <div
-          v-for="(item, index) in groupDataList"
+          v-for="(item, index) in newGroupDataList"
           :key="index"
           class="address-box"
           @click="goChatRoom(item, 'ChatGroupMsg')"
@@ -74,7 +79,9 @@
           <div class="contont-box">
             <div class="msg-box">
               <div>
-                <span>{{ item.name }}</span>
+                <span>{{ item.name }}
+                  <!-- <img :src="muteImg" v-if="device ==='pc' && !item.setting.prompt" style="padding-left:5px;"/> -->
+                </span>
                 <span class="content-text">
                   <span v-if="item.lastChat === null"></span>
                   <span
@@ -166,7 +173,7 @@
                 <span class="content-text">
                   <span v-if="item.lastChat === null"></span>
                   <span v-else-if="item.lastChat.chatType === 'SRV_USER_SEND'">{{
-                    isBase64(item.lastChat.text)
+                    judgeTextMarking(isBase64(item.lastChat.text))
                   }}</span>
                   <span v-else-if="item.lastChat.chatType === 'SRV_CHAT_PIN'"
                     >{{ item.lastChat.text }}置顶了消息</span
@@ -203,41 +210,28 @@ import Socket from "@/utils/socket";
 import AESBase64 from "@/utils/AESBase64.js";
 import { mapState, mapMutations } from "vuex";
 import { getToken } from "_util/utils.js";
-import {
-  getGroupList,
-  groupListMember,
-  // getSearchById,
-  getGroupAuthoritySetting,
-  // deleteRecentChat,
-  getMemberActivity,
-} from "@/api";
+import { getMemberActivity } from "@/api/memberProfileController";
+import { listMember,getGroupList,groupMemberList,getGroupAuthoritySetting } from '@/api/groupController'
 
 export default {
   name: "HiChat",
   data() {
     return {
-      searchKey: "",
       groupList: [],
       authorityData: {},
       groupDataList: [],
+      newGroupDataList:[],
       newHiChatDataList:[],
       newContactDataList:[],
       noGroupPeopleData:[],
-      getHistoryMessage: {
-        chatType: "",
-        toChatId: "",
-        id: Math.random(),
-        tokenType: 0,
-        targetId: "",
-        pageSize: 1000,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      },
+      contactDataList:[],      
+      groupMemberDataList:{},
       device: localStorage.getItem("device"),
       activeName: "address",
       isDialogShow: false,
       dialogData: {},
-      
+      muteImg:require("./../../../../static/images/icon_notification.svg"),
+      noMuteImg:require("./../../../../static/images/volume.svg"),
       //加解密 key iv
       aesKey: "hichatisachatapp",
       aesIv: "hichatisachatapp",
@@ -247,9 +241,11 @@ export default {
     Socket.$on("message", this.handleGetMessage);
     this.getGroupDataList();
     this.setActiveName(this.hichatNav.type);
-    this.memberTime = setInterval(() => {
-      this.getUserMemberActivity(this.noGroupPeopleData)
-    }, 30000);
+    if(this.hichatNav.type !=="group"){
+      this.memberTime = setInterval(() => {
+        this.getUserMemberActivity(this.noGroupPeopleData)
+      }, 30000);
+    }
   },
   beforeDestroy() {
     Socket.$off("message", this.handleGetMessage);
@@ -263,12 +259,18 @@ export default {
       hichatNav: (state) => state.ws.hichatNav,
       myUserInfo: (state) => state.ws.myUserInfo,
       contactUser: (state) => state.ws.contactUser,
+      chatMsgKey: (state) => state.ws.chatMsgKey,
       myContactDataList: (state) => state.ws.myContactDataList,
     }),
   },
   mounted() {
     this.getHiChatDataList();
     this.homeScrollHeight()
+    this.getGroupMemberList()
+    setTimeout(() => {
+      this.getUserMemberActivity(this.noGroupPeopleData)
+    }, 500);
+
   },
   watch: {
     contactDataList(val) {
@@ -281,41 +283,106 @@ export default {
     ...mapMutations({
       setWsRes: "ws/setWsRes",
       setTopMsg: "ws/setTopMsg",
+      setTopMsgShow: "ws/setTopMsgShow",
       setInfoMsg: "ws/setInfoMsg",
-      setEditMsg: "ws/setEditMsg",
-      setReplyMsg: "ws/setReplyMsg",
       setChatUser: "ws/setChatUser",
+      setChatGroup: "ws/setChatGroup",
+      setContactUser: "ws/setContactUser",
       setAuthority: "ws/setAuthority",
       setHichatNav: "ws/setHichatNav",
-      setChatGroup: "ws/setChatGroup",
       setGroupList: "ws/setGroupList",
-      setTopMsgShow: "ws/setTopMsgShow",
       setActiveName: "ws/setActiveName",
-      setContactUser: "ws/setContactUser",
       setCheckBoxBtn: "ws/setCheckBoxBtn",
       setContactListData: "ws/setContactListData",
+      setGroupMemberDataList:"ws/setGroupMemberDataList",
       setAuthorityGroupData: "ws/setAuthorityGroupData",
     }),
+    // TODO 右鍵
+    onContextmenu(data,type) {
+      let item = [
+        {
+          name: "close",
+          label: "關閉提醒",
+          icon:"el-icon-bell",
+          onClick: () => {
+          },
+        },
+      ];
+      this.$contextmenu({
+        items: item,
+        // event,
+        x: event.clientX,
+        y: event.clientY,
+        customClass: "custom-class",
+        zIndex: 6,
+        width:130,
+        minWidth: 130,
+      });
+      return false;
+    },    
     homeScrollHeight(){
       let scrollTop = document.querySelector(".home-content");
       let headerScrollTop = document.querySelector(".is-top");
       let tabsContentHeight = scrollTop.scrollHeight - headerScrollTop.scrollHeight
       document.querySelector(".el-tabs__content").style.height = tabsContentHeight + 'px';       
-    },    
+    }, 
+    calloutList(){
+      for (let item in this.groupMemberDataList) {
+        this.groupDataList.forEach((el)=>{
+          if(this.groupMemberDataList[item].groupId === Number(el.toChatId.replace("g", ""))){
+            if(el.lastChat === null){
+              return this.newGroupDataList = this.groupDataList
+            }else{
+              const dictionary = this.isBase64(el.lastChat.text).split(" ")
+              this.groupMemberDataList[item].memberList.forEach((name)=> {
+                const xIndex = dictionary.indexOf("@"+name.memberId + "\u200B")
+                if (xIndex > -1) {
+                  dictionary.splice(xIndex, 1, "@" + name.name)
+                }
+              });
+              return el.lastChat.text = dictionary.toString().replace(/,/g, " ")
+            }
+          }
+          this.groupList.forEach((list)=>{
+            if((el.forChatId === "u"+list.memberId) && (el.toChatId === "g" +  list.groupId )){
+              return el.setting = list.setting
+            }
+          })
+        })
+      }
+      this.newGroupDataList = this.groupDataList
+    },
+    getGroupMemberList(){
+      groupMemberList().then((res)=>{
+        if(res.code === 200){
+          this.groupMemberDataList = res.data
+          this.setGroupMemberDataList(this.groupMemberDataList)
+        }
+      })
+    },
+    unique(arr, key) {
+        if (!arr) return arr
+        if (key === undefined) return [...new Set(arr)]
+        const map = {
+            'string': e => e[key],
+            'function': e => key(e),
+        }
+        const fn = map[typeof key]
+        const obj = arr.reduce((o,e) => (o[fn(e)]=e, o), {})
+        return Object.values(obj)
+    },
     judgeTextMarking(data) {
-      if (
-        ["@" + this.myUserInfo.nickname, "@所有成員", "@所有成员"].includes(
-          data
-        )
-      ) {
+      let judgeTextData = data.replace(/\n|\r/g, "").split(" ")
+      const xIndex = judgeTextData.indexOf("@" + this.myUserInfo.nickname)
+      if (xIndex > -1 || ["@所有成員","@所有成员"].includes(data)) {
         if(this.device === "moblie"){
           return `<div style="color:#F00">【 有人@我 】</div>` + data;
         }else{
           return `<div style="color:#F00">【 有人@我 】</div>` + (data.length > 8 ? data.slice(0,6) + '...' : data);
         }
-      } else {
-         if(this.device === "moblie"){
-          return data
+      } else{
+        if(this.device === "moblie"){
+          return data.length > 30 ? data.slice(0,30) + '...' : data
         }else{
           return data.length > 25 ? data.slice(0,10) + '...' : data
         }
@@ -330,38 +397,22 @@ export default {
     },
     handleClick(tab) {
       if (tab.name === "address" || tab.name === "contact") {
-        this.getHistoryMessage.chatType = "CLI_HISTORY_REQ";
-        this.getHistoryMessage.toChatId = tab.name === "address" ? this.chatUser.toChatId : this.contactUser.toChatId;
-        this.getHistoryMessage.id = Math.random();
         this.memberTime = setInterval(() => {
           this.getUserMemberActivity(this.noGroupPeopleData)
         }, 30000);
       } else {
-        this.getHistoryMessage.chatType = "CLI_GROUP_HISTORY_REQ";
-        this.getHistoryMessage.toChatId = this.groupUser.toChatId;
-        this.getHistoryMessage.id = Math.random();
         clearInterval(this.memberTime)
       }
-      Socket.send(this.getHistoryMessage);
       this.setInfoMsg({ infoMsgShow: false });
       this.setActiveName(this.hichatNav.type);
       this.setTopMsgShow(true);
-      this.closeReplyMessage();
+      this.$root.closeReplyMessage();
     },
     //判斷是否base64
     isBase64(data) {
       return AESBase64(data, this.aesKey ,this.aesIv)
     },
-    getHiChatDataList() {
-      let chatMsgKey = {
-        chatType: "CLI_RECENT_CHAT",
-        id: Math.random(),
-        tokenType: 0,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      };
-      Socket.send(chatMsgKey);
-    },
+
     // 收取 socket 回来讯息 (全局讯息)
     handleGetMessage(msg) {
       this.setWsRes(JSON.parse(msg));
@@ -372,7 +423,7 @@ export default {
           this.groupNumBadge = 0;
           this.hiChatNumBadge = 0;
           this.contactNumBadge = 0;
-          this.groupDataList = [];
+          this.groupDataList = []
           userInfo.recentChat.forEach((item) => {
             if (item.isContact && (item.forChatId === item.toChatId)) {
               item.name = "嗨聊记事本"
@@ -390,7 +441,11 @@ export default {
             }
           });
           this.noGroupPeopleData = userInfo.recentChat.filter(res=> !res.isGroup)
-          this.getUserMemberActivity(this.noGroupPeopleData)
+          // this.getGroupMemberList()
+          this.calloutList()
+          if(this.hichatNav.type !=="group"){          
+            this.getUserMemberActivity(this.noGroupPeopleData)
+          }
           break;
         case "SRV_USER_IMAGE":
         case "SRV_USER_AUDIO":
@@ -398,10 +453,21 @@ export default {
         case "SRV_GROUP_IMAGE":
         case "SRV_GROUP_AUDIO":
         case "SRV_GROUP_SEND":
+        case "SRV_GROUP_DEL":
           this.getHiChatDataList();
           break;
       }
     },
+    getHiChatDataList() {
+      let chatMsgKey = {
+        chatType: "CLI_RECENT_CHAT",
+        id: Math.random(),
+        tokenType: 0,
+        token: getToken("token"),
+        deviceId: localStorage.getItem("UUID"),
+      };
+      Socket.send(chatMsgKey);
+    },    
     getUserMemberActivity(data) {
       let memberId = [];
       data.forEach(listNumber => {
@@ -441,12 +507,7 @@ export default {
     },
     getGroupDataList() {
       getGroupList().then((res) => {
-        this.groupList = res.data.list;
-        this.groupList.forEach((el) => {
-          if (el.icon === "") {
-            el.icon = require("./../../../../static/images/image_group_defult.png");
-          }
-        });
+        this.groupList = res.data.list;       
         this.setGroupList(this.groupList);
       });
     },
@@ -461,7 +522,7 @@ export default {
     },
     getGroupListMember(data) {
       let groupId = data.toChatId.replace("g", "");
-      groupListMember({ groupId }).then((res) => {
+      listMember({ groupId }).then((res) => {
         this.contactList = res.data.list;
         this.contactList.forEach((item) => {
           if (item.memberId === this.groupUser.memberId) {
@@ -484,18 +545,20 @@ export default {
       });
     },
     goChatRoom(data, path) {
-      this.setTopMsgShow(true);
-      this.getGroupDataList();
-      this.setInfoMsg({ infoMsgMap: "HiChat" });
-      if(this.device === "moblie"){
-        clearInterval(this.memberTime)
-      }
       if (path === "ChatMsg") {
         data.contactId = data.toChatId.replace("u", "");
         data.memberId = data.toChatId.replace("u", "");
-        this.setChatUser(data);
+        if(this.device === "pc" && (data.toChatId === this.chatUser.toChatId)){
+          return false;
+        } else{
+          this.setChatUser(data);
+        }
       } else if (path === "ChatContact") {
-        this.setContactUser(data);
+        if(this.device === "pc" && (data.toChatId === this.contactUser.toChatId)){
+          return false;
+        } else{
+          this.setContactUser(data);
+        }        
       } else {
         data.icon = data.icon;
         data.groupName = data.name;
@@ -508,11 +571,16 @@ export default {
             data.isManager = item.isManager;
           }
         });
-        this.setChatGroup(data);
-        this.getGroupListMember(data);
-        this.getGroupAuthority(data);
+        if(this.device === "pc" && (data.toChatId === this.groupUser.toChatId)){
+          return false;
+        } else{
+          this.setChatGroup(data);
+        }     
+
       }
       if (this.device === "moblie") {
+        clearInterval(this.memberTime)
+        this.setInfoMsg({ infoMsgMap: "HiChat" });
         this.$router.push({ name: path });
       } else {
         if (data.isContact) {
@@ -526,32 +594,13 @@ export default {
         this.setInfoMsg({
           infoMsgShow: false,
           infoMsgNav: path === "ChatMsg" ? "ContactPage" : "GroupPage",
+          infoMsgMap: "HiChat"
         });
-        this.getHistory(data, path);
-        this.closeReplyMessage();
+        this.$root.closeReplyMessage();
         this.setCheckBoxBtn(true)
       }
-    },
-    closeReplyMessage() {
-      this.setReplyMsg({
-        name: "",
-        icon: "",
-        chatType: "",
-        clickType: "",
-        innerText: "",
-        replyHistoryId: "",
-      });
-      this.setEditMsg({ innerText: "" });
-    },
-    getHistory(data, path) {
-      if (path === "ChatMsg" || path === "ChatContact") {
-        this.getHistoryMessage.chatType = "CLI_HISTORY_REQ";
-      } else {
-        this.getHistoryMessage.chatType = "CLI_GROUP_HISTORY_REQ";
-      }
-      this.getHistoryMessage.toChatId = data.toChatId;
-      this.getHistoryMessage.id = Math.random();
-      Socket.send(this.getHistoryMessage);
+      this.setTopMsgShow(true);
+      this.getGroupDataList();      
     },
   },
 };
@@ -572,14 +621,6 @@ export default {
     .msg-box {
       .content-text {
         span {
-          &:nth-child(1) {
-            width: 15em;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            margin-bottom: 0;
-            font-size: 14px;
-          }
           &:nth-child(2) {
             opacity: 1;
             font-size: 14px;

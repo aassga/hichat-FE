@@ -142,9 +142,9 @@
         list-type="picture"
       >
         <el-button type="primary">点击上传</el-button>
-        <div slot="tip" class="el-upload__tip">
+        <!-- <div slot="tip" class="el-upload__tip">
           只能上传 jpg / png 圖片，且不超过500kb
-        </div>
+        </div> -->
       </el-upload>
       <span slot="footer" class="dialog-footer">
         <template v-if="device === 'moblie'">
@@ -166,7 +166,7 @@
 
 <script>
 import { mapState,mapMutations } from "vuex";
-import { uploadGroupIcon } from "@/api";
+import { uploadGroupIcon } from '@/api/uploadController'
 
 export default {
   name: "AddGroupList",
@@ -177,7 +177,6 @@ export default {
       groupForm: {
         name: "",
       },
-      searchKey: "",
       groupIcon: "",
       fileList: [],
       disabled: true,
@@ -246,7 +245,7 @@ export default {
         icon:this.groupIcon,
         isAdmin:true,
       }
-      localStorage.setItem("groupData",JSON.stringify(groupList))
+      localStorage.setItem("addGroupData",JSON.stringify(groupList))
       this.setGroupPermissionData(this.groupPermissionData)
       this.$router.push({ path: '/SettingGroup'})
     },
@@ -254,6 +253,7 @@ export default {
       this.groupPermissionData.groupName = ""
       this.groupPermissionData.icon =""
       this.setGroupPermissionData(this.groupPermissionData)
+      localStorage.removeItem("addGroupData")
       this.$router.push({ path: "/AddGroup",});
     },
   },
@@ -380,7 +380,7 @@ export default {
             span {
               &::after {
                 content: "";
-                margin-top: 1em;
+                margin-top: 0.95em;
               }
             }
           }

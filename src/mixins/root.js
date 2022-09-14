@@ -1,4 +1,8 @@
+import { maybeKnow} from "@/api/memberContactController";
+import { mapMutations } from "vuex";
+
 const rootMixins = {
+  
   data() {
     return {}
   },
@@ -7,16 +11,43 @@ const rootMixins = {
   created() {
   },
   methods: {
+    ...mapMutations({
+      setReplyMsg:"ws/setReplyMsg",
+      setEditMsg:"ws/setEditMsg",
+      setMaybeKnowNum:"ws/setMaybeKnowNum",
+    }),
+    getMaybeKnow(){
+      maybeKnow().then((res) => {
+        this.setMaybeKnowNum(res.data.length)
+      })
+    },
+    closeReplyMessage() {
+      this.setReplyMsg({
+        name: "",
+        icon: "",
+        chatType: "",
+        clickType: "",
+        innerText: "",
+        replyHistoryId: "",
+        fileSize:"",   
+      });
+      this.setEditMsg({ innerText: "" });
+    },    
     //鎖定滾動
     handleTouch (e) {
       e._isScroller = true
     },
     // 置底
     gotoBottom() {
-      const box = document.getElementsByClassName('message-pabel-box')[0]
-      this.$nextTick(() => {
-        box.scrollTop = box.scrollHeight
-      })
+      let box = document.getElementsByClassName('message-pabel-box')[0]
+      if(box !== undefined){
+        this.$nextTick(() => {
+          setTimeout(() =>{
+            box.scrollTop = box.scrollHeight
+          },500)
+        })
+      }
+
     },
     // // 为了做验证的时分秒默认时间
     newDefaultEnd() {

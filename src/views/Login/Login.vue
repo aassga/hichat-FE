@@ -46,6 +46,7 @@
             v-model.trim="loginForm.password"
             name="password"
             :type="passwordType === 'password' ? 'password' : 'text'"
+            :disabled="passwordDisabled"
             tabindex="2"
             maxLength="12"
             @input="
@@ -90,6 +91,7 @@
             v-model.trim="loginForm.password"
             name="password"
             :type="passwordType === 'password' ? 'password' : 'text'"
+            :disabled="passwordDisabled"
             tabindex="2"
             maxLength="12"
             @input="
@@ -208,6 +210,7 @@ export default {
       remember: true,
       disabled: true,
       dialogShow: false,
+      passwordDisabled:false,
       token: localStorage.getItem("token"),
       device: localStorage.getItem("device"),
 
@@ -224,6 +227,7 @@ export default {
           if(!/^[\u4E00-\u9FA5_a-zA-Z/@~!#$%.^&*=<>:?"{}()]+$/.test(num)) newNum.push(num)
         })
         this.loginForm.phone = newNum.toString().replace(/,/g, "")
+        document.cookie = `phone=${this.loginForm.phone}`
         if (
           Object.values(val).every((el) => el !== "") &&
           val.password.toString().length >= 4
@@ -232,14 +236,14 @@ export default {
         } else {
           this.disabled = true;
         }
-        this.remember ? localStorage.setItem("phone", val.phone) : "";
+        this.remember ? document.cookie = `phone=${this.loginForm.phone}`:document.cookie = 'phone=';
       },
       deep: true,
     },
     remember(val) {
       !val
-        ? localStorage.removeItem("phone")
-        : localStorage.setItem("phone", this.loginForm.phone);
+        ? document.cookie = 'phone='
+        : document.cookie = `phone=${this.loginForm.phone}`
     },
   },
   created() {
@@ -248,9 +252,9 @@ export default {
   mounted() {
     if (this.remember) {
       this.loginForm.phone =
-        localStorage.getItem("phone") !== null
-          ? localStorage.getItem("phone")
-          : "";
+        document.cookie.replace("phone=","") !== null
+          ? document.cookie.replace("phone=","")
+          : document.cookie = 'phone=';
     }
     this.getUUID();
   },
@@ -335,9 +339,11 @@ export default {
         }
         this.loginForm.phone = this.loginForm.phone.trim();
         this.loginForm.password = Encrypt(this.loginForm.password,this.aesKey,this.aesIv)
+        this.passwordDisabled = true
         login(this.loginForm)
           .then((res) => {
             //登录成功
+            this.passwordDisabled = false
             if (res.code === 200) {
               localStorage.setItem(
                 "token",
@@ -358,6 +364,7 @@ export default {
               message: "登录验证失败，请重输入并确认",
               type: "error",
             });
+            this.loginForm.password = Decrypt(this.loginForm.password,this.aesKey,this.aesIv)
             localStorage.clear();
             this.getUUID();
             return false;

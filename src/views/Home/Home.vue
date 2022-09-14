@@ -12,14 +12,14 @@
                 { 'promote-img': num === 2 },
               ]"
               @click="
-                num === 0 || num === 2 ? (centerDialogVisible = true) : $router.push({ name: 'SpreadChange'})
+                num === 0 || num === 2 ? (centerDialogVisible = true) : activeName === 'address' ? $router.push({ name: 'SpreadChange'}) : false
               "
             ></div>
             <span class="home-header-title">{{
               num === 0 ? "通讯录" : num === 1 ? "嗨聊" : "设定"
             }}</span>
             <div v-if="num === 0 || num === 1">
-              <template v-if="['address', 'contact'].includes(activeName || hichatNav.type)">
+              <template v-if="['address', 'contact', 'maybeKnow'].includes(activeName || hichatNav.type)">
                 <router-link
                   :to="'/AddUser'"
                   :style="
@@ -65,11 +65,16 @@
           >
             <router-link :to="item.path">
               <span>
-                <div class="el-badge-box" v-if="index === 1">
+                <div class="el-badge-box" v-if="index === 1 && badgeNum !== 0">
                   <el-badge
                     :value="badgeNum"
                     class="item"
-                    v-if="badgeNum !== 0"
+                  ></el-badge>
+                </div>
+                <div class="el-badge-box" v-if="index === 0 && maybeKnowNum !== 0">
+                  <el-badge
+                    :value="maybeKnowNum"
+                    class="item"
                   ></el-badge>
                 </div>
                 <img :src="index !== num ? item.icon : item.active"
@@ -108,7 +113,7 @@
             >
             </el-input>
             <div v-if="num === 0 || num === 1">
-              <template v-if="['address'].includes(activeName || hichatNav.type)">
+              <template v-if="['address','maybeKnow'].includes(activeName || hichatNav.type)">
                 <router-link :to="'/Spread'" class="spread-style" v-if ="num === 1">
                   <img
                     src="./../../../static/images/pc/promotion.svg"
@@ -130,6 +135,7 @@
                     alt=""
                   />
                 </router-link>
+                
               </template>
             </div>
           </div>
@@ -150,11 +156,16 @@
           >
             <router-link :to="item.path">
               <span>
-                <div class="el-badge-box" v-if="index === 1">
+                <div class="el-badge-box" v-if="index === 1 && badgeNum !== 0">
                   <el-badge
                     :value="badgeNum"
                     class="item"
-                    v-if="badgeNum !== 0"
+                  ></el-badge>
+                </div>
+                <div class="el-badge-box" v-if="index === 0 && maybeKnowNum !== 0">
+                  <el-badge
+                    :value="maybeKnowNum"
+                    class="item"
                   ></el-badge>
                 </div>
                 <img :src="index !== num ? item.icon : item.active"
@@ -167,17 +178,18 @@
         <template v-if="num === 1 && $route.name !== 'Spread'">
           <chat-msg
             v-if="
-              hichatNav.type === 'address' && JSON.stringify(chatUser) !== '{}'
+              hichatNav.type === 'address' && chatUser.type !== 'address' && JSON.stringify(chatUser) !== '{}' 
             "
           />
           <chat-group-msg
             v-else-if="
-              hichatNav.type === 'group' && JSON.stringify(groupUser) !== '{}'
+              hichatNav.type === 'group' && groupUser.type !== 'address' && JSON.stringify(groupUser) !== '{}'
             "
           />
           <chat-contact
             v-else-if="
               hichatNav.type === 'contact' &&
+              contactUser.type !== 'address' && 
               JSON.stringify(contactUser) !== '{}'
             "
           />
@@ -244,7 +256,7 @@
         <router-link :to="'/QRcode'" v-if="num === 0"
           ><img src="./../../../static/images/scan.png" alt=""
         /></router-link>
-        <img src="./../../../static/images/share.png" alt="" @click="copyUrl" />
+        <img src="./../../../static/images/share.svg" alt="" @click="copyUrl" />
         <img
           v-if="num === 0"
           src="./../../../static/images/download.png"
@@ -280,19 +292,15 @@
 
 <script>
 import VueQr from "vue-qr";
-import urlCopy from "@/utils/urlCopy.js";
 import Socket from "@/utils/socket";
 import AESBase64 from "@/utils/AESBase64.js";
-import { getLocal, getToken } from "_util/utils.js";
+import { urlCopy } from "@/utils/urlCopy.js";
+import { getToken } from "_util/utils.js";
 import { mapState, mapMutations } from "vuex";
-import {
-  getGroupList,
-  groupListMember,
-  getUserInfo,
-  getContactList,
-  getMemberActivity,
-  logout,
-} from "@/api";
+import { logout } from "@/api";
+import { getMemberActivity,getUserInfo } from "@/api/memberProfileController";
+import { getContactList,maybeKnow } from "@/api/memberContactController";
+import { listMember,getGroupList } from '@/api/groupController'
 import { Encrypt } from "@/utils/AESUtils.js";
 import ChatMsg from "./../Chat/ChatMsg.vue";
 import ChatGroupMsg from "./../Chat/Chat.vue";
@@ -340,22 +348,11 @@ export default {
       searchData: [],
       chatDataList: [],
       addressDataList: [],
+      maybeKnowDataList:[],
       downloadFilename: "",
       logoutDialogShow: false,
-      infoMsgAsideShow: false,
       centerDialogVisible: false,
       device: localStorage.getItem("device"),
-      getHistoryMessage: {
-        chatType: "",
-        toChatId: "",
-        id: Math.random(),
-        tokenType: 0,
-        targetId: "",
-        pageSize: 1000,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      },
-      agentId: "",
 
       //加解密 key iv
       aesKey: "hichatisachatapp",
@@ -375,6 +372,7 @@ export default {
         : 2;
     Socket.$on("message", this.handleGetMessage);
     this.getContactDataList();
+    this.getMaybeKnow();
     this.getUserData();
     if (localStorage.getItem("soundNofiy") === null) {
       this.setSoundNofiy(this.soundNofiy);
@@ -397,18 +395,26 @@ export default {
       let searchKeyData = val.split(" ");
       searchKeyData.forEach((el) => {
         let searchCase =
-          this.activeName === "address" ? this.addressDataList : this.newGroupList;
+          this.activeName === "address" 
+          ? this.addressDataList 
+          : this.activeName === "group" 
+          ? this.newGroupList
+          : this.maybeKnowDataList;
         this.searchData = searchCase.filter((item) => {
           if (this.activeName === "address") {
             return item.name.indexOf(el.replace("@", "")) !== -1;
-          } else {
+          } else if(this.activeName === "group") {
             return item.groupName.indexOf(el.replace("@", "")) !== -1;
+          } else {
+            return item.nickname.indexOf(el.replace("@", "")) !== -1;
           }
         });
       });
       this.activeName === "address"
         ? this.setMyContactDataList(this.searchData)
-        : this.setGroupList(this.searchData);
+        : this.activeName === "group" 
+        ? this.setGroupList(this.searchData)
+        : this.setMaybeKnowList(this.searchData)
     },
   },
   computed: {
@@ -417,19 +423,19 @@ export default {
       infoMsg: (state) => state.ws.infoMsg,
       chatUser: (state) => state.ws.chatUser,
       badgeNum: (state) => state.ws.badgeNum,
+      maybeKnowNum: (state) => state.ws.maybeKnowNum,
       groupUser: (state) => state.ws.groupUser,
       hichatNav: (state) => state.ws.hichatNav,
       activeName: (state) => state.ws.activeName,
       contactUser: (state) => state.ws.contactUser,
       nofity: (state) => state.ws.nofity,
       soundNofiy: (state) => state.ws.soundNofiy,
+      groupMemberDataList: (state) => state.ws.groupMemberDataList,
     }),
   },
   methods: {
     ...mapMutations({
-      setNofiy: "ws/setNofiy",
       setSoundNofiy: "ws/setSoundNofiy",
-      setWsRes: "ws/setWsRes",
       setInfoMsg: "ws/setInfoMsg",
       setBadgeNum: "ws/setBadgeNum",
       setChatUser: "ws/setChatUser",
@@ -439,6 +445,7 @@ export default {
       setTopMsgShow: "ws/setTopMsgShow",
       setMyUserInfo: "ws/setMyUserInfo",
       setContactUser: "ws/setContactUser",
+      setMaybeKnowList:"ws/setMaybeKnowList",
       setContactListData: "ws/setContactListData",
       setMyContactDataList: "ws/setMyContactDataList",
     }),
@@ -458,7 +465,6 @@ export default {
         this.setChatGroup(this.groupUser);
       }
       this.setHichatNav({ type: type, num: 1 });
-      this.getHistory(type);
       this.$router.push({ name: "HiChat", params: data });
     },
     //判斷是否base64
@@ -479,7 +485,7 @@ export default {
           }    
          memberActivityData.push(el.contactId)   
         });
-        this.getUserMemberActivity(memberActivityData)
+        // this.getUserMemberActivity(memberActivityData)
       });
       getGroupList().then((res) => {
         this.groupList = res.data.list;
@@ -493,6 +499,11 @@ export default {
         })
       });
     },
+    getMaybeKnow(){
+      maybeKnow().then((res) => {
+        this.maybeKnowDataList = res.data
+      })
+    },    
     getUserMemberActivity(data){
       let memberId = data
       getMemberActivity({memberId}).then((res) => {
@@ -522,7 +533,7 @@ export default {
     },
     getGroupListMember() {
       let groupId = this.groupUser.toChatId.replace("g", "");
-      groupListMember({ groupId }).then((res) => {
+      listMember({ groupId }).then((res) => {
         this.contactList = res.data.list;
         this.contactList.forEach((item) => {
           if (item.icon === undefined) {
@@ -536,7 +547,6 @@ export default {
       this.num = index;
       this.setInfoMsg({ infoMsgShow: false });
       this.setHichatNav({ type: this.hichatNav.type, num: this.num });
-      if (this.num === 1) this.getHistory(this.hichatNav.type);
       this.getHistorySetTimeout();
     },
     getHistorySetTimeout() {
@@ -572,9 +582,6 @@ export default {
                 item.contactId = this.chatUser.contactId;
                 item.username = this.chatUser.username;
               }
-              if (this.device === "pc") {
-                this.setChatUser(item);
-              }
             }
             this.setBadgeNum(numNumber);
           });
@@ -586,7 +593,13 @@ export default {
         case "SRV_GROUP_AUDIO":
         case "SRV_GROUP_SEND":
           if (msgInfo.chat.fromChatId !== "u" + localStorage.getItem("id")) {
-            setTimeout(() => this.openNotify(msgInfo, msgInfo.chatType), 1000);
+            this.groupList.forEach((list)=>{
+              if(("u" + list.memberId === msgInfo.forChatId) && ("g" + list.groupId === msgInfo.toChatId)){
+                if(list.setting.prompt){
+                  setTimeout(() => this.openNotify(msgInfo, msgInfo.chatType), 500);
+                } 
+              }
+            })
           }
           if (this.device === "moblie") {
             this.getHiChatDataList();
@@ -608,6 +621,10 @@ export default {
           break;
         case "SRV_CHAT_DEL":
           this.getHiChatDataList();
+          break;
+        case "SRV_EDIT_CONTACT":  
+          this.getMaybeKnow();
+          break  
       }
     },
     getHiChatDataList() {
@@ -623,7 +640,7 @@ export default {
     openNotify(msgInfo, chatType) {
       // 判断浏览器是否支持Notification
       if (!window.Notification) {
-        // console.log("浏览器不支持通知");
+        this.$message({ message: "浏览器无法开启桌面通知", type: "error" });
       } else {
         // 检查用户曾经是否同意接受通知
         if (Notification.permission === "granted") {
@@ -633,10 +650,7 @@ export default {
           Notification.requestPermission(function (permission) {
             this.notifyMe(msgInfo, chatType); // 显示通知
           });
-        } else {
-          // denied 用户拒绝
-          // console.log("用户曾经拒绝显示通知");
-        }
+        } 
       }
     },
     noIconShow(iconData, key) {
@@ -674,7 +688,22 @@ export default {
       switch (chatType) {
         case "SRV_USER_SEND":
         case "SRV_GROUP_SEND":
-          this.bodyMsg = msgInfo.chat.text;
+          if(chatType === "SRV_GROUP_SEND"){
+            for (let item in this.groupMemberDataList) {
+              if(this.groupMemberDataList[item].groupId === Number(msgInfo.chat.toChatId.replace("g", ""))){
+                const dictionary = this.isBase64(msgInfo.chat.text).split(" ")
+                this.groupMemberDataList[item].memberList.forEach((name)=> {
+                  const xIndex = dictionary.indexOf("@"+name.memberId + "\u200B")
+                  if (xIndex > -1) {
+                    dictionary.splice(xIndex, 1, "@" + name.name)
+                  }
+                });
+                this.bodyMsg = dictionary.toString().replace(/,/g, " ")
+              }
+            } 
+          }else{
+            this.bodyMsg = msgInfo.chat.text;
+          }    
           break;
         case "SRV_USER_IMAGE":
         case "SRV_GROUP_IMAGE":
@@ -684,6 +713,7 @@ export default {
         case "SRV_GROUP_AUDIO":
           this.bodyMsg = "传送了语音";
           break;
+
       }
       // https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification#Parameters
       this.$notification.show(
@@ -726,33 +756,17 @@ export default {
               this.setChatGroup(this.notifyData[0]);
               this.getGroupListMember();
             }
-            this.getHistory(notify.type);
             this.getHistorySetTimeout();
           },
         }
       );
-    },
-    getHistory(type) {
-      if (type === "address" || type === "contact") {
-        this.getHistoryMessage.chatType = "CLI_HISTORY_REQ";
-        this.getHistoryMessage.toChatId = type === "address" ? this.chatUser.toChatId : this.contactUser.toChatId;
-        this.getHistoryMessage.id = Math.random();
-      } else {
-        this.getHistoryMessage.chatType = "CLI_GROUP_HISTORY_REQ";
-        this.getHistoryMessage.toChatId = this.groupUser.toChatId;
-        this.getHistoryMessage.id = Math.random();
-      }
-      Socket.send(this.getHistoryMessage);
     },
     loginOut() {
       logout()
         .then((res) => {
           if (res.code === 200 && res.message === "登出成功") {
             this.$router.push({ path: "/login" });
-            localStorage.removeItem("id");
-            localStorage.removeItem("token");
-            localStorage.removeItem("myUserInfo");
-            localStorage.removeItem("myUserList");
+            localStorage.clear()
             window.location.reload();
           }
         })

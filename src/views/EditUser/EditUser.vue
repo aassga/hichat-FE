@@ -41,7 +41,7 @@
           <div class="home-header flex-start">
             <div class="home-user-pc" @click="back"></div>
             <span class="home-header-title">编辑个人资料</span>
-            <div class="home-add-user home-edit-img" @click="editSubmit"></div>
+            <div class="home-add-user home-edit-img" @click="editSubmit()"></div>
           </div>
         </el-header>
         <div class="home-content">
@@ -58,7 +58,7 @@
             </div> -->
           </div>
           <div class="user-edit-form">
-            <el-form ref="form" :model="userEditForm" label-width="100px">
+            <el-form ref="form" :model="userEditForm" label-width="100px" onsubmit="return false;">
               <el-form-item label="用户昵称">
                 <el-input v-model="userEditForm.nickname"></el-input>
               </el-form-item>
@@ -84,9 +84,9 @@
         list-type="picture"
       >
         <el-button type="primary">点击上传</el-button>
-        <div slot="tip" class="el-upload__tip">
+        <!-- <div slot="tip" class="el-upload__tip">
           只能上传 jpg / png 圖片，且不超过500kb
-        </div>
+        </div> -->
       </el-upload>
       <span slot="footer" class="dialog-footer">
         <template v-if="device === 'moblie'">
@@ -107,7 +107,8 @@
 </template>
 
 <script>
-import { updateNickname, uploadIcon } from "@/api";
+import { updateNickname  } from "@/api/memberProfileController";
+import { uploadIcon } from '@/api/uploadController'
 import { mapMutations } from "vuex";
 
 export default {

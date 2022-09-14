@@ -4,10 +4,11 @@
     :style="device !== 'moblie' ? 'height:59px' : ''"
     @touchmove="$root.handleTouch"
   >
-    <div class="input-tools-right" v-if="device === 'moblie'">
+    <div class="input-tools-right" >
       <div>
-        <!-- <img src="./../../static/images/plus.png" alt=""> -->
+        <img src="./../../static/images/plus.png" alt="" :style="device === 'moblie'?'margin-right: 10px;':'margin-left: 10px; cursor: pointer;'" @click="uploadFileShow = true">
         <img
+          v-if="device === 'moblie'"
           src="./../../static/images/image.png"
           alt=""
           @click="uploadImgShow = true"
@@ -97,9 +98,6 @@
         v-else
       >
         <el-button type="primary">点击上传</el-button>
-        <div slot="tip" class="el-upload__tip">
-          只能上传 jpg / png 图片，且不超过500kb
-        </div>
       </el-upload>
       
       <span slot="footer" class="dialog-footer">
@@ -133,6 +131,10 @@
           {{ one }}<span>:</span>{{ two }}<span>:</span>{{ three }}
         </div>
         <div id="audioVoice-box"></div>
+        <!-- <mini-audio
+          id="audioVoice-box"
+          :audio-source=""
+        ></mini-audio> -->
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" :disabled="disabledPlay" @click="onStartVoice"
@@ -162,19 +164,61 @@
         v-on:closePictureShow="pictureShow"
       ></Photo>
     </el-dialog>
+    <el-dialog
+      title="档案上传"
+      :before-close="closeModel"
+      :visible.sync="uploadFileShow"
+      :close-on-click-modal="false"
+      :modal-append-to-body="false"
+      :append-to-body="false"
+      :class="{ 'el-dialog-loginOut': device === 'pc' }"
+      v-loading.fullscreen.lock="fullscreenLoading"
+      element-loading-text="档案上传中..."
+      width="100%"
+      class="el-upload-img"
+      center
+    >
+      <el-upload
+        class="upload-demo"
+        action="#"
+        accept=".zip, .rar, .txt,.pdf, .doc, .docx, .xls, .xlsx"
+        :on-change="handleChange"
+        :on-remove="handleRemove"
+        :on-exceed="limitFileCheck"
+        :file-list="fileData"
+        :auto-upload="false"
+        :multiple="false"
+        :limit="1"
+        >
+        <el-button size="small" type="primary">点击上传</el-button>
+      </el-upload>
+      <span slot="footer" class="dialog-footer">
+        <template v-if="device === 'moblie'">
+          <el-button type="success" @click="submitFile()">确认</el-button>
+          <el-button @click="closeModel()">取消</el-button>
+        </template>
+        <template v-else>
+          <el-button class="background-gray" @click="closeModel()"
+            >取消</el-button
+          >
+          <el-button class="background-orange" @click="submitFile()"
+            >确认</el-button
+          >
+        </template>
+      </span>
+    </el-dialog>    
     <audio id="notify-send-audio" src="./../../static/wav/send.mp3" preload="none"></audio>
   </div>
 </template>
 
 <script>
 import Socket from "@/utils/socket";
-
-import {VEmojiPicker} from 'v-emoji-picker'
 import Record from "./../../static/js/record-sdk";
 import Photo from "./Photo.vue";
-import { getLocal, getToken } from "_util/utils.js";
+import { getToken } from "_util/utils.js";
+import { VEmojiPicker } from 'v-emoji-picker'
 import { mapState, mapMutations } from "vuex";
-import { uploadMessageImage, uploadMessageFile } from "@/api";
+import { uploadMessageFile,uploadMessageImage } from '@/api/uploadController'
 import { Encrypt } from "@/utils/AESUtils.js";
 
 export default {
@@ -186,9 +230,11 @@ export default {
       showDialog: false,
       sendAduioShow: false,
       uploadImgShow: false,
+      uploadFileShow:false,
       takePictureShow: false,
       fullscreenLoading: false,
       fileList: [],
+      fileData:[],
       file:{},
       copyPicture:false,
       device: localStorage.getItem("device"),
@@ -262,9 +308,25 @@ export default {
     handleRemove(file, fileList) {
       this.fileList = fileList
     },
+    handleChange(file, fileList) {
+      let fileFilter = file.name.substring(file.name.lastIndexOf('.')+1)      
+      if(file.name.length > 50){
+        this.$message.error("档案名称过长无法传送");
+        fileList.splice(-1,1)
+        return false;
+      }else if(["exe","apk","ipa"].includes(fileFilter)){
+        this.$message.error("不支援exe、apk、ipa档案格式上传");
+        fileList.splice(-1,1)
+        return false;
+      }      
+      this.fileData = fileList
+    },  
     // 选择的文件超出限制的文件总数量时触发
     limitCheck() {
       this.$message({ message: "最多只能上传10张图片", type: "warning" });
+    },
+    limitFileCheck(){
+      this.$message({ message: "最多只能上传1个档案", type: "warning" });
     },
     // 取得圖片
     uploadImg(file, fileList) {
@@ -272,8 +334,10 @@ export default {
     },
     closeModel(){
       this.fileList = [];
+      this.fileData = [];
       this.copyPicture = false   
       this.uploadImgShow = false;
+      this.uploadFileShow= false;
       this.fullscreenLoading = false;
     },
     //貼上上傳圖片
@@ -315,6 +379,7 @@ export default {
         this.submitAvatarUpload(data.raw)
       })
     },
+    
     // 上傳圖片
     submitAvatarUpload(data) {
       let formData = new FormData();
@@ -349,7 +414,37 @@ export default {
         }
       });
     },
-
+    submitFile(){
+      let formData = new FormData();
+      formData.append("file", this.fileData[0].raw);
+      formData.append("type", "FILE");
+      this.fullscreenLoading = true;
+      uploadMessageFile(formData).then((res) => {
+        console.log(res.lengthComputable);
+        if (res.code === 200) {
+          let message ={
+            chatType: "CLI_USER_FILE",
+            deviceId: localStorage.getItem("UUID"),
+            fileSize: JSON.stringify(this.fileData[0].size),
+            fromChatId:"u" + localStorage.getItem("id"),
+            id:Math.random(),
+            replyHistoryId:"",
+            targetArray :[],
+            text:Encrypt(res.data,this.aesKey,this.aesIv),//TODO 加密  
+            toChatId:this.userData.toChatId,
+            token:getToken("token"),
+            tokenType:0
+          }
+          Socket.send(message);
+          this.fileData = [];
+          this.uploadFileShow = false;
+          this.fullscreenLoading = false;
+        } else if (res.code === 40001) {
+          this.fileData = [];
+          this.fullscreenLoading = false;
+        }
+      })
+    },
     // 開始計時
     startHandler() {
       this.resetTime();
@@ -426,6 +521,7 @@ export default {
         success: (res) => {
           this.isVoice = true;
           this.endDisabledPlay = false;
+          this.startHandler()
         },
         error: (e) => {
           this.resetTime();
@@ -436,7 +532,6 @@ export default {
           this.$message({ message: e, type: "warning" });
         },
       });
-      this.$nextTick(() => setTimeout(() => this.startHandler(), 1000));
     },
 
     // 结束录音
@@ -505,7 +600,6 @@ export default {
     },
     // 按Enter发送消息
     keyUp(event) {
-      console.log(123)
       if (event.shiftKey && event.keyCode === 13) {
         return this.textArea;
       } else if (event.key === "Enter") {
@@ -527,22 +621,10 @@ export default {
         }
       }
     },
-    // 關閉回復訊息
-    closeReplyMessage() {
-      this.setReplyMsg({
-        name: "",
-        icon: "",
-        chatType: "",
-        clickType: "",
-        innerText: "",
-        replyHistoryId: "",
-      });
-      this.setEditMsg({ innerText: "" });
-    },
     // 发送消息
     sendMessage() {
       if (this.textArea.replace(/\s+/g, "") === "") {
-        this.$message({ message: "不能发送空白消息", type: "error" });
+        this.$message.error("不能发送空白消息");
         this.textArea = "";
         return false;
       }      
@@ -571,7 +653,7 @@ export default {
       })
       
       Socket.send(message);
-      this.closeReplyMessage();
+      this.$root.closeReplyMessage();
       // 消息清空
       this.textArea = "";
       this.showDialog = false;
@@ -612,7 +694,7 @@ export default {
       };
       // 发送服务器
       Socket.send(editMessage);
-      this.closeReplyMessage();
+      this.$root.closeReplyMessage();
       // 消息清空
       this.textArea = "";
     },
@@ -624,7 +706,7 @@ export default {
 };
 </script>
 
-<style lang="scss" >
+<style lang="scss">
 .message-input-box {
   height: 55px;
   background-color: rgba(255, 255, 255, 0.85);
@@ -641,7 +723,7 @@ export default {
     }
   }
   .text-send-box {
-    width: 280px;
+    width: 260px;
     height: 35px;
     display: flex;
     align-items: center;

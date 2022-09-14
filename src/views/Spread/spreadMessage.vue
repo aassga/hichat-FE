@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper" @touchmove="$root.handleTouch">
-    <el-container v-if="device === 'moblie'">
+    <el-container>
       <el-main>
         <el-header height="70px">
           <div class="home-header">
@@ -89,9 +89,6 @@
               :limit="1"              
             >
               <el-button type="primary">点击上传</el-button>
-              <div slot="tip" class="el-upload__tip">
-                只能上传 jpg / png 图片，且不超过500kb
-              </div>
             </el-upload>
             <span slot="footer" class="dialog-footer">
               <template v-if="device === 'moblie'">
@@ -123,7 +120,8 @@ import Socket from "@/utils/socket";
 import { VEmojiPicker } from 'v-emoji-picker'
 import { getToken } from "_util/utils.js";
 import { Encrypt } from "@/utils/AESUtils.js";
-import { uploadMessageImage } from "@/api";
+import { uploadMessageImage } from '@/api/uploadController'
+
 export default {
   name: "spreadMessage",
   data() {
@@ -409,7 +407,7 @@ export default {
     }
   }
   .text-send-box {
-    width: 280px;
+    width: 260px;
     height: 35px;
     display: flex;
     align-items: center;

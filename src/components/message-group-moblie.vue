@@ -1,14 +1,14 @@
 <template>
-  <div class="message-pabel-box" @touchmove="$root.handleTouch">
+  <div class="message-pabel-box" @touchmove="$root.handleTouch" v-debounce="scrollHistoryBar">
     <ul class="message-styles-box">
-      <div v-for="(item, index) in newMessageData" :key="index">
+      <div v-for="(item, index) in reversedMessage" :key="index">
         <div class="now-time">
           <span>{{ index }}</span>
         </div>
         <el-checkbox-group v-model="checkList">
           <el-checkbox
             v-for="(el, index) in item"
-            :key="index"
+            :key="el.historyId"
             :label="el"
             :disabled="showCheckBtn(checkBoxDisabled, el)"
             :class="judgeClass(item[index])"
@@ -45,7 +45,7 @@
                     v-if="el.chatType === 'SRV_GROUP_SEND'"
                     class="message-classic"
                     @contextmenu.prevent.stop="onContextmenu(el)"
-                    @dblclick="dblclick(el)"
+                    @dblclick="replyMsgclick(el,'replyMsg')"
                   >
                     <div class="message-box">
                       <div
@@ -73,26 +73,27 @@
                             <div>
                               <div class="goAnchor-box">
                                 <span
-                                  v-if="
-                                    el.isRplay.chatType === 'SRV_GROUP_SEND'
-                                  "
+                                  v-if="el.isRplay.chatType === 'SRV_GROUP_SEND'"
                                   class="goAnchor"
                                   >{{ isBase64(el.isRplay.text) }}</span
                                 >
                                 <img
-                                  v-if="
-                                    el.isRplay.chatType === 'SRV_GROUP_IMAGE'
-                                  "
+                                  v-else-if="el.isRplay.chatType === 'SRV_GROUP_IMAGE'"
                                   :src="isBase64(el.isRplay.text)"
                                   style="border-radius: 5px"
                                 />
-                                <div class="reply-audio-box"></div>
-                                <mini-audio
-                                  v-if="
-                                    el.isRplay.chatType === 'SRV_GROUP_AUDIO'
-                                  "
-                                  :audio-source="isBase64(el.isRplay.text)"
-                                ></mini-audio>
+                                <span v-else-if="el.isRplay.chatType === 'SRV_GROUP_AUDIO'">
+                                  <div class="reply-audio-box"></div>
+                                  <mini-audio
+                                    :audio-source="isBase64(el.isRplay.text)"
+                                  ></mini-audio>
+                                </span>
+                                <div v-else-if="el.isRplay.chatType === 'SRV_GROUP_FILE'" class="message-file-box" id="file-download">
+                                <div class="file-message" style="padding-left:0;">
+                                  <span>{{fileData(isBase64(el.isRplay.text),'content')}}</span>
+                                  <span>档案大小　: {{ fileData(el.isRplay.fileSize,'size') }}</span>
+                                </div>
+                              </div>
                               </div>
                             </div>
                           </div>
@@ -100,7 +101,6 @@
                       </template>
 
                       <div
-                        v-if="device === 'pc'"
                         :class="{
                           'reply-content': el.isRplay !== null,
                         }"
@@ -113,72 +113,68 @@
                               item.startsWith('@') && item.length > 1,
                           }"
                         >
-                          <vue-markdown :anchor-attributes="linkAttrs">{{
-                            item
-                          }}</vue-markdown>
-
-                          <!-- @click="
-                              item.startsWith('@')
-                                ? carteMsgShow(item.replace(/[\@|\s*]/g, ''))
-                                : false
-                            " -->
-                        </span>
-                      </div>
-
-                      <div
-                        v-else
-                        :class="{
-                          'reply-content': el.isRplay !== null,
-                        }"
-                      >
-                        <div
-                          v-for="(item, index) in el.newContent"
-                          :key="index"
-                          :class="{
-                            'message-touch-carte':
-                              item.startsWith('@') && item.length > 1,
-                          }"
-                        >
-                          <div
-                            v-if="!IsURL(item)"
-                            @click.prevent.stop="
-                              !item.startsWith('@') ? onContextmenu(el) : false
-                            "
-                          >
-                            <span v-html="item"></span>
-                            <!-- @click="
-                                item.startsWith('@')
-                                  ? carteMsgShow(item.replace(/[\@|\s*]/g, ''))
-                                  : false
-                              " -->
-                          </div>
-                          <div v-else-if="IsURL(item)">
+                          <template v-if="device === 'pc'">
+                            <vue-markdown :anchor-attributes="linkAttrs">{{
+                              calloutTextAreaConvert(item)
+                            }}</vue-markdown>
+                          </template>
+                          <template v-else>
                             <div
-                              v-if="device === 'moblie'"
-                              class="images-more-btn"
-                              style="top: 5px"
-                              @click.prevent.stop="
-                                device === 'moblie' ? onContextmenu(el) : false
-                              "
+                              v-if="!IsURL(item)"
+                              @click.prevent.stop="onContextmenu(el)"
                             >
-                              <i class="el-icon-more"></i>
+                              <vue-markdown :anchor-attributes="linkAttrs">{{
+                                calloutTextAreaConvert(item)
+                              }}</vue-markdown>
                             </div>
-                            <vue-markdown
-                              :class="device === 'moblie' ? 'link-style' : ''"
-                              :anchor-attributes="linkAttrs"
-                              >{{ item }}</vue-markdown
-                            >
-                          </div>
-                          <span v-else v-html="item"></span>
-                        </div>
+                            <div v-else-if="IsURL(item)">
+                              <div
+                                class="images-more-btn"
+                                style="top: 5px"
+                                @click.prevent.stop="
+                                  device === 'moblie' ? onContextmenu(el) : false
+                                "
+                              >
+                                <i class="el-icon-more"></i>
+                              </div>
+                              <vue-markdown
+                                class="link-style"
+                                :anchor-attributes="linkAttrs"
+                                >{{ item }}</vue-markdown
+                              >
+                            </div>
+                            <span v-else v-html="item"></span>
+                          </template>
+                        </span>
                       </div>
                     </div>
                   </span>
                   <span
+                    class="message-classic"
+                    v-else-if="el.chatType === 'SRV_GROUP_FILE'"
+                    @contextmenu.prevent.stop="onContextmenu(el)"
+                    @dblclick="replyMsgclick(el,'replyMsg')" 
+                    @click.prevent.stop="
+                      device === 'moblie' ? onContextmenu(el) : false
+                    "
+                  >
+                    <div class="message-box">
+                      <div class="message-name" style="padding: 0 0 10px 0;">{{ el.name }}</div>
+                      <div class="message-file-box" id="file-download">
+                        <div class="file-box"></div>
+                        <div class="file-message">
+                          <span>{{fileData(isBase64(el.message.content),'content')}}</span>
+                          <span>档案大小　: {{ fileData(el.fileSize,'size') }}</span>
+                        </div>
+  
+                      </div>
+                    </div>
+                  </span>                  
+                  <span
                     class="message-audio"
                     v-else-if="el.chatType === 'SRV_GROUP_AUDIO'"
                     @contextmenu.prevent.stop="onContextmenu(el)"
-                    @dblclick="dblclick(el)"
+                    @dblclick="replyMsgclick(el,'replyMsg')"
                   >
                     <div class="message-box">
                       <div class="message-name">{{ el.name }}</div>
@@ -200,7 +196,7 @@
                     class="message-image"
                     v-else-if="el.chatType === 'SRV_GROUP_IMAGE'"
                     @contextmenu.prevent.stop="onContextmenu(el)"
-                    @dblclick="dblclick(el)"
+                    @dblclick="replyMsgclick(el,'replyMsg')"
                   >
                     <div class="message-box">
                       <div class="message-name" style="padding-right: 36px">
@@ -292,14 +288,12 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import {
-  deleteRecentChat,
-  pinHistory,
-  unpinHistory,
-  getGroupAuthoritySetting,
-} from "@/api";
+import { copyPaste } from "@/utils/urlCopy.js";
+import { getGroupAuthoritySetting } from '@/api/groupController'
+import { pinHistory,unpinHistory,deleteRecentChat } from '@/api/chatController'
+import { fileBoxName, formatFileSize } from "@/utils/FileSizeName.js";
+import { saveAs } from 'file-saver';
 import AESBase64 from "@/utils/AESBase64.js";
-
 import VueMarkdown from "vue-markdown";
 
 export default {
@@ -311,23 +305,25 @@ export default {
     messageData: {
       type: Array,
     },
-    timeOut: {
-      type: Number,
-    },
     showCheckBoxBtn: {
       type: Boolean,
     },
     checkDataList: {
       type: Array,
     },
+    historyMsgLength:{
+      type: Number,
+    }
   },
   data() {
     return {
       newData: [],
       message: [],
       checkList: [],
+      newArr:[],
       newMessageData: {},
       checkBoxDisabled: true,
+      isChatTop:false,
       fullscreenLoading: false,
       fileList: [],
       device: localStorage.getItem("device"),
@@ -342,8 +338,7 @@ export default {
     };
   },
   created() {
-    this.groupData = JSON.parse(localStorage.getItem("groupData"));
-    this.setMyUserInfo(JSON.parse(localStorage.getItem("myUserInfo")));
+    this.groupData = this.groupUser
     this.getGroupAuthority();
   },
   computed: {
@@ -353,6 +348,22 @@ export default {
       contactListData: (state) => state.ws.contactListData,
       goAnchorMessage: (state) => state.ws.goAnchorMessage,
     }),
+    reversedMessage: function () {
+      this.newMessageData = {};
+      //去除重复
+      this.message = this.unique(this.messageData , 'historyId') 
+      this.message.forEach((el)=>{
+        this.newMessageData[this.$root.formatTimeDay(el.message.time)]=[]
+      })
+
+      for(let item in this.newMessageData){
+        this.newMessageData[item] = this.message.filter((res)=>{
+          return item === this.$root.formatTimeDay(res.message.time)
+        })   
+      }
+      if(!this.showScrollBar) this.$root.gotoBottom()
+      return this.newMessageData
+    },
   },
   watch: {
     showCheckBoxBtn(val) {
@@ -364,66 +375,73 @@ export default {
     checkDataList(val) {
       this.checkList = val;
     },
-    messageData(val) {
-      //去除重复
-      const set = new Set();
-      this.message = val.filter((item) =>
-        !set.has(item.historyId) ? set.add(item.historyId) : false
-      );
-      this.newMessageData = {};
-      this.message.forEach((el) => {
-        this.newMessageData[this.$root.formatTimeDay(el.message.time)] = [];
-        let newData = this.message.filter((res) => {
-          return (
-            this.$root.formatTimeDay(res.message.time) ===
-            this.$root.formatTimeDay(el.message.time)
-          );
-        });
-        this.newMessageData[this.$root.formatTimeDay(el.message.time)] =
-          newData;
-          
-      });
-      this.$root.gotoBottom();
+    groupUser(){
+      this.$root.gotoBottom()
     },
   },
   mounted() {
-    window.addEventListener(
-      "scroll",
-      () => {
-        let scrollTop = document.querySelector(".message-pabel-box");
-        this.showScrollBar = !(
-          (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.2001953125 : 0.60009765625)  <=
-          scrollTop.clientHeight
-        );
-      },
-      true
-    );
     if (this.goAnchorMessage.historyId !== undefined) {
-      let newTime = this.timeOut + 3000;
       setTimeout(() => {
         this.goAnchor(this.goAnchorMessage.historyId);
         this.setGoAnchorMessage({});
-      }, newTime);
+      }, 2000);
     }
   },
   methods: {
     ...mapMutations({
-      setInfoMsg: "ws/setInfoMsg",
       setEditMsg: "ws/setEditMsg",
-      setChatUser: "ws/setChatUser",
       setReplyMsg: "ws/setReplyMsg",
-      setMyUserInfo: "ws/setMyUserInfo",
       setGoAnchorMessage: "ws/setGoAnchorMessage",
     }),
+    unique(arr, key) {
+        if (!arr) return arr
+        if (key === undefined) return [...new Set(arr)]
+        const map = {
+            'string': e => e[key],
+            'function': e => key(e),
+        }
+        const fn = map[typeof key]
+        const obj = arr.reduce((o,e) => (o[fn(e)]=e, o), {})
+        return Object.values(obj)
+    },
+    scrollHistoryBar(){
+      let scrollTop = document.querySelector(".message-pabel-box");
+      if(scrollTop !==null){
+        this.showScrollBar = !(
+          (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.2001953125 : 0.60009765625) <= scrollTop.clientHeight
+          );   
+          if(scrollTop.scrollTop < 5000 && this.historyMsgLength === 200){
+            this.$emit("scrollHistory",this.message[0].historyId)
+          }
+        this.$emit('scrollBar',this.showScrollBar)
+      }
+    },
+    calloutTextAreaConvert(data){
+      if(!data.match("@") || ["@所有成員","@所有成员"].includes(data)){
+        return data
+      }else{
+        this.newArr = this.contactListData.find((el)=>{
+          return "@" + el.memberId + "\u200B" === data
+        })
+        if(this.newArr !== undefined){
+          return data = "@" + this.newArr.name
+        }else{
+          return data
+        }
+      }
+    },
+    fileData(data,type){
+      if(type === "content"){
+        return fileBoxName(data)
+      }else{
+        return formatFileSize(data)
+      }
+    },  
     showCheckBtn(status, data) {
       if (status) {
         return status;
       } else if (!status) {
-        if (
-          ["SRV_GROUP_SEND", "SRV_GROUP_IMAGE", "SRV_GROUP_AUDIO"].includes(
-            data.chatType
-          )
-        ) {
+        if (["SRV_GROUP_SEND", "SRV_GROUP_IMAGE", "SRV_GROUP_AUDIO","SRV_GROUP_FILE"].includes(data.chatType)) {
           return status;
         } else {
           return !status;
@@ -461,11 +479,16 @@ export default {
       }
     },
     goAnchor(data) {
-      document.getElementById(data).classList.add("blink");
-      document.getElementById(data).scrollIntoView(true);
-      setTimeout(() => {
-        document.getElementById(data).classList.remove("blink");
-      }, 3000);
+      if(document.getElementById(data) === null){
+        this.$message({ message: "讯息过久，无法查询", type: "error" });
+        return
+      }else{
+        document.getElementById(data).classList.add("blink");
+        document.getElementById(data).scrollIntoView(true);
+        setTimeout(() => {
+          document.getElementById(data).classList.remove("blink");
+        }, 3000);
+      }   
     },
     //判斷是否base64
     isBase64(data) {
@@ -504,42 +527,15 @@ export default {
         return "message-layout-left";
       }
     },
-    carteMsgShow(data) {
-      this.carteContact = this.contactListData.filter((el) => {
-        return el.username === data;
-      });
-      if (this.carteContact.length === 0) {
-        this.$message({ message: "無此成員", type: "error" });
-        return;
-      } else {
-        this.carteContact[0].toChatId = "u" + this.carteContact[0].memberId;
-        if (
-          data === JSON.parse(localStorage.getItem("myUserInfo")).username
-        ) {
-          this.$message({ message: "此即为您的帐号", type: "warning" });
-        } else {
-          if (this.device === "moblie"){
-            this.$router.push({ name: "ContactPage" });
-          } else{
-            this.carteContact[0].type = "address";
-            this.setInfoMsg({
-              infoMsgShow: true,
-              infoMsgChat: true,
-              infoMsgNav: "ContactPage",
-            });
-          }
-        }
-      }
-      this.setChatUser(this.carteContact[0]);
-    },
-    dblclick(event) {
+    replyMsgclick(event,type) {
       this.setReplyMsg({
         chatType: event.chatType,
-        clickType: "replyMsg",
+        clickType: type,
         innerText: this.isBase64(event.message.content),
         replyHistoryId: event.historyId,
         name: event.name,
         icon: event.icon,
+        fileSize:event.fileSize,  
       });
     },
     onContextmenu(data) {
@@ -548,14 +544,7 @@ export default {
           name: "edit",
           label: "编辑",
           onClick: () => {
-            this.setReplyMsg({
-              chatType: data.chatType,
-              clickType: "editMsg",
-              innerText: this.isBase64(data.message.content),
-              replyHistoryId: data.historyId,
-              name: data.name,
-              icon: data.icon,
-            });
+            this.replyMsgclick(data,'editMsg')
             this.setEditMsg({ innerText: this.isBase64(data.message.content) });
           },
         },
@@ -563,7 +552,7 @@ export default {
           name: "copy",
           label: "复制",
           onClick: () => {
-            this.copyPaste(data);
+            copyPaste(this.isBase64(data.message.content).replace(/(\s*$)/g, ""));
           },
         },
 
@@ -571,21 +560,14 @@ export default {
           name: "reply",
           label: "回覆",
           onClick: () => {
-            this.setReplyMsg({
-              chatType: data.chatType,
-              clickType: "replyMsg",
-              innerText: this.isBase64(data.message.content),
-              replyHistoryId: data.historyId,
-              name: data.name,
-              icon: data.icon,
-            });
+            this.replyMsgclick(data,'replyMsg')
           },
         },
         {
           name: "download",
           label: "下载",
           onClick: () => {
-            this.downloadImages(data);
+            this.downloadFile(this.isBase64(data.message.content),this.fileData(this.isBase64(data.message.content),'content'))          
           },
         },
         {
@@ -642,7 +624,7 @@ export default {
                 )
             );
           }
-        } else if (data.chatType === "SRV_GROUP_IMAGE") {
+        } else if (data.chatType === "SRV_GROUP_IMAGE" || data.chatType === "SRV_GROUP_FILE") {
           if (
             isAdmin ||
             (isManager &&
@@ -673,7 +655,7 @@ export default {
           }
         }
       } else {
-        if (data.chatType === "SRV_GROUP_IMAGE") {
+        if (data.chatType === "SRV_GROUP_IMAGE" || data.chatType === "SRV_GROUP_FILE") {
           this.newItem = item.filter(
             (list) => !["edit", "copy"].includes(list.name)
           );
@@ -743,51 +725,8 @@ export default {
         });
       }
     },
-    downloadImages(data) {
-      let downloadUrl = "";
-      downloadUrl = this.isBase64(data.message.content);
-      this.downloadByBlob(downloadUrl, "images");
-    },
-    downloadByBlob(url, name) {
-      let image = new Image();
-      image.setAttribute("crossOrigin", "anonymous");
-      image.src = url;
-      image.onload = () => {
-        let canvas = document.createElement("canvas");
-        canvas.width = image.width;
-        canvas.height = image.height;
-        let ctx = canvas.getContext("2d");
-        ctx.drawImage(image, 0, 0, image.width, image.height);
-        canvas.toBlob((blob) => {
-          let url = URL.createObjectURL(blob);
-          this.download(url, name);
-          // 用完释放URL对象
-          URL.revokeObjectURL(url);
-        });
-      };
-    },
-    download(href, name) {
-      let link = document.createElement("a");
-      link.download = name;
-      link.href = href;
-      link.click();
-      link.remove();
-    },
-    copyPaste(data) {
-      let url = document.createElement("textarea");
-      document.body.appendChild(url);
-      url.value = this.isBase64(data.message.content).replace(/(\s*$)/g, "");
-      url.select();
-      document.execCommand("copy");
-      document.body.removeChild(url);
-
-      this.$message({
-        message: `${
-          url.value.length > 110 ? url.value.substr(0, 110) + " ..." : url.value
-        } 复制成功`,
-        type: "success",
-        duration: 1000,
-      });
+    downloadFile (href,filename) {
+      saveAs(href, filename);
     },
     deleteRecent(data, type) {
       let parmas = {
@@ -1017,12 +956,12 @@ export default {
       }
       .message-image {
         position: relative;
-
         display: inline-block;
         padding: 5px 6px 2px 6px;
         color: #333333;
         background-color: #e5e4e4;
         border-radius: 8px 0 8px 8px;
+        font-weight: 600;
         .el-image {
           width: -webkit-fill-available !important;
           height: 9em !important;
@@ -1066,6 +1005,28 @@ export default {
       }
       img {
         height: 6em;
+      }
+    }
+    .message-classic{
+      .message-file-box{
+        display: flex;
+        align-items: center;
+        padding-right: 45px;
+        .file-box{
+          width: 4em;
+          height: 4em;
+          background-color: #000;
+          border-radius: 10px;
+          background-image: url("./../../static/images/icon_file.svg");
+          background-repeat: no-repeat;
+          background-size:65%;        
+          background-position: center;
+        }
+        .file-message{
+          display: flex;
+          flex-direction: column;
+          padding-left: 10px;
+        }
       }
     }
     .message-audio {
@@ -1150,6 +1111,8 @@ export default {
 .message-touch-carte {
   color: #10686e;
   cursor: pointer;
+  display: inline-block;
+  margin-right: 6px;
 }
 
 .reply-aduio {
@@ -1290,6 +1253,7 @@ export default {
 }
 .scroll-bottom-btn {
   position: fixed;
+  right: 30px;
   bottom: 80px;
   border-radius: 50px;
   border: 1px solid rgba(0, 0, 0, 0.05);

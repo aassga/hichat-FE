@@ -24,29 +24,17 @@
                   !editBtnShow ? contactList.length : checkDataList.length
                 }})
               </span>
-              <template v-if="groupData.isAdmin && !editBtnShow">
+              <template v-if="(groupData.isAdmin || groupData.isManager) && !editBtnShow">
                 <router-link
+                  v-if="groupData.isAdmin || authority.addUser"
                   :to="'GroupAddPeople'"
                   style="position: absolute; right: 50px"
+                  :style="!groupData.isAdmin && !authority.delUser ? 'right: 5px' : ''"
                 >
                   <div class="home-add-user"></div>
                 </router-link>
                 <div
-                  class="home-user-edit"
-                  @click="(editBtnShow = true) && (checkList = [])"
-                ></div>
-              </template>
-              <template v-if="groupData.isManager && !editBtnShow">
-                <router-link
-                  v-if="authority.addUser"
-                  :to="'GroupAddPeople'"
-                  style="position: absolute; right: 50px"
-                  :style="!authority.delUser ? 'right: 5px' : ''"
-                >
-                  <div class="home-add-user"></div>
-                </router-link>
-                <div
-                  v-if="authority.delUser"
+                  v-if="groupData.isAdmin || authority.delUser"
                   class="home-user-edit"
                   @click="(editBtnShow = true) && (checkList = [])"
                 ></div>
@@ -87,27 +75,14 @@
                 }})
               </span>
 
-              <template v-if="groupData.isAdmin && !editBtnShow">
+              <template v-if="(groupData.isAdmin || groupData.isManager) && !editBtnShow">
                 <div
                   class="home-add-user"
                   @click="addGroupPeople"
                   style="position: absolute; right: 50px"
                 ></div>
                 <div
-                  class="home-user-edit"
-                  @click="(editBtnShow = true) && (checkList = [])"
-                ></div>
-              </template>
-              <template v-if="groupData.isManager && !editBtnShow">
-                <div
-                  v-if="authority.addUser"
-                  class="home-add-user"
-                  @click="addGroupPeople"
-                  style="position: absolute; right: 50px"
-                  :style="!authority.delUser ? 'right: 5px' : ''"
-                ></div>
-                <div
-                  v-if="authority.delUser"
+                  v-if="groupData.isAdmin || authority.delUser"
                   class="home-user-edit"
                   @click="(editBtnShow = true) && (checkList = [])"
                 ></div>
@@ -144,26 +119,16 @@
                           <span style="margin-bottom: 3px"
                             >{{ item.name }}
                             <span
-                              v-if="item.isManager"
+                    
                               style="
                                 color: #fe5f3f;
                                 padding-left: 0.5em;
                                 display: inline-block;
                                 margin-bottom: 0;
                               "
-                              >★ 管理员</span
+                              >{{item.isAdmin ? '♔ 群主' : item.isManager ? '★ 管理员':  ''}}</span
                             >
-                            <span
-                              v-if="item.isAdmin"
-                              style="
-                                color: #fe5f3f;
-                                padding-left: 0.5em;
-                                display: inline-block;
-                                margin-bottom: 0;
-                              "
-                              >♔ 群主</span
-                            ></span
-                          >
+                          </span>
                           <span
                             class="content-text"
                             :class="
@@ -202,15 +167,15 @@
               </el-checkbox>
             </el-checkbox-group>
           </div>
+          <div class="home-footer-btn">
+            <el-button
+              :class="disabled ? 'gray-btn' : 'red-btn'"
+              :disabled="disabled"
+              @click="leaveUserDialogShow = true"
+              >移除成员</el-button
+            >
+          </div>
         </template>
-        <div class="home-footer-btn" v-if="editBtnShow">
-          <el-button
-            :class="disabled ? 'gray-btn' : 'red-btn'"
-            :disabled="disabled"
-            @click="leaveUserDialogShow = true"
-            >移除成员</el-button
-          >
-        </div>
       </el-main>
     </el-container>
     <el-dialog
@@ -262,22 +227,15 @@
 
 <script>
 import Socket from "@/utils/socket";
-import {
-  groupListMember,
-  removeMember,
-  getGroupAuthoritySetting,
-  getMemberActivity,
-} from "@/api";
+import { getMemberActivity } from "@/api/memberProfileController";
+import { listMember,getGroupAuthoritySetting, removeMember } from '@/api/groupController'
 import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "GroupPeople",
   data() {
     return {
-      authority: {
-        addUser: true,
-        delUser: true,
-      },
+      authority: {},
       groupData: {},
       checkList: [],
       contactList: [],
@@ -293,19 +251,11 @@ export default {
     };
   },
   created() {
-    if (this.device === "moblie") {
-      this.groupData = JSON.parse(localStorage.getItem("groupData"));
-    } else {
-      this.groupData = this.groupUser;
-      Socket.$on("message", this.handleGetMessage);
-    }
-    if (JSON.parse(localStorage.getItem("authority")) !== undefined) {
-      this.authority = JSON.parse(localStorage.getItem("authority"));
-    }
+    this.groupData = JSON.stringify(this.groupUser) === '{}' ? JSON.parse(localStorage.getItem("groupData")) :this.groupUser;
     this.memberTime = setInterval(() => {
       this.getUserMemberActivity(this.newContactList)
     }, 30000);
-
+    Socket.$on("message", this.handleGetMessage);
   },
   beforeDestroy() {
     clearInterval(this.memberTime)
@@ -351,6 +301,7 @@ export default {
       setInfoMsg: "ws/setInfoMsg",
       setChatUser: "ws/setChatUser",
       setMsgInfoPage: "ws/setMsgInfoPage",
+      setGroupUserCheck:"ws/setGroupUserCheck",
       setContactListData: "ws/setContactListData",
     }),
     // 收取 socket 回来讯息 (全局讯息)
@@ -362,21 +313,44 @@ export default {
         case "SRV_GROUP_ADD_MANAGER_HISTORY":
         case "SRV_GROUP_REMOVE_MANAGER_HISTORY":
         case "SRV_GROUP_CHANGE_ADMIN_HISTORY":
-          this.getGroupListMember()
+          this.getGroupListMember();
           break
+        //變更權限          
+        case "SRV_GROUP_AUTHORITY":
+          this.getGroupAuthority();
+          break;
+        case "SRV_GROUP_MANAGER_AUTHORITY":
+        case "SRV_GROUP_ADMIN_CHANGE":
+        case "SRV_GROUP_BAN_POST":
+          this.getGroupListMember();
+  
       }
     },
     getGroupListMember() {
       let groupId = this.groupData.groupId;
-      groupListMember({ groupId }).then((res) => {
+      listMember({ groupId }).then((res) => {
         this.contactList = res.data.list;
         this.contactList.forEach((item) => {
+          if (item.memberId === this.groupData.memberId) {
+            this.groupData.isAdmin = item.isAdmin;
+            this.groupData.isBanPost = item.isBanPost;
+            this.groupData.isManager = item.isManager;
+            if (item.memberId === Number(localStorage.getItem("id"))) {
+              if (item.isAdmin) {
+                localStorage.removeItem("authority");
+              } else if (item.isManager) {
+                this.authority = item.authority;
+              } else if (!item.isAdmin && !item.isManager) {
+                localStorage.removeItem("authority");
+              }
+            }
+          }
           if (item.icon === undefined) {
             item.icon = require("./../../../static/images/image_user_defult.png");
           }
         });
-
         this.setContactListData(this.contactList);
+
         this.checkDataList = this.contactList.filter(
           (el) =>
             el.memberId !== this.groupData.memberId &&
@@ -421,7 +395,7 @@ export default {
           return "上次上线于" + this.$root.formatTimeS(data.lastActivityTime);
         }
       }
-    },
+    },    
     getGroupAuthority() {
       let groupId = this.groupData.groupId;
       getGroupAuthoritySetting({ groupId }).then((res) => {
@@ -464,47 +438,62 @@ export default {
           });
           this.setMsgInfoPage({ pageShow: true, type: "" });
         } else {
-          this.setInfoMsg({ infoMsgShow: true, infoMsgChat: true });
+          this.setInfoMsg({ infoMsgShow: true, infoMsgChat: true, infoMsgNav: "GroupPage", });
           this.setMsgInfoPage({ pageShow: true });
         }
       }
     },
     goInfoMsgContactPage(data) {
-      if (data.memberId === JSON.parse(localStorage.getItem("id"))) {
-        this.$message({ message: "此即为您的帐号", type: "warning" });
-      } else {
+      // if (data.memberId === JSON.parse(localStorage.getItem("id"))) {
+      //   // this.$message({ message: "此即为您的帐号", type: "warning" });
+      //   data.contactId = data.toChatId.replace("u", "");
+      //   data.memberId = data.toChatId.replace("u", "");
+        
+      // } else {
         data.toChatId = "u" + data.memberId;
         if (this.device === "moblie") {
-          this.$router.push({ name: "ContactPage" });
-        } else {
-          if (this.infoMsg.infoMsgMap === "address") {
-            this.setInfoMsg({
-              infoMsgShow: true,
-              infoMsgNav: "ContactPage",
-              infoMsgChat: false,
-              infoMsgMap: "address",
-            });
-            this.setMsgInfoPage({
-              pageShow: true,
-              type: "ContactPage",
-              page: "GroupPeople",
-            });
-          } else {
-            this.setInfoMsg({
-              infoMsgShow: true,
-              infoMsgChat: true,
-              infoMsgNav: "ContactPage",
-              infoMsgMap: "GroupPeople",
-            });
-            this.setMsgInfoPage({
-              pageShow: true,
-              type: "ContactPage",
-              page: "GroupPeople",
-            });
+          if (data.memberId === JSON.parse(localStorage.getItem("id"))){
+            data.contactId = data.toChatId.replace("u", "");
+            data.memberId = data.toChatId.replace("u", "");
+            data.isContact = true
+            data.name = "嗨聊记事本"
+            data.icon = require("./../../../static/images/image_savemessage.png");
+            this.$router.push({ name: "ChatMsg" });
+          }else{
+            this.$router.push({ name: "ContactPage" });
           }
+          this.setChatUser(data);
+          
+        } else {
+          this.isContact = this.contactList.filter((el)=>{
+            return "u"+ el.memberId === data.toChatId
+          })
+          if(this.isContact[0].length !== 0 ){
+            this.isContact[0].isContact = true
+          } else{
+            data.isContact = false
+            this.isContact[0] = data
+          }
+          if (data.memberId === JSON.parse(localStorage.getItem("id"))){
+            this.isContact[0].name = "嗨聊记事本"
+            this.isContact[0].icon = require("./../../../static/images/image_savemessage.png");
+          }
+          this.isContact[0].toChatId = "u" + data.memberId;
+          this.setInfoMsg({
+            infoMsgShow: true,
+            infoMsgChat: true,
+            infoMsgNav: "ContactPage",
+            infoMsgMap: "GroupPeople",
+          });
+          this.setMsgInfoPage({
+            pageShow: true,
+            type: "ContactPage",
+            page: "GroupPeople",
+          });
+          this.setGroupUserCheck(this.isContact[0])
         }
-        this.setChatUser(data);
-      }
+        // 
+      // }
     },
     goContactPage(data) {
       if (this.device === "moblie") {
@@ -733,7 +722,7 @@ export default {
                     span {
                       &::after {
                         content: "";
-                        margin-top: 1em;
+                        margin-top: 0.95em;
                       }
                     }
                   }

@@ -2,7 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Router from 'vue-router'
 import { setLocal } from '_util/utils.js'
-import { getUserInfo } from "@/api"
+import { getUserInfo } from "@/api/memberProfileController"
 const originalPush = Router.prototype.push
 Router.prototype.push = function push(location) {
   return originalPush.call(this, location).catch((err) => err)
@@ -202,6 +202,12 @@ const routes = [
     meta: { keepAlive: false },
   },
   {
+    path: "/MuteSound",
+    name: "MuteSound",
+    component: () => import(/* webpackChunkName: "Notify" */ '@/views/Notify/MuteSound.vue'),
+    meta: { keepAlive: false },
+  },  
+  {
     path: "/SpreadChange",
     name: "SpreadChange",
     component: () => import(/* webpackChunkName: "Spread" */ '@/views/Spread/SpreadChange.vue'),
@@ -229,7 +235,7 @@ const routes = [
     path: "/About",
     name: "About",
     component: () => import(/* webpackChunkName: "About" */ '@/views/About/About.vue'),
-    meta: { keepAlive: true },
+    meta: { keepAlive: false },
   },
   {
     path: "*",

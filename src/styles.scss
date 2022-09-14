@@ -213,19 +213,14 @@ body {
     .el-tabs {
       width: 100vw;
       z-index: 8;
-
+      
       .el-tabs__header {
-        // position: fixed;
-        // top: 105px;
-        width: 100vw;
-        z-index: 9;
-        background-color: #eaf5fa;
+        height: 50px;
         display: flex;
         justify-content: space-evenly;
+        background-color: #eaf5fa;
         margin: 0;
-        // padding: 5px 0;
-        height: 49px;
-
+        z-index: 9;
         .el-tabs__nav-wrap {
           &:after {
             content: "";
@@ -489,6 +484,9 @@ body {
               width: 205px;
               display: inline-block;
               margin: 10px 5px 0 5px;
+              .el-upload-list__item-name{
+                font-size: 18px;
+              }
             }
           }
         }
@@ -743,19 +741,12 @@ body {
 
     .el-tabs {
       width: 100%;
-
       .el-tabs__header {
-        // top: 70px;
-        width: 314px;
-        height: 54px;
-        position: relative;
+        height: 55px;
         background-color: #FFFFFF !important;
-        padding: 0;
-
         .el-tabs__nav-wrap {
           display: flex;
           align-items: center;
-
           .el-tabs__nav {
             width: 100%;
 
@@ -840,7 +831,7 @@ body {
 
       .text-send-box {
         width: 80%;
-        border-radius: 5px;
+        // border-radius: 5px;
         margin: 0 auto;
         .disable-box{
           width: 80%;
@@ -910,9 +901,12 @@ body {
       .msg-box {
         span {
           &:nth-child(1) {
-            margin-bottom: 0 !important;
-            height: 22px;
-            line-height: 22px;
+            // margin-bottom: 0 !important;
+            // height: 22px;
+            // line-height: 22px;
+            img{
+              height: 1em;
+            }
           }
         }
       }
@@ -981,24 +975,6 @@ body {
           font-weight: 600;
           margin-top: 2em;
           display: block;
-        }
-
-        .upload-demo {
-          line-height: 1.5em;
-          .el-upload-list {
-            max-height: 400px;
-            overflow: auto;
-            .el-upload-list__item {
-              margin-top: 0;
-              width: 205px;
-              display: inline-block;
-              margin: 10px 5px 0 5px;
-            }
-          }
-
-          .hidden {
-            visibility: hidden;
-          }
         }
       }
 
@@ -1158,6 +1134,11 @@ body {
         border-radius: 5px;
       }
     }
+    .replyMsg-file{
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
   }
   .reply-close-btn {
     position: absolute;
@@ -1172,4 +1153,48 @@ body {
       width: -webkit-fill-available;
     }
   }
+}
+
+//scrollbar 自訂樣式
+.el-tabs__content::-webkit-scrollbar-track{
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	background-color: #F5F5F5;
+}
+.el-tabs__content::-webkit-scrollbar{
+	width: 6px;
+	background-color: #F5F5F5;
+}
+.el-tabs__content::-webkit-scrollbar-thumb{
+	background-color: rgba(0, 0, 0, 0.5);
+}
+
+
+
+
+/* 滚动条 */
+::-webkit-scrollbar-thumb:horizontal{ /*水平滚动条的样式*/
+  width: 4px;
+  background-color: #CCCCCC;
+  -webkit-border-radius: 6px;
+}
+::-webkit-scrollbar-track-piece {
+  // background-color: #fff; /*滚动条的背景颜色*/
+  -webkit-border-radius: 0; /*滚动条的圆角宽度*/
+}
+::-webkit-scrollbar {
+  width: 10px; /*滚动条的宽度*/
+  height: 8px; /*滚动条的高度*/
+}
+::-webkit-scrollbar-thumb:vertical { /*垂直滚动条的样式*/
+  height: 50px;
+  background-color: #999;
+  -webkit-border-radius: 4px;
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+  border: 2px solid #fff;
+}
+::-webkit-scrollbar-thumb:hover { /*滚动条的hover样式*/
+  height: 50px;
+  background-color: #9f9f9f;
+  -webkit-border-radius: 4px;
 }

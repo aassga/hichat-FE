@@ -118,8 +118,8 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
-import { groupListMember, changeAdmin } from "@/api";
+import { mapState,mapMutations } from "vuex";
+import { listMember, changeAdmin } from "@/api/groupController";
 
 export default {
   name: "GroupAdminChange",
@@ -137,8 +137,14 @@ export default {
       device: localStorage.getItem("device"),
     };
   },
+  computed: {
+    ...mapState({
+      groupUser: (state) => state.ws.groupUser,
+      infoMsg: (state) => state.ws.infoMsg,
+    }),
+  },  
   created() {
-    this.groupData = JSON.parse(localStorage.getItem("groupData"));
+    this.groupData = this.groupUser;
   },
   mounted() {
     this.getGroupListMember();
@@ -169,7 +175,7 @@ export default {
     }),
     getGroupListMember() {
       let groupId = this.groupData.groupId;
-      groupListMember({ groupId })
+      listMember({ groupId })
         .then((res) => {
           this.contactList = res.data.list;
           this.contactList.forEach((item) => {
@@ -208,8 +214,18 @@ export default {
       if (this.device === "moblie") {
         this.$router.back(-1);
       } else {
-        this.setInfoMsg({ infoMsgShow: true, infoMsgChat: true });
-        this.setMsgInfoPage({ pageShow: true });
+        if (this.infoMsg.infoMsgMap === "address") {
+          this.setInfoMsg({
+            infoMsgShow: true,
+            infoMsgNav: "GroupPage",
+            infoMsgChat: false,
+            infoMsgMap: "address",
+          });
+          this.setMsgInfoPage({ pageShow: true, type: "" });
+        } else {
+          this.setInfoMsg({ infoMsgShow: true, infoMsgChat: true, infoMsgNav: "GroupPage", });
+          this.setMsgInfoPage({ pageShow: true });
+        }
       }
     },
   },

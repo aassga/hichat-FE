@@ -106,7 +106,9 @@
 </template>
 
 <script>
-import { searchByEmailUsername, addContactUser } from "@/api";
+import {mapMutations } from "vuex";
+import { searchByEmailUsername  } from "@/api/memberProfileController";
+import { addContactUser } from "@/api/memberContactController";
 
 export default {
   name: "AddUser",
@@ -122,10 +124,13 @@ export default {
     };
   },
   created() {
-    if (this.getUrlParam("username") !== "")
+  if (this.getUrlParam("username") !== "")
       this.searchUserData(this.getUrlParam("username"));
   },
   methods: {
+      ...mapMutations({
+      setChatUser: "ws/setChatUser",
+    }),
     // 獲取URL key
     getUrlParam(paraName) {
       let url = document.location.toString();
@@ -149,7 +154,7 @@ export default {
         this.addUser = {};
         this.noData = true;
         return;
-      } else if (token === localStorage.getItem("username")) {
+      } else if (token === localStorage.getItem("username") || token === document.cookie.replace("phone=","")) {
         this.$message({ message: "无法增加自己到联络人", type: "error" });
         return;
       }

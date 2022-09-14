@@ -82,8 +82,9 @@
           </div>
         </el-header>
         <div class="home-content">
-          <div class="setting-title">群组成员</div>
+          
           <template v-if="groupData.isAdmin">
+            <div class="setting-title">群组成员</div>
             <div
               class="setting-button"
               v-for="(item, index) in messagePermissionData"
@@ -150,7 +151,7 @@
 
 <script>
 import { mapState,mapMutations } from "vuex";
-import { addGroup,getGroupAuthoritySetting,setGroupAuthority} from "@/api";
+import { addGroup,getGroupAuthoritySetting,setGroupAuthority } from '@/api/groupController'
 
 export default {
   name: "SettingGroup",
@@ -168,10 +169,10 @@ export default {
           isCheck:true,
         },
         {
-          name:"传送链接或网址",
+          name:"传送档案或链接网址",
           key:"sendLink",
           isCheck:true,
-        },        
+        },               
         {
           name:"查看群组成员资讯",
           key:"checkUserInfo",
@@ -202,11 +203,12 @@ export default {
   computed: {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
+      infoMsg: (state) => state.ws.infoMsg,      
       groupPermissionData: (state) => state.ws.groupPermissionData,
     }),
   },  
   created() {
-    this.groupData = JSON.parse(localStorage.getItem("groupData"))
+    this.groupData = this.groupPermissionData.addGroup ? JSON.parse(localStorage.getItem("addGroupData")): this.groupUser
   },
   mounted() {
     if(!this.groupPermissionData.addGroup) this.getGroupAuthority()
@@ -281,8 +283,7 @@ export default {
             if(this.device === "moblie"){
               this.$router.push({ path: "/GroupPage",});
             }else{
-              this.setInfoMsg({ infoMsgShow: true,infoMsgChat:true, });
-              this.setMsgInfoPage({ pageShow: true });
+              this.setInfoMsgTure()
             }  
           }
         })
@@ -290,6 +291,7 @@ export default {
         delete this.groupPermissionData.addGroup
         delete this.groupPermissionData.peopleData
         this.groupPermissionData.groupAdminAuthority = this.newAuthorityData
+        localStorage.removeItem('addGroupData')
         addGroup(this.groupPermissionData).then((res)=>{
           if(res.code === 200){
             let groupData = {
@@ -315,11 +317,24 @@ export default {
         if (this.device === "moblie"){
           this.$router.push({ path: "/GroupPage",});
         }else{
-          this.setInfoMsg({ infoMsgShow: true,infoMsgChat:true, });
-          this.setMsgInfoPage({ pageShow: true });
+          this.setInfoMsgTure()
         }
       }
     },    
+    setInfoMsgTure(){
+      if (this.infoMsg.infoMsgMap === "address") {
+        this.setInfoMsg({
+          infoMsgShow: true,
+          infoMsgNav: "GroupPage",
+          infoMsgChat: false,
+          infoMsgMap: "address",
+        });
+        this.setMsgInfoPage({ pageShow: true, type: "" });
+      } else {
+        this.setInfoMsg({ infoMsgShow: true, infoMsgChat: true, infoMsgNav: "GroupPage", });
+        this.setMsgInfoPage({ pageShow: true });
+      }
+    }
   },
 };
 </script>

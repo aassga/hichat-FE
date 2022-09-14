@@ -12,14 +12,14 @@ import "reset-css";
 
 //fontawesome icon 引入
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { fas } from "@fortawesome/free-solid-svg-icons";
+import { faHatWizard } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 //超连结
 import linkify from 'vue-linkify'
 Vue.directive('linkified', linkify)
-library.add(fas);
 
+library.add(faHatWizard);
 Vue.component("font-awesome-icon", FontAwesomeIcon);
 
 //导入全局样式
@@ -49,10 +49,26 @@ Vue.use(VueAudio)
 //i18n
 import i18n from './common/plugins/vue-i18n'
 
+Vue.directive('debounce', {
+  inserted(el, binding, vnode) {
+    let timer = {}
+    el.addEventListener('scroll', () => {
+      if (timer) {
+        clearTimeout(timer)
+      }
+      timer = setTimeout(() => {
+        binding.value()
+      }, 100)
+    })
+  }
+})
+
 
 Vue.prototype.$md5 = md5;
+moment.suppressDeprecationWarnings = true; // 关闭日期警告
 Vue.prototype.$moment = moment;
 Vue.config.productionTip = false
+
 
 
 new Vue({

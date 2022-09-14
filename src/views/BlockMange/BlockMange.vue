@@ -119,7 +119,8 @@
 
 <script>
 import { mapState,mapMutations } from "vuex";
-import { blockListMember,unBlockContactUser } from "@/api";
+import { unBlockContactUser,blockListMember } from '@/api/memberBlockController'
+
 export default {
   name: "BlockMange",
   data() {
@@ -145,6 +146,7 @@ export default {
   computed: {
     ...mapState({
       chatUser:(state) => state.ws.chatUser,
+      contactUser: (state) => state.ws.contactUser,
     }),
   },
   methods: {
@@ -171,10 +173,12 @@ export default {
           this.unblockDialogShow = false;
           this.editBtnShow = true;
           blockIdList.forEach(el => {
-            if(el === this.chatUser.contactId || this.chatUser.toChatId.replace("u", "")){
+            if(this.chatUser.toChatId !== undefined && (el === this.chatUser.toChatId.replace("u", ""))){
               this.chatUser.isBlock = false
               this.setChatUser(this.chatUser)
-              this.setContactUser(this.chatUser)
+            }else{
+              this.contactUser.isBlock = false
+              this.setContactUser(this.contactUser)
             }
           })
           this.getBlockDataList()

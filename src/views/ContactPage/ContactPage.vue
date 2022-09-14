@@ -37,7 +37,7 @@
                 ID :
                 <span
                   class="user-paste"
-                  @click="copyPaste(chatUser.username)"
+                  @click="copyID()"
                   >{{ chatUser.username }}</span
                 ></span
               >
@@ -262,16 +262,13 @@
 
 <script>
 import { developmentMessage } from "@/assets/tools";
+import { copyPaste } from "@/utils/urlCopy.js";
 import { mapState, mapMutations } from "vuex";
-import {
-  getSearchById,
-  addContactUser,
-  addBlockContactUser,
-  unBlockContactUser,
-  deleteContactUser,
-  setBanPostByPersonal,
-  deleteRecentChat,
-} from "@/api";
+import { deleteRecentChat } from '@/api/chatController'
+import { setBanPostByPersonal } from '@/api/groupController'
+import { getSearchById } from "@/api/memberProfileController";
+import { addContactUser,deleteContactUser } from "@/api/memberContactController";
+import { addBlockContactUser,unBlockContactUser } from '@/api/memberBlockController'
 
 export default {
   name: "ContactPage",
@@ -313,22 +310,19 @@ export default {
   },
   computed: {
     ...mapState({
-      // chatUser: (state) => state.ws.chatUser,
+      chatUser: (state) => state.ws.chatUser,
       groupUser: (state) => state.ws.groupUser,
       infoMsg: (state) => state.ws.infoMsg,
       myUserInfo: (state) => state.ws.myUserInfo,
     }),
   },
   created() {
-    this.chatUser = JSON.parse(localStorage.getItem("userData"));
-    this.myInfo = JSON.parse(localStorage.getItem("myUserInfo"))
-    this.setMyUserInfo(this.myInfo)
+    // this.chatUser = JSON.parse(localStorage.getItem("userData"));
     this.getUserId();
   },
   methods: {
     ...mapMutations({
       setChatUser: "ws/setChatUser",
-      setMyUserInfo:"ws/setMyUserInfo"
     }),
     deleteMessage(){
       let parmas = {
@@ -359,25 +353,15 @@ export default {
         this.setChatUser(this.chatUser);
       });
     },
+    copyID(){
+      copyPaste(this.chatUser.username)
+    },   
     noIconShow(iconData) {
       if ([undefined,null,""].includes(iconData.icon)) {
         return require("./../../../static/images/image_user_defult.png");
       } else {
         return iconData.icon;
       }
-    },
-    copyPaste(data) {
-      let url = document.createElement("input");
-      document.body.appendChild(url);
-      url.value = data;
-      url.select();
-      document.execCommand("copy");
-      document.body.removeChild(url);
-      this.$message({
-        message: `ID : ${data} 复制成功`,
-        type: "success",
-        duration: 1000,
-      });
     },
     goChatRoom(data, path) {
       this.$router.push({ name: path, params: data });
@@ -391,7 +375,7 @@ export default {
         case "banPost":
         case "unBanPost":
           this.dialogContent = `确认是否${
-            type === "block" ? "禁言" : "解除禁言"
+            type === "banPost" ? "禁言" : "解除禁言"
           }联络人${this.chatUser.name}？`;
           break;
         case "block":
@@ -440,6 +424,7 @@ export default {
                 this.successDialogShow = true;
                 this.chatUser.isContact = false;
                 this.setChatUser(this.chatUser);
+                this.$root.getMaybeKnow()
               }
             })
             .catch((err) => {

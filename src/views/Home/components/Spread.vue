@@ -19,8 +19,8 @@
 
 <script>
 import Socket from "@/utils/socket";
+import { getContactList } from "@/api/memberContactController";
 
-import { getContactList } from "@/api";
 import { mapMutations } from "vuex";
 import { getToken } from "_util/utils.js";
 
@@ -193,19 +193,6 @@ export default {
     }
   }
 }
-/deep/.el-dialog__wrapper {
-  .el-dialog {
-    .el-dialog__body {
-      .upload-demo {
-        .el-upload-list {
-          .el-upload-list__item {
-            margin-top: -72px;
-          }
-        }
-      }
-    }
-  }
-}
 
 .hichat-pc {
   .home-wrapper {
@@ -224,7 +211,7 @@ export default {
             span {
               &::after {
                 content: "";
-                margin-top: 1em;
+                margin-top: 0.95em;
               }
             }
           }

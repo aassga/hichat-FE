@@ -62,7 +62,6 @@
               placeholder="搜寻"
               prefix-icon="el-icon-search"
               v-model="searchKey"
-              @keyup.native.enter="developmentMessage(searchKey)"
             >
             </el-input>
           </div>
@@ -95,7 +94,7 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { groupListMember, setBanPost, listMember } from "@/api";
+import { listMember,setBanPost } from '@/api/groupController'
 
 export default {
   name: "SettingGroup",
@@ -144,7 +143,7 @@ export default {
     getGroupListMember() {
       if (!this.groupPermissionData.addGroup) {
         let groupId = this.groupData.groupId;
-        groupListMember({ groupId }).then((res) => {
+        listMember({ groupId }).then((res) => {
           this.contactList = res.data.list;
           this.contactList.forEach((item) => {
             if (item.icon === undefined) {
@@ -335,7 +334,7 @@ export default {
             span {
               &::after {
                 content: "";
-                margin-top: 1em;
+                margin-top: 0.95em;
               }
             }
           }

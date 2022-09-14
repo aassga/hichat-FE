@@ -68,9 +68,6 @@
         :limit="1"        
       >
         <el-button type="primary">点击上传</el-button>
-        <div slot="tip" class="el-upload__tip">
-          只能上传 jpg / png 图片，且不超过500kb
-        </div>
       </el-upload>
       <span slot="footer" class="dialog-footer">
         <template v-if="device === 'moblie'">
@@ -105,11 +102,11 @@
 
 <script>
 import Socket from "@/utils/socket";
-import {VEmojiPicker} from 'v-emoji-picker'
 import Photo from "./Photo.vue";
+import {VEmojiPicker} from 'v-emoji-picker'
 import { getToken } from "_util/utils.js";
 import { mapState, mapMutations } from "vuex";
-import { uploadMessageImage } from "@/api";
+import { uploadMessageImage } from '@/api/uploadController'
 import { Encrypt } from "@/utils/AESUtils.js";
 
 export default {
@@ -207,7 +204,6 @@ export default {
           this.uploadImgShow = false;
           this.fullscreenLoading = false;
           this.$message({ message: "发送讯息成功", type: "success" });
-          this.getChatHistoryMessage()
           this.disabled = true
           setTimeout(() => {
             this.setSpreadDataList([])
@@ -276,7 +272,6 @@ export default {
         Socket.send(message);
       })
       this.$message({ message: "发送讯息成功", type: "success" });
-      this.getChatHistoryMessage()
       this.disabled = true
       setTimeout(() => {
         this.setSpreadDataList([])
@@ -301,20 +296,6 @@ export default {
         audioEl.src = require("./../../static/wav/send.mp3")
         audioEl.play();
       }, 150);
-    },
-    // 獲取歷史訊息
-    getChatHistoryMessage() {
-      let historyMessageData = {
-        chatType: "CLI_HISTORY_REQ",
-        id: Math.random(),
-        tokenType: 0,
-        toChatId: this.chatUser.toChatId,
-        targetId:"",
-        pageSize: 1000,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      };
-      Socket.send(historyMessageData);
     },
   },
   components: {
@@ -341,7 +322,7 @@ export default {
     }
   }
   .text-send-box {
-    width: 280px;
+    width: 260px;
     height: 35px;
     display: flex;
     align-items: center;
@@ -421,12 +402,6 @@ export default {
         display: block;
       }
       .upload-demo {
-        // line-height: 1.5em;
-        .el-upload-list {
-          .el-upload-list__item {
-            // margin-top: -72px;
-          }
-        }
         .hidden {
           visibility: hidden;
         }

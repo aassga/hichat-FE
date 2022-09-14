@@ -47,7 +47,7 @@
                 ID :
                 <span
                   class="user-paste"
-                  @click="copyPaste(userData.username)"
+                  @click="copyID()"
                   >{{ userData.username }}</span
                 ></span
               >
@@ -75,7 +75,8 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { updateContactNickName } from "@/api";
+import { updateContactNickName} from "@/api/memberContactController";
+import { copyPaste } from "@/utils/urlCopy.js";
 
 export default {
   name: "EditContact",
@@ -104,6 +105,9 @@ export default {
       setMsgInfoPage: "ws/setMsgInfoPage",
       setMyContactDataList: "ws/setMyContactDataList",
     }),
+    copyID(){
+      copyPaste(this.userData.username)
+    },   
     noIconShow(iconData) {
       if ([undefined,null,""].includes(iconData.icon)) {
         return require("./../../../static/images/image_user_defult.png");

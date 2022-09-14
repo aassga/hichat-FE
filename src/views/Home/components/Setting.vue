@@ -13,7 +13,7 @@
         <span>{{ myUserInfo.nickname }}</span>
         <span class="user-data-id">
           ID :
-          <span class="user-paste" @click="copyPaste(myUserInfo.username)">{{
+          <span class="user-paste" @click="copyID()">{{
             myUserInfo.username
           }}</span></span
         >
@@ -139,7 +139,7 @@ import Socket from "@/utils/socket";
 import { getToken } from "_util/utils.js";
 
 import VueQr from "vue-qr";
-import urlCopy from "@/utils/urlCopy.js";
+import { urlCopy,copyPaste } from "@/utils/urlCopy.js";
 import { logout } from "@/api";
 import { Encrypt} from "@/utils/AESUtils.js";
 
@@ -154,7 +154,7 @@ export default {
         {
           name: "密码管理",
           icon: require("./../../../../static/images/safe.png"),
-          pcIcon: require("./../../../../static/images/pc/shield.svg"),
+          pcIcon: require("./../../../../static/images/shield.svg"),
           path: "/PasswordMange",
         },
         {
@@ -239,27 +239,14 @@ export default {
       let url = this.promoteCodeConfig.text;
       urlCopy(url);
     },
-    copyPaste(data) {
-      let url = document.createElement("input");
-      document.body.appendChild(url);
-      url.value = data;
-      url.select();
-      document.execCommand("copy");
-      document.body.removeChild(url);
-      this.$message({
-        message: `ID : ${data} 复制成功`,
-        type: "success",
-        duration: 1000,
-      });
+    copyID(){
+      copyPaste(this.myUserInfo.username)
     },
     loginOut() {
       logout().then((res) => {
         if(res.code === 200 && res.message === "登出成功"){
           this.$router.push({ path: "/login" });
-          localStorage.removeItem("id");
-          localStorage.removeItem("token");
-          localStorage.removeItem("myUserInfo");
-          localStorage.removeItem("myUserList");
+          localStorage.clear()
           window.location.reload();
         }
       })

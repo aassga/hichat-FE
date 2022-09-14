@@ -1,18 +1,17 @@
 <template>
-  <div class="message-pabel-box" @touchmove="$root.handleTouch"  >
+  <div class="message-pabel-box" @touchmove="$root.handleTouch" v-debounce="scrollHistoryBar">
     <ul class="message-styles-box">
-      <div v-for="(item, index) in newMessageData" :key="index">
+      <div v-for="(item, index) in reversedMessage" :key="index">
         <div class="now-time">
           <span>{{ index }}</span>
-        </div>
-        <el-checkbox-group v-model="checkList">
+        </div>     
+        <el-checkbox-group v-model="checkList" >
           <el-checkbox
             v-for="(el, index) in item"
-            :key="index"
+            :key="el.historyId"
             :label="el"
-            :disabled="checkBoxDisabled"
+            :disabled="showCheckBtn(checkBoxDisabled, el)"
             :class="judgeClass(item[index])"
-            @scroll="paperScroll(el.message.content)"
           >
             <li >
               <template v-if="el.chatType !== 'SRV_CHAT_PIN'">
@@ -29,12 +28,13 @@
                     },
                   ]"
                   :id="el.historyId"
+                  ref="viewBox"
                 >
                   <span
                     class="message-classic"
                     v-if="el.chatType === 'SRV_USER_SEND'"
                     @contextmenu.prevent.stop="onContextmenu(el)"
-                    @dblclick="dblclick(el)" 
+                    @dblclick="replyMsgclick(el,'replyMsg')" 
                   >
                     <template v-if="el.isRplay !== null">
                       <div
@@ -56,16 +56,22 @@
                                 >{{ isBase64(el.isRplay.text) }}</span
                               >
                               <img
-                                v-if="el.isRplay.chatType === 'SRV_USER_IMAGE'"
+                                v-else-if="el.isRplay.chatType === 'SRV_USER_IMAGE'"
                                 :src="isBase64(el.isRplay.text)"
                                 style="border-radius: 5px"
                               />
-                              <span v-if="el.isRplay.chatType === 'SRV_USER_AUDIO'">
+                              <span v-else-if="el.isRplay.chatType === 'SRV_USER_AUDIO'">
                                 <div class="reply-audio-box"></div>
                                 <mini-audio
                                   :audio-source="isBase64(el.isRplay.text)"
                                 ></mini-audio>
                               </span>
+                              <div v-else-if="el.isRplay.chatType === 'SRV_USER_FILE'" class="message-file-box" id="file-download">
+                                <div class="file-message" style="padding-left:0;">
+                                  <span>{{fileData(isBase64(el.isRplay.text),'content')}}</span>
+                                  <span>档案大小　: {{ fileData(el.isRplay.fileSize,'size') }}</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -105,12 +111,29 @@
                       <span v-else v-html="el.message.content"></span>
                     </div>
                   </span>
+                  <span
+                    class="message-classic"
+                    v-else-if="el.chatType === 'SRV_USER_FILE'"
+                    @contextmenu.prevent.stop="onContextmenu(el)"
+                    @dblclick="replyMsgclick(el,'replyMsg')" 
+                    @click.prevent.stop="
+                      device === 'moblie' ? onContextmenu(el) : false
+                    "
+                  >
+                    <div class="message-file-box" id="file-download">
+                      <div class="file-box"></div>
+                      <div class="file-message">
+                        <span>{{fileData(isBase64(el.message.content),'content')}}</span>
+                        <span>档案大小　: {{ fileData(el.fileSize,'size') }}</span>
+                      </div>
+                    </div>
+                  </span>
 
                   <span
                     class="message-mini-audio"
                     v-else-if="el.chatType === 'SRV_USER_AUDIO'"
                     @contextmenu.prevent.stop="onContextmenu(el)"
-                    @dblclick="dblclick(el)"
+                    @dblclick="replyMsgclick(el,'replyMsg')"
                   >
                     <div
                       v-if="device === 'moblie'"
@@ -131,7 +154,7 @@
                     class="message-image"
                     v-else-if="el.chatType === 'SRV_USER_IMAGE'"
                     @contextmenu.prevent.stop="onContextmenu(el)"
-                    @dblclick="dblclick(el)"
+                    @dblclick="replyMsgclick(el,'replyMsg')"
                   >
                     <div
                       v-if="device === 'moblie'"
@@ -186,13 +209,11 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import {
-  deleteRecentChat,
-  pinHistory,
-  unpinHistory,
-} from "@/api";
+import { pinHistory,unpinHistory,deleteRecentChat } from '@/api/chatController'
+import { fileBoxName, formatFileSize } from "@/utils/FileSizeName.js";
+import { copyPaste } from "@/utils/urlCopy.js";
+import { saveAs } from 'file-saver';
 import AESBase64 from "@/utils/AESBase64.js";
-
 import VueMarkdown from "vue-markdown";
 export default {
   name: "MessagePabel",
@@ -203,18 +224,19 @@ export default {
     messageData: {
       type: Array,
     },
-    timeOut: {
-      type: Number,
-    },
     showCheckBoxBtn: {
       type: Boolean,
     },    
     checkDataList:{
       type: Array,
-    }
+    },
+    historyMsgLength:{
+      type: Number,
+    }    
   },
   data() {
     return {
+      count:0,
       newData: [],
       message: [],
       checkList:[],
@@ -233,6 +255,29 @@ export default {
       aesIv: "hichatisachatapp",
     };
   },
+  computed: {
+    ...mapState({
+      chatUser: (state) => state.ws.chatUser,
+      soundNofiy: (state) => state.ws.soundNofiy,
+      myUserInfo: (state) => state.ws.myUserInfo,
+      goAnchorMessage: (state) => state.ws.goAnchorMessage,
+    }),
+    reversedMessage: function() {
+      this.newMessageData = {};
+      //去除重复
+      this.message = this.unique(this.messageData , 'historyId') 
+      this.message.forEach((el)=>{
+        this.newMessageData[this.$root.formatTimeDay(el.message.time)]=[]
+      })
+      for(let item in this.newMessageData){
+        this.newMessageData[item] = this.message.filter((res)=>{
+          return item === this.$root.formatTimeDay(res.message.time)
+        })
+      }
+      if(!this.showScrollBar) this.$root.gotoBottom()
+      return this.newMessageData
+    },
+  },
   watch: {
     showCheckBoxBtn(val) {
       this.checkBoxDisabled = val;
@@ -243,71 +288,64 @@ export default {
     checkDataList(val){
       this.checkList = val
     },
-    messageData(val) {
-      //去除重复
-      const set = new Set();
-      this.message = val.filter((item) =>
-        !set.has(item.historyId) ? set.add(item.historyId) : false
-      );
-      this.newMessageData = {};
-      this.message.forEach((el) => {
-        this.newMessageData[this.$root.formatTimeDay(el.message.time)] = [];
-        let newData = this.message.filter((res) => {
-          return (
-            this.$root.formatTimeDay(res.message.time) ===
-            this.$root.formatTimeDay(el.message.time)
-          );
-        });
-        this.newMessageData[this.$root.formatTimeDay(el.message.time)] =
-          newData;
-      });
-      this.$root.gotoBottom();
-
-      //TODO 至底按鈕出現 移除滾動
-      // if(!this.showScrollBar){
-      //   this.$root.gotoBottom();
-      // } 
+    chatUser(){
+      this.$root.gotoBottom()
     },
-  },
-  computed: {
-    ...mapState({
-      chatUser: (state) => state.ws.chatUser,
-      soundNofiy: (state) => state.ws.soundNofiy,
-      myUserInfo: (state) => state.ws.myUserInfo,
-      goAnchorMessage: (state) => state.ws.goAnchorMessage,
-    }),
-  },
-  created() {
-    this.setMyUserInfo(JSON.parse(localStorage.getItem("myUserInfo")));
-  },
+
+  },  
   mounted() {
-    window.addEventListener(
-      "scroll",
-      () => {
-        let scrollTop = document.querySelector(".message-pabel-box");
-        this.showScrollBar = !(
-          (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.199951171875 : 0.60009765625)  <=
-          scrollTop.clientHeight
-        );
-        // console.log(document.querySelector(".el-checkbox__label"))
-      },
-      true
-    );
     if (this.goAnchorMessage.historyId !== undefined) {
-      let newTime = this.timeOut + 1000;
       setTimeout(() => {
         this.goAnchor(this.goAnchorMessage.historyId);
-      }, newTime);
+        this.setGoAnchorMessage({});
+      }, 3000);
     }
   },
   methods: {
     ...mapMutations({
       setEditMsg: "ws/setEditMsg",
       setReplyMsg: "ws/setReplyMsg",
-      setMyUserInfo: "ws/setMyUserInfo",
     }),
-    paperScroll(event){
-      console.log(event)
+    unique(arr, key) {
+      if (!arr) return arr
+      if (key === undefined) return [...new Set(arr)]
+      const map = {
+          'string': e => e[key],
+          'function': e => key(e),
+      }
+      const fn = map[typeof key]
+      const obj = arr.reduce((o,e) => (o[fn(e)]=e, o), {})
+      return Object.values(obj)
+    },
+    scrollHistoryBar(){
+      let scrollTop = document.querySelector(".message-pabel-box");
+      if(scrollTop !==null){
+        this.showScrollBar = !(
+          (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.2001953125 : 0.60009765625) <= scrollTop.clientHeight
+        );
+        if(scrollTop.scrollTop < 5000 && this.historyMsgLength === 200){
+          this.$emit("scrollHistory",this.message[0].historyId)
+        }
+        this.$emit('scrollBar',this.showScrollBar)
+      }
+    },    
+    fileData(data,type){
+      if(type === "content"){
+        return fileBoxName(data)
+      }else{
+        return formatFileSize(data)
+      }
+    },
+    showCheckBtn(status, data) {
+      if (status) {
+        return status;
+      } else if (!status) {
+        if (["SRV_USER_SEND", "SRV_USER_IMAGE", "SRV_USER_AUDIO","SRV_USER_FILE"].includes(data.chatType)) {
+          return status;
+        } else {
+          return !status;
+        }
+      }
     },
     IsURL(str_url) {
       var strRegex =
@@ -381,14 +419,15 @@ export default {
         });
       }
     },
-    dblclick(event) {
+    replyMsgclick(event,type) {
       this.setReplyMsg({
         chatType: event.chatType,
-        clickType: "replyMsg",
+        clickType: type,
         innerText: event.message.content,
         replyHistoryId: event.historyId,
         name: event.name,
         icon: event.icon,
+        fileSize:event.fileSize,
       });
     },
     onContextmenu(data) {
@@ -397,14 +436,7 @@ export default {
           name: "edit",
           label: "编辑",
           onClick: () => {
-            this.setReplyMsg({
-              chatType: data.chatType,
-              clickType: "editMsg",
-              innerText: data.message.content,
-              replyHistoryId: data.historyId,
-              name: data.name,
-              icon: data.icon,
-            });
+            this.replyMsgclick(data,"editMsg")
             this.setEditMsg({ innerText: data.message.content });
           },
         },
@@ -412,7 +444,7 @@ export default {
           name: "copy",
           label: "复制",
           onClick: () => {
-            this.copyPaste(data);
+            copyPaste(data.message.content.replace(/(\s*$)/g, ""));
           },
         },
 
@@ -420,21 +452,14 @@ export default {
           name: "reply",
           label: "回覆",
           onClick: () => {
-            this.setReplyMsg({
-              chatType: data.chatType,
-              clickType: "replyMsg",
-              innerText: data.message.content,
-              replyHistoryId: data.historyId,
-              name: data.name,
-              icon: data.icon,
-            });
+            this.replyMsgclick(data,'replyMsg')
           },
         },
         {
           name: "download",
           label: "下载",
           onClick: () => {
-            this.downloadImages(data);
+            this.downloadFile(data.message.content,this.fileData(data.message.content,'content'))
           },
         },
         {
@@ -471,7 +496,7 @@ export default {
         },        
       ];
       if (data.userChatId !== "u" + localStorage.getItem("id")) {
-        if (data.chatType === "SRV_USER_IMAGE") {
+        if (data.chatType === "SRV_USER_IMAGE" || data.chatType === "SRV_USER_FILE") {
           this.newItem = item.filter(
             (list) => !["deleteAllChat", "edit", "copy"].includes(list.name)
           );
@@ -485,7 +510,7 @@ export default {
           );
         }
       } else {
-        if (data.chatType === "SRV_USER_IMAGE") {
+        if (data.chatType === "SRV_USER_IMAGE" || data.chatType === "SRV_USER_FILE") {
           this.newItem = item.filter(
             (list) => !["edit", "copy"].includes(list.name)
           );
@@ -534,51 +559,8 @@ export default {
         });
       }
     },
-    downloadImages(data) {
-      let hreLocal = "";
-      hreLocal = this.isBase64(data.message.content);
-      this.downloadByBlob(hreLocal, "images");
-    },
-    downloadByBlob(url, name) {
-      let image = new Image();
-      image.setAttribute("crossOrigin", "anonymous");
-      image.src = url;
-      image.onload = () => {
-        let canvas = document.createElement("canvas");
-        canvas.width = image.width;
-        canvas.height = image.height;
-        let ctx = canvas.getContext("2d");
-        ctx.drawImage(image, 0, 0, image.width, image.height);
-        canvas.toBlob((blob) => {
-          let url = URL.createObjectURL(blob);
-          this.download(url, name);
-          // 用完释放URL对象
-          URL.revokeObjectURL(url);
-        });
-      };
-    },
-    download(href, name) {
-      let link = document.createElement("a");
-      link.download = name;
-      link.href = href;
-      link.click();
-      link.remove();
-    },
-    copyPaste(data) {
-      let url = document.createElement("textarea");
-      document.body.appendChild(url);
-      url.value = data.message.content.replace(/(\s*$)/g, "");
-      url.select();
-      document.execCommand("copy");
-      document.body.removeChild(url);
-
-      this.$message({
-        message: `${
-          url.value.length > 110 ? url.value.substr(0, 110) + " ..." : url.value
-        } 复制成功`,
-        type: "success",
-        duration: 1000,
-      });
+    downloadFile (href,filename) {
+     saveAs(href, filename);
     },
     deleteRecent(data, type) {
       let parmas = {
@@ -886,6 +868,29 @@ export default {
         height: 6em;
       }
     }
+    .message-classic{
+      .message-file-box{
+        display: flex;
+        align-items: center;
+        padding-right: 45px;
+        .file-box{
+          width: 4em;
+          height: 4em;
+          background-color: #000;
+          border-radius: 10px;
+          background-image: url("./../../static/images/icon_file.svg");
+          background-repeat: no-repeat;
+          background-size:65%;        
+          background-position: center;
+        }
+        .file-message{
+          display: flex;
+          flex-direction: column;
+          padding-left: 10px;
+        }
+      }
+    }
+    
     .message-audio {
       width: 190px;
       height: 2.5em;
@@ -895,12 +900,12 @@ export default {
     }
     .message-image {
       position: relative;
-      
       display: inline-block;
       padding: 5px 6px 2px 6px;
       color: #333333;
       background-color: #e5e4e4;
       border-radius: 10px;
+      font-weight: 600;     
       img {
         border-radius: 8px;
         width: 6em;

@@ -13,7 +13,6 @@
               placeholder="搜寻"
               prefix-icon="el-icon-search"
               v-model="searchKey"
-              @keyup.native.enter="searchUserData(searchKey)"
             >
             </el-input>
           </div>
@@ -53,8 +52,8 @@
               class="home-header-title"
               :style="
                 !groupPermissionData.addGroup
-                  ? 'position: relative; left: 1px; top: 1px;'
-                  : 'position: relative; left: 1px;'
+                  ? 'position: relative; left: 0px; top: 1px;'
+                  : ''
               "
               >管理员设定</span
             >
@@ -67,7 +66,6 @@
               placeholder="搜寻"
               prefix-icon="el-icon-search"
               v-model="searchKey"
-              @keyup.native.enter="developmentMessage(searchKey)"
             >
             </el-input>
           </div>
@@ -96,7 +94,7 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { groupListMember } from "@/api";
+import { listMember } from "@/api/groupController";
 
 export default {
   name: "SettingGroup",
@@ -144,7 +142,7 @@ export default {
     getGroupListMember() {
       if (!this.groupPermissionData.addGroup) {
         let groupId = this.groupData.groupId;
-        groupListMember({ groupId }).then((res) => {
+        listMember({ groupId }).then((res) => {
           this.contactList = res.data.list;
           this.contactList.forEach((item) => {
             if (item.icon === undefined) {
@@ -293,7 +291,7 @@ export default {
             span {
               &::after {
                 content: "";
-                margin-top: 1em;
+                margin-top: 0.95em;
               }
             }
           }

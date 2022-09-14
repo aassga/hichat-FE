@@ -15,26 +15,17 @@
               class="message-classic"
               v-if="el.chatType === 'SRV_USER_SEND'"
               @contextmenu.prevent.stop="onContextmenu(el)"
-              @dblclick="dblclick(el)"
             >
               <div>
                 <span
-                  v-if="
-                    isBase64(el.chat.text).match(
-                      /(http|https):\/\/([\w.]+\/?)\S*/gi
-                    ) === null
-                  "
+                  v-if="!IsURL(isBase64(el.chat.text))"
                   @click.prevent.stop="
                     device === 'moblie' ? onContextmenu(el) : false
                   "
                   v-html="isBase64(el.chat.text)"
                 ></span>
                 <div
-                  v-else-if="
-                    isBase64(el.chat.text).match(
-                      /(http|https):\/\/([\w.]+\/?)\S*/gi
-                    )
-                  "
+                  v-else-if="IsURL(isBase64(el.chat.text))"
                 >
                   <div
                     v-if="device === 'moblie'"
@@ -56,10 +47,27 @@
               </div>
             </span>
             <span
+              class="message-classic"
+              v-else-if="el.chatType === 'SRV_USER_FILE'"
+              @contextmenu.prevent.stop="onContextmenu(el)"
+              @dblclick="dblclick(el)" 
+              @click.prevent.stop="
+                device === 'moblie' ? onContextmenu(el) : false
+              "
+            >
+              <div class="message-file-box" id="file-download">
+                <div class="file-box"></div>
+                <div class="file-message">
+                  <span>{{fileData(isBase64(el.chat.text),'content')}}</span>
+                  <span>档案大小　: {{ fileData(el.chat.fileSize,'size') }}</span>                      
+                </div>
+
+              </div>
+            </span>            
+            <span
               class="message-mini-audio"
               v-else-if="el.chatType === 'SRV_USER_AUDIO'"
               @contextmenu.prevent.stop="onContextmenu(el)"
-              @dblclick="dblclick(el)"
             >
               <div
                 v-if="device === 'moblie'"
@@ -79,7 +87,6 @@
               class="message-image"
               v-else-if="el.chatType === 'SRV_USER_IMAGE'"
               @contextmenu.prevent.stop="onContextmenu(el)"
-              @dblclick="dblclick(el)"
             >
               <div
                 v-if="device === 'moblie'"
@@ -131,9 +138,10 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { unpinHistory, pinList } from "@/api";
+import { pinList,unpinHistory } from '@/api/chatController'
+import { fileBoxName, formatFileSize } from "@/utils/FileSizeName.js";
+import { copyPaste } from "@/utils/urlCopy.js";
 import AESBase64 from "@/utils/AESBase64.js";
-
 
 export default {
   name: "MessagePabel",
@@ -161,7 +169,7 @@ export default {
   },
   watch: {
     topMsgShow(val) {
-      !val ? this.getPinList() : false;
+      // !val ? this.getPinList() : false;
     },
   },
   computed: {
@@ -190,6 +198,23 @@ export default {
       setTopMsgShow: "ws/setTopMsgShow",
       setGoAnchorMessage: "ws/setGoAnchorMessage",
     }),
+    fileData(data,type){
+      if(type === "content"){
+        return fileBoxName(data)
+      }else{
+        return formatFileSize(data)
+      }
+    },    
+    IsURL(str_url) {
+      var strRegex =
+        /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
+      var re = new RegExp(strRegex);
+      if (re.test(str_url)) {
+        return true;
+      } else {
+        return false;
+      }
+    },       
     goMessageAction(data) {
       this.setGoAnchorMessage(data);
       this.setTopMsgShow(true);
@@ -220,6 +245,10 @@ export default {
             this.newMessageData[this.$root.formatTimeDay(el.chat.sendTime)] =
               newData;
           });
+          if(JSON.stringify(this.newMessageData) === '{}') {
+            this.setTopMsgShow(true);
+            this.$emit("resetPinMsg");
+          }
           this.$root.gotoBottom();
         }
       });
@@ -235,23 +264,6 @@ export default {
         return iconData.icon;
       }
     },
-    audioAction() {
-      let audioEl = document.getElementById("notify-send-audio");
-      var playPromise = audioEl.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then((_) => {
-            audioEl.pause();
-          })
-          .catch((error) => {});
-      }
-      audioEl.src = ""; // 移除src, 防止之后播放空白音频
-      setTimeout(() => {
-        // 用setTimeout模拟一个2秒的延迟
-        audioEl.src = require("./../../static/wav/send.mp3");
-        audioEl.play();
-      }, 150);
-    },
     // 判断讯息Class名称
     judgeClass(item) {
       if (item.chat.fromChatId === "u" + localStorage.getItem("id")) {
@@ -266,7 +278,7 @@ export default {
           name: "copy",
           label: "复制",
           onClick: () => {
-            this.copyPaste(data);
+            copyPaste(this.isBase64(data.chat.text).replace(/(\s*$)/g, ""));
           },
         },
         {
@@ -291,7 +303,7 @@ export default {
       ];
       if (data.chatType === "SRV_USER_SEND") {
         this.newItem = item.filter(list => list.name !== "share" && list.name !== "download");
-      } else if (data.chatType === "SRV_USER_IMAGE") {
+      } else if (data.chatType === "SRV_USER_IMAGE" || data.chatType === "SRV_USER_FILE") {
         this.newItem = item.filter(list => list.name !== "copy");
       } else if (data.chatType === "SRV_USER_AUDIO") {
         this.newItem = item.filter(list => list.name === "upDown");
@@ -307,6 +319,7 @@ export default {
       });
       return false;
     },
+    //下載圖片
     downloadImages(data) {
       let hreLocal = "";
       hreLocal = this.isBase64(data.chat.text);
@@ -337,6 +350,7 @@ export default {
       link.click();
       link.remove();
     },
+
     topMsgAction(data) {
       let param = {
         historyId: data.historyId,
@@ -347,24 +361,6 @@ export default {
           this.$emit("resetPinMsg");
           this.getPinList();
         }
-      });
-    },
-    copyPaste(data) {
-      let url = document.createElement("textarea");
-      document.body.appendChild(url);
-      url.value = this.isBase64(data.chat.text).replace(/(\s*$)/g, "");
-      url.select();
-      document.execCommand("copy");
-      document.body.removeChild(url);
-
-      this.$message({
-        message: `${
-          url.value.length > 110
-            ? url.value.substr(0, 110) + " ..."
-            : this.isBase64(url.value)
-        } 复制成功`,
-        type: "success",
-        duration: 1000,
       });
     },
   },
@@ -639,6 +635,28 @@ export default {
         height: 6em;
       }
     }
+    .message-classic{
+      .message-file-box{
+        display: flex;
+        align-items: center;
+        padding-right: 45px;
+        .file-box{
+          width: 4em;
+          height: 4em;
+          background-color: #000;
+          border-radius: 10px;
+          background-image: url("./../../static/images/icon_file.svg");
+          background-repeat: no-repeat;
+          background-size:65%;        
+          background-position: center;
+        }
+        .file-message{
+          display: flex;
+          flex-direction: column;
+          padding-left: 10px;
+        }
+      }
+    }    
     .message-audio {
       width: 190px;
       height: 2.5em;
@@ -648,12 +666,12 @@ export default {
     }
     .message-image {
       position: relative;
-      
       display: inline-block;
       padding: 5px 6px 2px 6px;
       color: #333333;
       background-color: #e5e4e4;
       border-radius: 10px;
+      font-weight: 600;      
       img {
         border-radius: 8px;
         width: 6em;
