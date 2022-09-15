@@ -420,7 +420,6 @@ export default {
       formData.append("type", "FILE");
       this.fullscreenLoading = true;
       uploadMessageFile(formData).then((res) => {
-        console.log(res.lengthComputable);
         if (res.code === 200) {
           let message ={
             chatType: "CLI_USER_FILE",

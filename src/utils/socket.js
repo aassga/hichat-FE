@@ -22,31 +22,29 @@ const emitter = new Vue({
       if (socket.readyState === 1) socket.send(JSON.stringify(message));
     },
     onClose() {
-      let leaveChatKey = this.chatDataKey;
-      leaveChatKey.chatType = "CLI_LEAVE_ROOM";
-      leaveChatKey.id = Math.random();
-      socket.send(JSON.stringify(leaveChatKey));
+      this.chatDataKey.chatType = "CLI_LEAVE_ROOM";
+      this.chatDataKey.id = Math.random();
+      socket.send(JSON.stringify(this.chatDataKey));
       socket.close();
     },
 
     // 初始化 websocket 
     connect() {
       socket = new WebSocket(wsUrl);
-      let joinChatKey = this.chatDataKey
       socket.onmessage = function (msg) {
         let messageData = JSON.parse(msg.data)
         let chatType = messageData.chatType
         switch (chatType) {
           // 连线成功
           case "SRV_NEED_AUTH":
-            socket.send(JSON.stringify(joinChatKey));
+            socket.send(JSON.stringify(this.chatDataKey));
             break;
           // 连线失敗
           case "SRV_ERROR_MSG":
             if(messageData.text === "50002"){
-              joinChatKey.chatType = "CLI_AUTH";
-              joinChatKey.id = Math.random();
-              socket.send(JSON.stringify(joinChatKey));
+              this.chatDataKey.chatType = "CLI_AUTH";
+              this.chatDataKey.id = Math.random();
+              socket.send(JSON.stringify(this.chatDataKey));
             } 
             break;
         }
@@ -56,7 +54,7 @@ const emitter = new Vue({
         emitter.$emit("error", err);
       };
       socket.onclose = function (e) {
-        setTimeout(() => emitter.connect(), 3000);
+        setTimeout(() => emitter.connect(), 5000);
       };
     },
   }

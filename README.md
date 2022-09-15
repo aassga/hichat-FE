@@ -1,4 +1,4 @@
-# hichat(多彩网)
+# hailiao 嗨聊
 ### 安装方法
 ```
 npm install
