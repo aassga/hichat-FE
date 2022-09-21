@@ -113,6 +113,19 @@
                 >
               </div>
               <div
+                class="setting-button no_bor_mb10"
+                @click="dialogShow(!chatUser.setting.prompt ? 'mute' : 'unMute')"
+                >
+                  <a>
+                    <div class="setting-button-left">
+                      <img :src="!chatUser.setting.prompt ? muteImg : noMuteImg" />
+                      <span>{{
+                        !chatUser.setting.prompt ? "开启通知" : "关闭通知"
+                      }}</span>
+                    </div>
+                  </a>
+                </div>
+              <div
                 v-for="(item, index) in settingContactData"
                 :key="index"
                 class="setting-button"
@@ -125,21 +138,7 @@
                   <img src="./../../../static/images/next.png" alt="" />
                 </a>
               </div>
-              
               <template v-if="chatUser.name !== '嗨聊记事本' && infoMsg.infoMsgMap === 'address'">
-                <!-- <div
-                  class="setting-button"
-                  @click="dialogShow(!chatUser.mute ? 'mute' : 'unMute')"
-                >
-                  <a>
-                    <div class="setting-button-left">
-                      <img :src="chatUser.mute  ? muteImg : noMuteImg"/>
-                      <span>{{
-                        !chatUser.mute  ? "关闭通知" : "开启通知"
-                      }}</span>
-                    </div>
-                  </a>
-                </div> -->
                 <div
                   class="setting-button"
                   @click="dialogShow(!chatUser.isBlock ? 'block' : 'unBlock')"
@@ -456,8 +455,8 @@ export default {
       dialogContent: "",
       contactList: [],
       groupDataList: [],
-      muteImg:require("./../../../static/images/icon_notification.svg"),
-      noMuteImg:require("./../../../static/images/volume.svg"),      
+      muteImg:require("./../../../static/images/pc/bell.svg"),
+      noMuteImg:require("./../../../static/images/pc/bell-off.svg"),      
       notification: true,
       successDialogShow: false,
       settingDialogShow: false,
@@ -933,6 +932,9 @@ export default {
 }
 .mt10-border {
   border-top: 3px solid rgba(0, 0, 0, 0.05);
+}
+.no_bor_mb10{
+  border-bottom: 3px solid rgba(0, 0, 0, 0.05);
 }
 .hichat-pc {
   .home-wrapper {
