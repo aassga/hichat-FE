@@ -33,7 +33,7 @@
                       <span>{{ item.name }}</span>
                     </div>
                     <div class="time" @click="muteActional(item,'user')">
-                      <img :src="item.mute ? muteImg : noMuteImg" />
+                      <img :src="item.setting.prompt ? noMuteImg:muteImg " />
                     </div>
                   </div>
                   <div class="contont-border-bottom"></div>
@@ -70,8 +70,8 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { getContactList } from "@/api/memberContactController";
-import { getGroupList,updateGroupSetting } from '@/api/groupController'
+import { getContactList,updateContactNickName } from "@/api/memberContactController";
+import { getGroupList,updateGroup } from '@/api/groupController'
 
 export default {
   name: "Notify",
@@ -129,9 +129,6 @@ export default {
       getContactList().then((res) => {
         this.newContactList = []
         this.contactList = res.data.list;
-        this.contactList.forEach((el) => {
-          el.mute = true
-        }); 
         this.newContactList = this.contactList.filter((name)=>{
           return name.contactId !== localStorage.getItem("id")
         })
@@ -154,21 +151,34 @@ export default {
     },    
     muteActional(item,type){
       if(type === "user"){
-        item.mute = !item.mute
-        this.newContactList = this.contactList.filter((name)=>{
-          return name.contactId !== localStorage.getItem("id")
+        item.setting.prompt = !item.setting.prompt
+        let contactId =item.contactId
+        let parmas = {
+          name: item.name,
+          setting: {
+            prompt: item.setting.prompt
+          }
+        }
+        updateContactNickName(parmas,contactId).then(res =>{
+          if(res.code === 200){
+            this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+            this.getDataList()
+          }
         })
       }else{
         item.setting.prompt = !item.setting.prompt
         let parmas = {
           groupId: item.groupId,
+          groupName: item.groupName,
+          icon: item.icon,
           setting: {
             prompt: item.setting.prompt
           }
         }
-        updateGroupSetting(parmas).then(res =>{
+        updateGroup(parmas).then(res =>{
           if(res.code === 200){
             this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+            this.getDataList()
           }
         })
       }

@@ -82,14 +82,12 @@
                         'reply-content': el.isRplay !== null,
                       }"
                     >
-                      <span
+                      <vue-markdown
                         v-if="!IsURL(el.message.content)"
                         @click.prevent.stop="
                           device === 'moblie' ? onContextmenu(el) : false
                         "
-                        v-html="el.message.content"
-                      >
-                      </span>
+                      >{{ el.message.content }}</vue-markdown>
 
                       <div v-else-if="IsURL(el.message.content)">
                         <div
@@ -108,7 +106,6 @@
                           >{{ el.message.content }}</vue-markdown
                         >
                       </div>
-                      <span v-else v-html="el.message.content"></span>
                     </div>
                   </span>
                   <span
@@ -591,6 +588,7 @@ export default {
     .message-styles-box {
       .message-layout-left {
         p {
+          user-select: text;
           .el-image {
             width: -webkit-fill-available !important;
             height: 11em !important;
@@ -608,6 +606,7 @@ export default {
       }
       .message-layout-right {
         p {
+          user-select: text;
           .el-image {
             width: -webkit-fill-available !important;
             height: 11em !important;
@@ -752,6 +751,7 @@ export default {
         font-weight: 600;
         letter-spacing: 0.5px;
         border-radius: 0 8px 8px 8px;
+        user-select: text;
       }
       .nickname-time {
         color: #777777;
@@ -819,6 +819,7 @@ export default {
         background-color: #ffffff;
         letter-spacing: 0.5px;
         border-radius: 8px 0 8px 8px;
+        user-select: text;
       }
       .nickname-time {
         color: #777777;

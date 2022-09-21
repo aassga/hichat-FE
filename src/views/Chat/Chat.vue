@@ -18,14 +18,14 @@
                 <div class="home-user-more"></div>
               </div>
               <el-dropdown-menu slot="dropdown" class="chat-more">
-                <!-- <el-dropdown-item>
+                <el-dropdown-item>
                   <div class="logout-btn" @click="isMuteDialogShow = true">
-                    <img :src="groupUser.mute ? muteImg : noMuteImg"/>
+                    <img :src="!groupUser.setting.prompt ? muteImg : noMuteImg" />
                     <span>{{
-                      groupUser.mute ? "开启通知" : "关闭通知"
+                      !groupUser.setting.prompt ? "开启通知" : "关闭通知"
                     }}</span>
                   </div>
-                </el-dropdown-item> -->
+                </el-dropdown-item>
                 <el-dropdown-item>
                   <div
                     class="logout-btn"
@@ -39,12 +39,12 @@
                 <el-dropdown-item>
                   <div class="logout-btn" @click="deleteGroupDialogShow = true">
                     <img src="./../../../static/images/pc/trash.svg" alt="" />
-                    <span style="color: #ee5253">刪除對話</span>
+                    <span style="color: #ee5253">删除聊天室</span>
                   </div>
                 </el-dropdown-item>
                 <el-dropdown-item>
                   <div class="logout-btn" @click="leaveGroupDialogShow = true">
-                    <img src="./../../../static/images/pc/trash.svg" alt="" />
+                    <img src="./../../../static/images/pc/logout.svg" alt="" />
                     <span style="color: #ee5253">退出群组</span>
                   </div>
                 </el-dropdown-item>
@@ -283,7 +283,7 @@
       </span>
     </el-dialog>
     <el-dialog
-      :title="`${groupUser.mute ? '开启' : '关闭'}通知`"
+      :title="`${groupUser.setting.prompt ? '开启' : '关闭'}通知`"
       :visible.sync="isMuteDialogShow"
       class="el-dialog-loginOut"
       width="70%"
@@ -293,7 +293,7 @@
     >
       <div class="loginOut-box">
         <span
-          >确认是否{{ groupUser.mute ? "开启通知" : "关闭通知" }}</span
+          >确认是否{{ groupUser.setting.prompt ? "开启通知" : "关闭通知" }}</span
         >
       </div>
       <span slot="footer" class="dialog-footer">
@@ -302,7 +302,7 @@
           @click="isMuteDialogShow = false"
           >取消</el-button
         >
-        <el-button class="background-red"
+        <el-button class="background-red" @click="muteActional(groupUser)"
           >确认</el-button
         >
       </span>
@@ -320,7 +320,7 @@ import Socket from "@/utils/socket";
 import AESBase64 from "@/utils/AESBase64.js";
 import { pinList,deleteRecentChatMul,getChatHistory,unpinHistory,deleteRecentChat } from '@/api/chatController'
 import { mapState, mapMutations } from "vuex";
-import { listMember,leaveGroup,getGroupAuthoritySetting } from '@/api/groupController'
+import { listMember,leaveGroup,getGroupAuthoritySetting,updateGroup } from '@/api/groupController'
 import { fileBoxName, formatFileSize } from "@/utils/FileSizeName.js";
 import { getToken } from "_util/utils.js";
 import MessagePabel from "@/components/message-group-moblie";
@@ -358,8 +358,8 @@ export default {
       deleteGroupDialogShow: false,
       leaveGroupDialogShow: false,
       pinDataList: [],
-      muteImg:require("./../../../static/images/icon_notification.svg"),
-      noMuteImg:require("./../../../static/images/volume.svg"),
+      muteImg:require("./../../../static/images/pc/bell.svg"),
+      noMuteImg:require("./../../../static/images/pc/bell-off.svg"),
       //加解密 key iv
       aesKey: "hichatisachatapp",
       aesIv: "hichatisachatapp",
@@ -432,6 +432,24 @@ export default {
       setContactListData: "ws/setContactListData",
       setCheckBoxBtn: "ws/setCheckBoxBtn",
     }),
+    muteActional(item){
+      item.setting.prompt = !item.setting.prompt
+      let parmas = {
+        groupId: item.groupId,
+        groupName: item.groupName,
+        icon: item.icon,
+        setting: {
+          prompt: item.setting.prompt
+        }
+      }
+      updateGroup(parmas).then(res =>{
+        if(res.code === 200){
+          this.isMuteDialogShow = false
+          this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+          this.getHiChatDataList();
+        }
+      })
+    },    
     scrollHistory(val){
       this.getChatHistoryMessage(val)
     },

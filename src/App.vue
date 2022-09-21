@@ -73,8 +73,7 @@ export default {
   min-height: -webkit-fill-available;
   overflow: hidden;
   font-family: 'Noto Sans SC', sans-serif;
-  user-select: none;
-  -webkit-user-select: none;  
+  user-select: text;
 }
 .el-notification__content {
   margin-top: 20px;

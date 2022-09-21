@@ -303,6 +303,14 @@
                   </div>
                 </a>
               </div>
+              <div class="setting-button">
+                <a @click="leaveGroupDialogShow = true">
+                  <div class="setting-button-left">
+                    <img src="./../../../static/images/pc/logout.svg" alt="" />
+                    <span>退出群组</span>
+                  </div>
+                </a>
+              </div>
             </template>
           </div>
         </el-main>
@@ -359,6 +367,29 @@
         >
       </span>
     </el-dialog>
+    <el-dialog
+      title="退出群組"
+      :visible.sync="leaveGroupDialogShow"
+      class="el-dialog-loginOut"
+      width="70%"
+      :show-close="false"
+      :close-on-click-modal="false"
+      center
+    >
+      <div class="loginOut-box">
+        <span v-if="groupUser.isAdmin">
+          <span>管理者退出將解散群組</span>
+          <span>确认是否退出？</span>
+        </span>
+        <span v-else>确认是否退出群組？</span>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button class="background-gray" @click="leaveGroupDialogShow = false"
+          >取消</el-button
+        >
+        <el-button class="background-red" @click="leaveSubmitBtn">确认</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -370,7 +401,7 @@ import { copyPaste } from "@/utils/urlCopy.js";
 import { getSearchById } from "@/api/memberProfileController";
 import { addContactUser,deleteContactUser } from "@/api/memberContactController";
 import { addBlockContactUser,unBlockContactUser } from '@/api/memberBlockController'
-import { listMember,setBanPostByPersonal } from '@/api/groupController'
+import { listMember,setBanPostByPersonal,leaveGroup } from '@/api/groupController'
 
 
 import EditGroup from "./../EditContact/EditGroup.vue";
@@ -430,6 +461,7 @@ export default {
       notification: true,
       successDialogShow: false,
       settingDialogShow: false,
+      leaveGroupDialogShow:false,
     };
   },
   computed: {
@@ -464,6 +496,20 @@ export default {
       setGroupUserCheck:"ws/setGroupUserCheck",
       setContactListData: "ws/setContactListData",
     }),
+    leaveSubmitBtn() {
+      let groupId = this.groupUser.groupId;
+      leaveGroup({ groupId })
+        .then((res) => {
+          if (res.code === 200) {
+            this.leaveGroupDialogShow = false;
+            this.setChatGroup({});
+            this.closeInfoMsgShow()
+          }
+        })
+        .catch((err) => {
+          return false;
+        });
+    },    
     getGroupListMember(data) {
       let groupId = data.toChatId.replace("g", "");
       listMember({ groupId }).then((res) => {

@@ -97,7 +97,7 @@
               <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item>
                   <div class="logout-btn" @click="logoutDialogShow = true">
-                    <img src="./../../../static/images/pc/logout.png" alt="" />
+                    <img src="./../../../static/images/pc/logout.svg" alt="" />
                     <span>登出</span>
                   </div>
                 </el-dropdown-item>

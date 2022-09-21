@@ -373,6 +373,7 @@ export default {
     .message-styles-box {
       .message-layout-left {
         p {
+          user-select: text;
           .el-image {
             width: -webkit-fill-available !important;
             height: 11em !important;
@@ -390,6 +391,7 @@ export default {
       }
       .message-layout-right {
         p {
+          user-select: text;
           .el-image {
             width: -webkit-fill-available !important;
             height: 11em !important;
@@ -500,6 +502,7 @@ export default {
         font-weight: 600;
         letter-spacing: 0.5px;
         border-radius: 0 8px 8px 8px;
+        user-select: text;
       }
       .nickname-time {
         display: flex;
@@ -576,6 +579,7 @@ export default {
         background-color: #ffffff;
         letter-spacing: 0.5px;
         border-radius: 8px 0 8px 8px;
+        user-select: text;
       }
       .nickname-time {
         display: flex;

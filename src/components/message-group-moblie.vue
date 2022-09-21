@@ -816,6 +816,7 @@ export default {
       p {
         display: flex;
         align-items: flex-end;
+        user-select: text;
         .message-audio {
           border-radius: 0 10px 10px 10px;
           background-color: rgba(0, 0, 0, 0.05);
@@ -864,6 +865,7 @@ export default {
         font-weight: 600;
         letter-spacing: 0.5px;
         border-radius: 0 8px 8px 8px;
+        user-select: text;
       }
       .nickname-time {
         color: #777777;
@@ -902,6 +904,7 @@ export default {
         display: flex;
         align-items: flex-end;
         flex-flow: row-reverse;
+        user-select: text;
         .message-audio {
           border-radius: 0 10px 10px 10px;
           background-color: rgba(0, 0, 0, 0.05);
@@ -932,6 +935,7 @@ export default {
         background-color: #ffffff;
         letter-spacing: 0.5px;
         border-radius: 8px 0 8px 8px;
+        user-select: text;
       }
       .nickname-time {
         color: #777777;

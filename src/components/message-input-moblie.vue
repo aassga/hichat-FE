@@ -642,7 +642,6 @@ export default {
           this.aesKey,
           this.aesIv
         ),//TODO 加密
-        // text: this.textArea,
         token: getToken("token"),
         deviceId: localStorage.getItem("UUID"),
       };
@@ -650,8 +649,8 @@ export default {
       this.soundNofiy.forEach((res)=>{
         if(res.key === "private" && res.isNofity) this.audioAction()
       })
-      
-      Socket.send(message);
+      console.log(message)
+      // Socket.send(message);
       this.$root.closeReplyMessage();
       // 消息清空
       this.textArea = "";

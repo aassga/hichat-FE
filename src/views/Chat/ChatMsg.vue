@@ -74,14 +74,14 @@
                       <div class="home-user-more"></div>
                     </div>
                     <el-dropdown-menu slot="dropdown" class="chat-more">
-                      <!-- <el-dropdown-item>
+                      <el-dropdown-item>
                         <div class="logout-btn" @click="isMuteDialogShow = true">
-                          <img :src="chatUser.mute ? muteImg : noMuteImg" v-if="device ==='pc'"/>
+                          <img v-if="device ==='pc'" :src="!chatUser.setting.prompt ? muteImg : noMuteImg" />
                           <span>{{
-                            chatUser.mute ? "开启通知" : "关闭通知"
+                            !chatUser.setting.prompt ? "开启通知" : "关闭通知"
                           }}</span>
                         </div>
-                      </el-dropdown-item> -->
+                      </el-dropdown-item>
                       <el-dropdown-item>
                         <div class="logout-btn" @click="isBlockDialogShow = true">
                           <img
@@ -102,7 +102,7 @@
                             src="./../../../static/images/pc/trash.svg"
                             alt=""
                           />
-                          <span style="color: #ee5253">删除對話</span>
+                          <span style="color: #ee5253">删除聊天室</span>
                         </div>
                       </el-dropdown-item>
                       <el-dropdown-item>
@@ -317,7 +317,7 @@
 
     <el-dialog
       :title="
-        device === 'pc' ? `${chatUser.mute ? '开启' : '关闭'}通知` : ''
+        device === 'pc' ? `${chatUser.setting.prompt ? '开启' : '关闭'}通知` : ''
       "
       :visible.sync="isMuteDialogShow"
       class="el-dialog-loginOut"
@@ -328,7 +328,7 @@
     >
       <div class="loginOut-box">
         <span
-          >确认是否{{ chatUser.mute ? "开启通知" : "关闭通知" }}</span
+          >确认是否{{ chatUser.setting.prompt ? "开启通知" : "关闭通知" }}</span
         >
       </div>
       <span slot="footer" class="dialog-footer">
@@ -337,7 +337,7 @@
           @click="isMuteDialogShow = false"
           >取消</el-button
         >
-        <el-button class="background-red"
+        <el-button class="background-red" @click="muteActional(chatUser)"
           >确认</el-button
         >
       </span>
@@ -498,7 +498,7 @@
 <script>
 import Socket from "@/utils/socket";
 import { getMemberActivity,getSearchById } from "@/api/memberProfileController";
-import { addContactUser,deleteContactUser } from "@/api/memberContactController";
+import { addContactUser,deleteContactUser,updateContactNickName } from "@/api/memberContactController";
 import { addBlockContactUser,unBlockContactUser } from '@/api/memberBlockController'
 import { pinList,getChatHistory,deleteRecentChatMul,unpinHistory,deleteRecentChat } from '@/api/chatController'
 import { fileBoxName, formatFileSize } from "@/utils/FileSizeName.js";
@@ -539,8 +539,8 @@ export default {
       deleteGroupDialogShow: false,
       isDeleteContactDialogShow: false,
       device: localStorage.getItem("device"),
-      muteImg:require("./../../../static/images/icon_notification.svg"),
-      noMuteImg:require("./../../../static/images/volume.svg"),
+      muteImg:require("./../../../static/images/pc/bell.svg"),
+      noMuteImg:require("./../../../static/images/pc/bell-off.svg"),
       //加解密 key iv
       aesKey: "hichatisachatapp",
       aesIv: "hichatisachatapp",
@@ -622,6 +622,23 @@ export default {
       setCheckBoxBtn: "ws/setCheckBoxBtn",
       setMyContactDataList: "ws/setMyContactDataList",
     }),
+    muteActional(item){
+      item.setting.prompt = !item.setting.prompt
+      let contactId =item.contactId
+      let parmas = {
+        name: item.name,
+        setting: {
+          prompt: item.setting.prompt
+        }
+      }
+      updateContactNickName(parmas,contactId).then(res =>{
+        if(res.code === 200){
+          this.isMuteDialogShow = false
+          this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+          this.getHiChatDataList();
+        }
+      })
+    },
     fileData(data,type){
       if(type === "content"){
         return fileBoxName(data)

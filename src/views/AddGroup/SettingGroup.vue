@@ -152,6 +152,7 @@
 <script>
 import { mapState,mapMutations } from "vuex";
 import { addGroup,getGroupAuthoritySetting,setGroupAuthority } from '@/api/groupController'
+import { thru } from "lodash";
 
 export default {
   name: "SettingGroup",
@@ -299,6 +300,9 @@ export default {
               groupName: res.data.groupName,
               icon: res.data.icon,
               isAdmin: true,
+              setting:{
+                prompt:true,
+              },
               toChatId: "g" + res.data.id,
               memberId: JSON.parse(localStorage.getItem("id")),
             };

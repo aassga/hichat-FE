@@ -48,3 +48,4 @@ export const updateContactNickName = (data,contactId) => {
   }
   return axios.request(postData)
 }
+

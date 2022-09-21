@@ -26,13 +26,14 @@ const emitter = new Vue({
       leaveChatKey.chatType = "CLI_LEAVE_ROOM";
       leaveChatKey.id = Math.random();
       socket.send(JSON.stringify(leaveChatKey));
+      clearInterval(this.timeHearBeat);
       socket.close();
     },
 
     // 初始化 websocket 
     connect() {
-      socket = new WebSocket(wsUrl);
       let joinChatKey = this.chatDataKey
+      socket = new WebSocket(wsUrl);
       socket.onmessage = function (msg) {
         let messageData = JSON.parse(msg.data)
         let chatType = messageData.chatType
@@ -40,6 +41,9 @@ const emitter = new Vue({
           // 连线成功
           case "SRV_NEED_AUTH":
             socket.send(JSON.stringify(joinChatKey));
+            this.timeHearBeat = setInterval(() => {
+              socket.send(JSON.stringify({chatType:"CLI_HEARTBEAT"}));
+            }, 120000);
             break;
           // 连线失敗
           case "SRV_ERROR_MSG":
@@ -56,7 +60,7 @@ const emitter = new Vue({
         emitter.$emit("error", err);
       };
       socket.onclose = function (e) {
-        setTimeout(() => emitter.connect(), 3000);
+        setTimeout(() => emitter.connect(), 5000);
       };
     },
   }

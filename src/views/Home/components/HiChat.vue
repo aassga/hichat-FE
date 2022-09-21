@@ -15,6 +15,7 @@
           :key="index"
           class="address-box"
           @click="goChatRoom(item, 'ChatMsg')"
+          @contextmenu.prevent.stop="onContextmenu(item)"
         >
           <el-badge is-dot class="item" type="success" :class="{'no-show':!onlineMsg(item)}"
             ><el-image :src="noIconShow(item, 'user')"
@@ -23,7 +24,7 @@
             <div class="msg-box">
               <div>
                 <span>{{ item.name }} 
-                  <!-- <img :src="muteImg" v-if="device ==='pc' && item.setting.prompt" style="padding-left:5px;"/> -->
+                  <img :src="muteImg" v-if="device ==='pc' && !item.setting.prompt" style="padding-left:5px;"/>
                 </span>
                 <span class="content-text">
                   <span v-if="item.lastChat === null"></span>
@@ -74,13 +75,14 @@
           :key="index"
           class="address-box"
           @click="goChatRoom(item, 'ChatGroupMsg')"
+          @contextmenu.prevent.stop="onContextmenu(item)"
         >
           <el-image :src="noIconShow(item, 'group')" />
           <div class="contont-box">
             <div class="msg-box">
               <div>
                 <span>{{ item.name }}
-                  <!-- <img :src="muteImg" v-if="device ==='pc' && !item.setting.prompt" style="padding-left:5px;"/> -->
+                  <img :src="muteImg" v-if="device ==='pc' && !item.setting.prompt" style="padding-left:5px;"/>
                 </span>
                 <span class="content-text">
                   <span v-if="item.lastChat === null"></span>
@@ -162,6 +164,7 @@
               ? goChatRoom(item, 'ChatMsg')
               : goChatRoom(item, 'ChatContact')
           "
+          @contextmenu.prevent.stop="onContextmenu(item)"
         >
           <el-badge is-dot class="item" type="success" :class="{'no-show':!onlineMsg(item)}"
             ><el-image :src="noIconShow(item, 'user')"
@@ -202,6 +205,25 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+    <el-dialog
+      title="刪除對話"
+      :visible.sync="deleteGroupDialogShow"
+      class="el-dialog-loginOut"
+      width="70%"
+      :show-close="false"
+      :close-on-click-modal="false"
+      center
+    >
+      <div class="loginOut-box">
+        <span>确认是否刪除對話？</span>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button class="background-gray" @click="deleteGroupDialogShow = false"
+          >取消</el-button
+        >
+        <el-button class="background-red" @click="deleteRecent(dialogData)">确认</el-button>
+      </span>
+    </el-dialog>    
   </div>
 </template>
 
@@ -211,6 +233,7 @@ import AESBase64 from "@/utils/AESBase64.js";
 import { mapState, mapMutations } from "vuex";
 import { getToken } from "_util/utils.js";
 import { getMemberActivity } from "@/api/memberProfileController";
+import { deleteRecentChat } from '@/api/chatController'
 import { listMember,getGroupList,groupMemberList,getGroupAuthoritySetting } from '@/api/groupController'
 
 export default {
@@ -229,6 +252,7 @@ export default {
       device: localStorage.getItem("device"),
       activeName: "address",
       isDialogShow: false,
+      deleteGroupDialogShow:false,
       dialogData: {},
       muteImg:require("./../../../../static/images/icon_notification.svg"),
       noMuteImg:require("./../../../../static/images/volume.svg"),
@@ -297,14 +321,49 @@ export default {
       setGroupMemberDataList:"ws/setGroupMemberDataList",
       setAuthorityGroupData: "ws/setAuthorityGroupData",
     }),
+    // 刪除對話
+    deleteRecent(data) {
+      let parmas = {
+        fullDelete: true,
+        historyId: "",
+        toChatId: data.toChatId,
+      };
+      deleteRecentChat(parmas)
+        .then((res) => {
+          if (res.code === 200) {
+            this.deleteGroupDialogShow = false;
+            this.getHiChatDataList();
+            if(this.hichatNav.type === "address" && (this.chatUser.toChatId === data.toChatId)){
+              this.setChatUser({});
+            }else if(this.hichatNav.type === "group" && (this.groupUser.toChatId === data.toChatId)){
+              this.setChatGroup({});
+            }else{
+              this.setContactUser({})
+            }
+          }
+        })
+        .catch((err) => {
+          this.$message({ message: err, type: "error" });
+        });
+    },
     // TODO 右鍵
-    onContextmenu(data,type) {
+    onContextmenu(data) {
+      console.log(data)
       let item = [
+        // {
+        //   name: "close",
+        //   label: "關閉提醒",
+        //   icon:"el-icon-bell",
+        //   onClick: () => {
+        //   },
+        // },
         {
-          name: "close",
-          label: "關閉提醒",
-          icon:"el-icon-bell",
+          name: "deleteMessage",
+          label: "刪除對話",
+          icon:"el-icon-delete",
           onClick: () => {
+            this.deleteGroupDialogShow = true
+            this.dialogData = data
           },
         },
       ];
@@ -343,11 +402,6 @@ export default {
               return el.lastChat.text = dictionary.toString().replace(/,/g, " ")
             }
           }
-          this.groupList.forEach((list)=>{
-            if((el.forChatId === "u"+list.memberId) && (el.toChatId === "g" +  list.groupId )){
-              return el.setting = list.setting
-            }
-          })
         })
       }
       this.newGroupDataList = this.groupDataList
@@ -424,24 +478,25 @@ export default {
           this.hiChatNumBadge = 0;
           this.contactNumBadge = 0;
           this.groupDataList = []
+
           userInfo.recentChat.forEach((item) => {
             if (item.isContact && (item.forChatId === item.toChatId)) {
               item.name = "嗨聊记事本"
               item.icon = require("./../../../../static/images/image_savemessage.png");
               this.hiChatNumBadge += item.unreadCount;
             } else if (item.isGroup) {
+
               this.groupDataList.push(item);
               this.groupNumBadge += item.unreadCount;
             } else if (
               !item.isContact &&
               item.isContact !== null &&
               item.lastChat !== null
-            ) {
-              this.contactNumBadge += item.unreadCount;
+              ) {
+                this.contactNumBadge += item.unreadCount;
             }
           });
           this.noGroupPeopleData = userInfo.recentChat.filter(res=> !res.isGroup)
-          // this.getGroupMemberList()
           this.calloutList()
           if(this.hichatNav.type !=="group"){          
             this.getUserMemberActivity(this.noGroupPeopleData)
@@ -696,6 +751,55 @@ export default {
         }
         &:nth-child(1) {
           border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+      }
+    }
+  }
+}
+/deep/.el-dialog-loginOut {
+  overflow: auto;
+  .el-dialog {
+    position: relative;
+    margin: 0 auto 50px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-sizing: border-box;
+    width: 50%;
+    .el-dialog__header {
+      padding: 10px;
+    }
+    .el-dialog__body {
+      text-align: center;
+      padding: 25px 25px 15px;
+      .loginOut-box {
+        img {
+          height: 5em;
+          margin-bottom: 1.2em;
+        }
+      }
+    }
+    .el-dialog__footer {
+      padding: 0 !important;
+      text-align: right;
+      box-sizing: border-box;
+      .dialog-footer {
+        display: flex;
+        justify-content: space-between;
+        .el-button {
+          width: 100%;
+          border-radius: 8px;
+        }
+        .background-red {
+          background-color: #ee5253;
+          color: #fff;
+        }
+        .background-orange {
+          background-color: #fe5f3f;
+          color: #fff;
+        }
+        .border-red {
+          border: 1px solid #fe5f3f;
+          color: #fe5f3f;
         }
       }
     }
