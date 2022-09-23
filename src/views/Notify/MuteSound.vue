@@ -112,7 +112,7 @@ export default {
   },
   computed: {
     ...mapState({
-
+      myContactDataList: (state) => state.ws.myContactDataList,
     }),
   },
   created() {
@@ -123,7 +123,7 @@ export default {
   },
   methods: {
     ...mapMutations({
-
+      setMyContactDataList: "ws/setMyContactDataList",
     }),
     getDataList() {
       getContactList().then((res) => {
@@ -152,7 +152,7 @@ export default {
     muteActional(item,type){
       if(type === "user"){
         item.setting.prompt = !item.setting.prompt
-        let contactId =item.contactId
+        let contactId = item.contactId
         let parmas = {
           name: item.name,
           setting: {
@@ -162,6 +162,12 @@ export default {
         updateContactNickName(parmas,contactId).then(res =>{
           if(res.code === 200){
             this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+            this.myContactDataList.forEach(el=>{
+              if(el.contactId === item.contactId) {
+                return el.setting = item.setting
+              }
+             })
+            this.setMyContactDataList(this.myContactDataList)
             this.getDataList()
           }
         })

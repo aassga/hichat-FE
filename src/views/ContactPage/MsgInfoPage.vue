@@ -114,17 +114,21 @@
               </div>
               <div
                 class="setting-button no_bor_mb10"
-                @click="dialogShow(!chatUser.setting.prompt ? 'mute' : 'unMute')"
                 >
-                  <a>
-                    <div class="setting-button-left">
-                      <img :src="!chatUser.setting.prompt ? muteImg : noMuteImg" />
-                      <span>{{
-                        !chatUser.setting.prompt ? "开启通知" : "关闭通知"
-                      }}</span>
-                    </div>
-                  </a>
-                </div>
+                <a>
+                  <div class="setting-button-left">
+                    <img :src="!chatUser.setting.prompt ? muteImg : noMuteImg" />
+                    <el-switch
+                      v-model="chatUser.setting.prompt"
+                      :inactive-text="!chatUser.setting.prompt ? '开启通知' : '关闭通知'"
+                      active-color="#fd5f3f"
+                      inactive-color="#666666"
+                      @change="chengeSettingPrompt(chatUser,'user')"
+                    >
+                    </el-switch>
+                  </div>
+                </a>
+              </div>
               <div
                 v-for="(item, index) in settingContactData"
                 :key="index"
@@ -193,19 +197,6 @@
                     </a>
                   </div>
                 </template>
-                <!-- <div
-                  class="setting-button"
-                  @click="dialogShow(!groupUserCheck.mute ? 'mute' : 'unMute')"
-                >
-                  <a>
-                    <div class="setting-button-left">
-                      <img :src="groupUserCheck.mute  ? muteImg : noMuteImg"/>
-                      <span>{{
-                        !groupUserCheck.mute  ? "关闭通知" : "开启通知"
-                      }}</span>
-                    </div>
-                  </a>
-                </div> -->
                 <div
                   class="setting-button"
                   @click="dialogShow(!groupUserCheck.isBlock ? 'block' : 'unBlock')"
@@ -256,6 +247,23 @@
                     ? groupData.groupName
                     : groupUser.groupName
                 }}</span>
+              </div>
+              <div
+                class="setting-button no_bor_mb10"
+                >
+                <a>
+                  <div class="setting-button-left">
+                    <img :src="!groupUser.setting.prompt ? muteImg : noMuteImg" />
+                    <el-switch
+                      v-model="groupUser.setting.prompt"
+                      :inactive-text="!groupUser.setting.prompt ? '开启通知' : '关闭通知'"
+                      active-color="#fd5f3f"
+                      inactive-color="#666666"
+                      @change="chengeSettingPrompt(groupUser,'group')"
+                    >
+                    </el-switch>
+                  </div>
+                </a>
               </div>
               <div
                 class="setting-button"
@@ -398,9 +406,9 @@ import { mapState, mapMutations } from "vuex";
 import { getToken } from "_util/utils.js";
 import { copyPaste } from "@/utils/urlCopy.js";
 import { getSearchById } from "@/api/memberProfileController";
-import { addContactUser,deleteContactUser } from "@/api/memberContactController";
 import { addBlockContactUser,unBlockContactUser } from '@/api/memberBlockController'
-import { listMember,setBanPostByPersonal,leaveGroup } from '@/api/groupController'
+import { addContactUser,deleteContactUser,updateContactNickName } from "@/api/memberContactController";
+import { listMember,setBanPostByPersonal,leaveGroup,updateGroup } from '@/api/groupController'
 
 
 import EditGroup from "./../EditContact/EditGroup.vue";
@@ -494,7 +502,48 @@ export default {
       setMsgInfoPage: "ws/setMsgInfoPage",
       setGroupUserCheck:"ws/setGroupUserCheck",
       setContactListData: "ws/setContactListData",
+      setMyContactDataList: "ws/setMyContactDataList",
     }),
+    chengeSettingPrompt(status,type){
+      if(type ==="user"){
+        let contactId = status.contactId
+        let parmas = {
+          name: status.name,
+          setting: {
+            prompt: status.setting.prompt
+          }
+        }
+        updateContactNickName(parmas,contactId).then(res =>{
+          if(res.code === 200){
+            this.$message({ message: !status.setting.prompt ? "静音":"關閉靜音", type: !status.setting.prompt ? "success" : "warning" });
+            if(this.chatUser.toChatId === status.toChatId){
+              this.chatUser.setting.prompt = status.setting.prompt
+              this.setChatUser(this.chatUser)
+            }
+            this.getHiChatDataList()
+          }
+        })
+      } else{
+        let parmas = {
+          groupId: status.groupId,
+          groupName: status.groupName,
+          icon: status.icon,
+          setting: {
+            prompt: status.setting.prompt
+          }
+        }
+        updateGroup(parmas).then(res =>{
+          if(res.code === 200){
+            this.$message({ message: !status.setting.prompt ? "静音":"關閉靜音", type: !status.setting.prompt ? "success" : "warning" });
+            if(this.groupUser.toChatId === data.toChatId){
+              this.groupUser.setting.prompt = data.setting.prompt
+              this.setChatGroup(this.groupUser)
+            }
+            this.getHiChatDataList()
+          }
+        })
+      }
+    },
     leaveSubmitBtn() {
       let groupId = this.groupUser.groupId;
       leaveGroup({ groupId })
@@ -848,6 +897,17 @@ export default {
         span {
           margin-left: 1em;
           font-size: 15px;
+          color: #333333;
+        }
+        .el-switch{
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          margin-left:1em;
+          font-size: 15px;
+          cursor: pointer;
+        }
+        /deep/.el-switch__label.is-active{
           color: #333333;
         }
       }

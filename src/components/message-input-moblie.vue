@@ -649,8 +649,7 @@ export default {
       this.soundNofiy.forEach((res)=>{
         if(res.key === "private" && res.isNofity) this.audioAction()
       })
-      console.log(message)
-      // Socket.send(message);
+      Socket.send(message);
       this.$root.closeReplyMessage();
       // 消息清空
       this.textArea = "";

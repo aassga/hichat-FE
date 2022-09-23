@@ -317,7 +317,7 @@
 
     <el-dialog
       :title="
-        device === 'pc' ? `${chatUser.setting.prompt ? '开启' : '关闭'}通知` : ''
+        device === 'pc' ? `${!chatUser.setting.prompt ? '开启' : '关闭'}通知` : ''
       "
       :visible.sync="isMuteDialogShow"
       class="el-dialog-loginOut"
@@ -328,7 +328,7 @@
     >
       <div class="loginOut-box">
         <span
-          >确认是否{{ chatUser.setting.prompt ? "开启通知" : "关闭通知" }}</span
+          >确认是否{{ !chatUser.setting.prompt ? "开启通知" : "关闭通知" }}</span
         >
       </div>
       <span slot="footer" class="dialog-footer">
@@ -623,18 +623,21 @@ export default {
       setMyContactDataList: "ws/setMyContactDataList",
     }),
     muteActional(item){
-      item.setting.prompt = !item.setting.prompt
-      let contactId =item.contactId
+      let contactId = item.contactId
       let parmas = {
         name: item.name,
         setting: {
-          prompt: item.setting.prompt
+          prompt: !item.setting.prompt
         }
       }
       updateContactNickName(parmas,contactId).then(res =>{
         if(res.code === 200){
           this.isMuteDialogShow = false
           this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+          if(this.chatUser.toChatId === item.toChatId){
+            this.chatUser.setting.prompt = !item.setting.prompt
+            this.setChatUser(this.chatUser)
+          }
           this.getHiChatDataList();
         }
       })

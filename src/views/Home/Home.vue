@@ -372,6 +372,7 @@ export default {
         : 2;
     Socket.$on("message", this.handleGetMessage);
     this.getContactDataList();
+    this.getGropDataList()
     this.getMaybeKnow();
     this.getUserData();
     if (localStorage.getItem("soundNofiy") === null) {
@@ -430,6 +431,7 @@ export default {
       contactUser: (state) => state.ws.contactUser,
       nofity: (state) => state.ws.nofity,
       soundNofiy: (state) => state.ws.soundNofiy,
+      myContactDataList: (state) => state.ws.myContactDataList,
       groupMemberDataList: (state) => state.ws.groupMemberDataList,
     }),
   },
@@ -485,8 +487,9 @@ export default {
           }    
          memberActivityData.push(el.contactId)   
         });
-        // this.getUserMemberActivity(memberActivityData)
       });
+    },
+    getGropDataList(){
       getGroupList().then((res) => {
         this.groupList = res.data.list;
         this.groupList.forEach((el) => {
@@ -515,7 +518,6 @@ export default {
                 list.currentTime = data.currentTime 
                 list.lastActivityTime = data.lastActivityTime
               }
-
             });
           })
           this.setMyContactDataList(this.addressDataList);
@@ -593,13 +595,12 @@ export default {
         case "SRV_GROUP_AUDIO":
         case "SRV_GROUP_SEND":
           if (msgInfo.chat.fromChatId !== "u" + localStorage.getItem("id")) {
-            this.groupList.forEach((list)=>{
-              if(("u" + list.memberId === msgInfo.forChatId) && ("g" + list.groupId === msgInfo.toChatId)){
-                if(list.setting.prompt){
-                  setTimeout(() => this.openNotify(msgInfo, msgInfo.chatType), 500);
-                } 
-              }
+            let userNotificationData = this.chatDataList.filter((list) =>{
+              return list.toChatId === msgInfo.toChatId;
             })
+            if(userNotificationData[0].setting.prompt){
+              setTimeout(() => this.openNotify(msgInfo, msgInfo.chatType), 500);
+            }
           }
           if (this.device === "moblie") {
             this.getHiChatDataList();
@@ -625,6 +626,9 @@ export default {
         case "SRV_EDIT_CONTACT":  
           this.getMaybeKnow();
           break  
+        case  "SRV_GROUP_SETTING":
+          this.getGropDataList()
+          break;  
       }
     },
     getHiChatDataList() {

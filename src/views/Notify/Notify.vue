@@ -18,12 +18,13 @@
             }"
           >
             <div class="setting-box">
-              <div class="setting-button-left">
+              <!-- <div class="setting-button-left">
                 <span>{{ item.name }}</span>
-              </div>
-              <div class="setting-button-right">
+              </div> -->
+              <div class="setting-button-left">
                 <el-switch
                   v-model="item.isNofity"
+                  :inactive-text="item.name"
                   active-color="#fd5f3f"
                   inactive-color="#666666"
                   @change="chengeSoundNofiy(item)"
@@ -66,12 +67,13 @@
             :key="item + index"
           >
             <div class="setting-box">
-              <div class="setting-button-left">
+              <!-- <div class="setting-button-left">
                 <span>{{ item.name }}</span>
-              </div>
-              <div class="setting-button-right">
+              </div> -->
+              <div class="setting-button-left">
                 <el-switch
                   v-model="item.isNofity"
+                  :inactive-text="item.name"
                   active-color="#fd5f3f"
                   inactive-color="#666666"
                   @change="chengeSoundNofiy(item)"
@@ -201,6 +203,17 @@ export default {
               span {
                 margin-left: 0;
               }
+              .el-switch{
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                margin-left:1em;
+                font-size: 15px;
+                cursor: pointer;
+              }
+              /deep/.el-switch__label.is-active{
+                color: #333333;
+              }
             }
           }
         }
@@ -256,6 +269,17 @@ export default {
         span {
           margin-left: 1em;
           font-size: 15px;
+          color: #333333;
+        }
+        .el-switch{
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          margin-left:1em;
+          font-size: 15px;
+          cursor: pointer;
+        }
+        /deep/.el-switch__label.is-active{
           color: #333333;
         }
       }

@@ -283,7 +283,7 @@
       </span>
     </el-dialog>
     <el-dialog
-      :title="`${groupUser.setting.prompt ? '开启' : '关闭'}通知`"
+      :title="`${ !groupUser.setting.prompt ? '开启' : '关闭' }通知`"
       :visible.sync="isMuteDialogShow"
       class="el-dialog-loginOut"
       width="70%"
@@ -293,7 +293,7 @@
     >
       <div class="loginOut-box">
         <span
-          >确认是否{{ groupUser.setting.prompt ? "开启通知" : "关闭通知" }}</span
+          >确认是否{{ !groupUser.setting.prompt ? "开启通知" : "关闭通知" }}</span
         >
       </div>
       <span slot="footer" class="dialog-footer">
@@ -433,19 +433,22 @@ export default {
       setCheckBoxBtn: "ws/setCheckBoxBtn",
     }),
     muteActional(item){
-      item.setting.prompt = !item.setting.prompt
       let parmas = {
         groupId: item.groupId,
         groupName: item.groupName,
         icon: item.icon,
         setting: {
-          prompt: item.setting.prompt
+          prompt: !item.setting.prompt
         }
       }
       updateGroup(parmas).then(res =>{
         if(res.code === 200){
           this.isMuteDialogShow = false
           this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+          if(this.groupUser.toChatId === item.toChatId){
+            this.groupUser.setting.prompt = !item.setting.prompt
+            this.setChatGroup(this.groupUser)
+          }
           this.getHiChatDataList();
         }
       })

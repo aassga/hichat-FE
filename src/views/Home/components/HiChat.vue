@@ -15,7 +15,7 @@
           :key="index"
           class="address-box"
           @click="goChatRoom(item, 'ChatMsg')"
-          @contextmenu.prevent.stop="onContextmenu(item)"
+          @contextmenu.prevent.stop="onContextmenu(item,'user')"
         >
           <el-badge is-dot class="item" type="success" :class="{'no-show':!onlineMsg(item)}"
             ><el-image :src="noIconShow(item, 'user')"
@@ -75,7 +75,7 @@
           :key="index"
           class="address-box"
           @click="goChatRoom(item, 'ChatGroupMsg')"
-          @contextmenu.prevent.stop="onContextmenu(item)"
+          @contextmenu.prevent.stop="onContextmenu(item,'group')"
         >
           <el-image :src="noIconShow(item, 'group')" />
           <div class="contont-box">
@@ -164,7 +164,7 @@
               ? goChatRoom(item, 'ChatMsg')
               : goChatRoom(item, 'ChatContact')
           "
-          @contextmenu.prevent.stop="onContextmenu(item)"
+          @contextmenu.prevent.stop="onContextmenu(item,'contact')"
         >
           <el-badge is-dot class="item" type="success" :class="{'no-show':!onlineMsg(item)}"
             ><el-image :src="noIconShow(item, 'user')"
@@ -232,9 +232,10 @@ import Socket from "@/utils/socket";
 import AESBase64 from "@/utils/AESBase64.js";
 import { mapState, mapMutations } from "vuex";
 import { getToken } from "_util/utils.js";
-import { getMemberActivity } from "@/api/memberProfileController";
 import { deleteRecentChat } from '@/api/chatController'
-import { listMember,getGroupList,groupMemberList,getGroupAuthoritySetting } from '@/api/groupController'
+import { getMemberActivity } from "@/api/memberProfileController";
+import { updateContactNickName } from "@/api/memberContactController";
+import { listMember,getGroupList,groupMemberList,getGroupAuthoritySetting,updateGroup } from '@/api/groupController'
 
 export default {
   name: "HiChat",
@@ -320,6 +321,7 @@ export default {
       setContactListData: "ws/setContactListData",
       setGroupMemberDataList:"ws/setGroupMemberDataList",
       setAuthorityGroupData: "ws/setAuthorityGroupData",
+      setMyContactDataList: "ws/setMyContactDataList",
     }),
     // 刪除對話
     deleteRecent(data) {
@@ -347,16 +349,53 @@ export default {
         });
     },
     // TODO 右鍵
-    onContextmenu(data) {
-      console.log(data)
+    onContextmenu(data,type) {
       let item = [
-        // {
-        //   name: "close",
-        //   label: "關閉提醒",
-        //   icon:"el-icon-bell",
-        //   onClick: () => {
-        //   },
-        // },
+        {
+          name: "close",
+          label: !data.setting.prompt ? "开启通知" : "关闭通知",
+          icon: !data.setting.prompt ? "el-icon-bell":"el-icon-close-notification",
+          onClick: () => {
+            if(type === "user" || type === "contact"){
+              let contactId = data.toChatId.replace("u", "")
+              let parmas = {
+                name: data.name,
+                setting: {
+                  prompt: !data.setting.prompt
+                }
+              }
+              updateContactNickName(parmas,contactId).then(res =>{
+                if(res.code === 200){
+                  this.$message({ message: !data.setting.prompt ? "静音":"關閉靜音", type: !data.setting.prompt ? "success" : "warning" });
+                  if(this.chatUser.toChatId === data.toChatId){
+                    this.chatUser.setting.prompt = !data.setting.prompt
+                    this.setChatUser(this.chatUser)
+                  }
+                  this.getHiChatDataList()
+                }
+              })
+            }else if(type === "group"){
+              let parmas = {
+                groupId: data.toChatId.replace("g", ""),
+                groupName: data.name,
+                icon: data.icon,
+                setting: {
+                  prompt: !data.setting.prompt
+                }
+              }
+              updateGroup(parmas).then(res =>{
+                if(res.code === 200){
+                  this.$message({ message: !data.setting.prompt ? "静音":"關閉靜音", type: !data.setting.prompt ? "success" : "warning" });
+                  if(this.groupUser.toChatId === data.toChatId){
+                    this.groupUser.setting.prompt = !data.setting.prompt
+                    this.setChatGroup(this.groupUser)
+                  }
+                  this.getHiChatDataList()
+                }
+              })
+            }
+          },
+        },
         {
           name: "deleteMessage",
           label: "刪除對話",
@@ -478,7 +517,6 @@ export default {
           this.hiChatNumBadge = 0;
           this.contactNumBadge = 0;
           this.groupDataList = []
-
           userInfo.recentChat.forEach((item) => {
             if (item.isContact && (item.forChatId === item.toChatId)) {
               item.name = "嗨聊记事本"
