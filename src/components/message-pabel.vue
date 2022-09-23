@@ -1,13 +1,5 @@
 <template>
   <div class="message-pabel-box" @touchmove="$root.handleTouch">
-    <el-button
-      v-if="isShowMoreMsg"
-      class="eye-more"
-      :disabled="disabled"
-      @click="seeMoreHistoryMsgData()"
-      type="text"
-      >加载更多历史讯息</el-button
-    >
     <ul class="message-styles-box">
       <li
         v-for="(item, index) in message"
@@ -27,9 +19,6 @@
         
       </li>
     </ul>
-    <div class="bottom-btn">
-      <el-button v-show="showBottomBtn" icon="el-icon-arrow-down" circle @click="goDown"></el-button>
-    </div> 
   </div>
 </template>
 
@@ -39,95 +28,19 @@ import { gotoBottom } from "@/assets/tools";
 export default {
   name: "MessagePabel",
   props: {
-    userInfoData: {
-      type: Object,
-    },
-    messageData: {
-      type: Array,
-    },
-    isShowMoreMsg: {
-      type: Boolean,
-    },
-    chatListData:{
-      type: Array,
-    },
+ 
   },
   data() {
     return {
-      message: [],
-      gotoBottom: gotoBottom,
-      showBottomBtn:false,
-      disabled:false,
-      historyNum:0,
+      message:[]
     };
   },
-  watch: {
-    messageData(val) {
-      this.historyId = val.length > 0 ? val[0].historyId : "";
-      //去除重复
-      const set = new Set();
-      setTimeout(() => {
-        this.message = val.filter((item) =>{
-          if(item.chatType === "SRV_JOIN_ROOM"){
-            this.chatListData.forEach((el)=>{
-              if(item.nickname === JSON.stringify(el.id)){
-                return item.nickname = el.nickname
-              } 
-            })
-            return !set.has(item.nickname) ? set.add(item.nickname) : false
-          }else{
-            return item
-          }
-        });
-        if (!this.showBottomBtn) this.gotoBottom()
-      }, 600);    
-    },
-    showBottomBtn(val){
-      if(!val) this.gotoBottom();
-    }
-  },
+
   mounted() {
-    window.addEventListener(
-      "scroll",
-      () => {
-        let scrollTopBox =
-          document.getElementsByClassName("message-pabel-box")[0];
-        let scrollTop =
-          document.documentElement.scrollTop ||
-          document.body.scrollTop ||
-          document.querySelector(".message-pabel-box").scrollTop;
-        this.showBottomBtn =
-          (scrollTopBox.scrollHeight - scrollTop) / 4 > (scrollTopBox.offsetHeight / 3)
-      },
-      true
-    );
+    
   },
   methods: {
-    goDown(){
-      this.showBottomBtn = false;
-    },
-    // 查看历史讯息
-    seeMoreHistoryMsgData() {
-      this.showBottomBtn = true
-      this.historyNum ++
-      let historyMsgList = this.userInfoData;
-      historyMsgList.chatType = "CLI_ROOM_HISTORY_REQ";
-      historyMsgList.id = Math.random();
-      historyMsgList.targetId = this.historyId;
-      historyMsgList.pageSize = 100;
-      delete historyMsgList.username
-      delete historyMsgList.text
-      this.disabled = true
-      setTimeout(() => {
-        Socket.send(historyMsgList);  
-      }, 500);
-      setTimeout(() => {
-        this.disabled = false
-      },1500)
-      if(this.historyNum <1){
-        return false;
-      }
-    },
+   
   },
 };
 </script>
