@@ -444,7 +444,7 @@ export default {
       updateGroup(parmas).then(res =>{
         if(res.code === 200){
           this.isMuteDialogShow = false
-          this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+          this.$message({ message: !item.setting.prompt ? "开启通知":"关闭通知", type: !item.setting.prompt ? "success" : "warning" });
           if(this.groupUser.toChatId === item.toChatId){
             this.groupUser.setting.prompt = !item.setting.prompt
             this.setChatGroup(this.groupUser)

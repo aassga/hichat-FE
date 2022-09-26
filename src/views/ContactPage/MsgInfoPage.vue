@@ -515,7 +515,7 @@ export default {
         }
         updateContactNickName(parmas,contactId).then(res =>{
           if(res.code === 200){
-            this.$message({ message: !status.setting.prompt ? "静音":"關閉靜音", type: !status.setting.prompt ? "success" : "warning" });
+            this.$message({ message: !status.setting.prompt ? "开启通知":"关闭通知", type: !status.setting.prompt ? "success" : "warning" });
             if(this.chatUser.toChatId === status.toChatId){
               this.chatUser.setting.prompt = status.setting.prompt
               this.setChatUser(this.chatUser)
@@ -534,7 +534,7 @@ export default {
         }
         updateGroup(parmas).then(res =>{
           if(res.code === 200){
-            this.$message({ message: !status.setting.prompt ? "静音":"關閉靜音", type: !status.setting.prompt ? "success" : "warning" });
+            this.$message({ message: !status.setting.prompt ? "开启通知":"关闭通知", type: !status.setting.prompt ? "success" : "warning" });
             if(this.groupUser.toChatId === data.toChatId){
               this.groupUser.setting.prompt = data.setting.prompt
               this.setChatGroup(this.groupUser)

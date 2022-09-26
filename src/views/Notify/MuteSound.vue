@@ -5,7 +5,7 @@
         <el-header height="70px">
           <div class="home-header flex-start">
             <div class="home-user-pc" @click="back"></div>
-            <span class="home-header-title">编辑静音名单</span>
+            <span class="home-header-title">编辑开启通知名单</span>
           </div>
         </el-header>
         <div style="border-bottom: 1px solid rgba(0, 0, 0, 0.05)">
@@ -161,7 +161,7 @@ export default {
         }
         updateContactNickName(parmas,contactId).then(res =>{
           if(res.code === 200){
-            this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+            this.$message({ message: !item.setting.prompt ? "开启通知":"关闭通知", type: !item.setting.prompt ? "success" : "warning" });
             this.myContactDataList.forEach(el=>{
               if(el.contactId === item.contactId) {
                 return el.setting = item.setting
@@ -183,7 +183,7 @@ export default {
         }
         updateGroup(parmas).then(res =>{
           if(res.code === 200){
-            this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+            this.$message({ message: !item.setting.prompt ? "开启通知":"关闭通知", type: !item.setting.prompt ? "success" : "warning" });
             this.getDataList()
           }
         })

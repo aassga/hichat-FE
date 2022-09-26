@@ -633,7 +633,7 @@ export default {
       updateContactNickName(parmas,contactId).then(res =>{
         if(res.code === 200){
           this.isMuteDialogShow = false
-          this.$message({ message: !item.setting.prompt ? "静音":"關閉靜音", type: !item.setting.prompt ? "success" : "warning" });
+          this.$message({ message: !item.setting.prompt ? "开启通知":"关闭通知", type: !item.setting.prompt ? "success" : "warning" });
           if(this.chatUser.toChatId === item.toChatId){
             this.chatUser.setting.prompt = !item.setting.prompt
             this.setChatUser(this.chatUser)
