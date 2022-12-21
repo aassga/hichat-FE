@@ -403,7 +403,7 @@ export default {
           display: inline-block;
           height: 47px;
           width: 85%;
-          /deep/.el-input__inner {
+          ::v-deep.el-input__inner {
             border: 0 !important;
           }
         }
@@ -455,7 +455,7 @@ export default {
       top: 2em;
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -512,7 +512,7 @@ export default {
     background-image: url("./../../../static/images/pc/check.png");
   }
   .register-content {
-    /deep/.el-form {
+    ::v-deep.el-form {
       .el-form-item {
         border-radius: 8px;
         background-color: rgba(0, 0, 0, 0.05);
@@ -528,7 +528,7 @@ export default {
     }
   }
   .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding: 0 !important;
     }
   }

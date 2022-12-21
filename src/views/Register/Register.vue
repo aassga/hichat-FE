@@ -678,7 +678,7 @@ export default {
           display: inline-block;
           height: 47px;
           width: 85%;
-          /deep/.el-input__inner {
+          ::v-deep.el-input__inner {
             border: 0 !important;
           }
         }
@@ -731,10 +731,10 @@ export default {
   }
   .read-check-box {
     margin-bottom: 1em;
-    /deep/.el-checkbox__input.is-checked + .el-checkbox__label {
+    ::v-deep.el-checkbox__input.is-checked + .el-checkbox__label {
       color: rgba(0, 0, 0, 0.8);
     }
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       .el-checkbox__input {
         .el-checkbox__inner {
           width: 20px;
@@ -758,7 +758,7 @@ export default {
       }
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -844,7 +844,7 @@ export default {
       .el-form-item {
         .el-input {
           width: 60%;
-          /deep/.el-input__inner {
+          ::v-deep.el-input__inner {
             vertical-align: middle;
             background-color: #ffffff !important;
           }
@@ -868,7 +868,7 @@ export default {
     border: 0 !important;
     right: 0.5em;
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       .el-dialog__footer {

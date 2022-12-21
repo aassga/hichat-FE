@@ -229,7 +229,7 @@ export default {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -279,7 +279,7 @@ export default {
     color: #444444;
     font-size: 14px;
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -356,7 +356,7 @@ export default {
     margin: 2em 0;
   }
   .el-dialog-loginOut{
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding:0 !important;
       .el-button{
         &:nth-child(2){

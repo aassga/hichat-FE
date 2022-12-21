@@ -196,7 +196,7 @@ export default {
     }
   }
   .home-search {
-    /deep/.el-input {
+    ::v-deep.el-input {
       .el-input__prefix {
         color: #666666;
       }
@@ -218,7 +218,7 @@ export default {
       }
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -277,7 +277,7 @@ export default {
       }
     }
     .el-dialog-loginOut{
-     /deep/ .el-dialog{
+     ::v-deep .el-dialog{
         .el-dialog__footer{
           padding: 0 !important;
         }

@@ -273,7 +273,7 @@ export default {
         }
       }
     }    
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;

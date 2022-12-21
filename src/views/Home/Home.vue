@@ -751,7 +751,7 @@ export default {
 <style lang="scss" scoped>
 .home-wrapper {
   .el-container {
-    /deep/.el-main {
+    ::v-deep.el-main {
       .el-header {
         .home-header {
           .QRcode-img {
@@ -795,7 +795,7 @@ export default {
   }
 }
 .el-dialog-loginOut {
-  /deep/.el-dialog__footer {
+  ::v-deep.el-dialog__footer {
     padding: 0 !important;
     .el-button {
       padding: 20px !important;

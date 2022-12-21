@@ -887,7 +887,7 @@ export default {
             width: 15em !important;
             height: 9em !important;
             top: 0;
-            /deep/.el-image__inner {
+            ::v-deep.el-image__inner {
               height: unset;
             }
           }
@@ -964,7 +964,7 @@ export default {
           width: 15em !important;
           height: 9em !important;
           top: 0;
-          /deep/.el-image__inner {
+          ::v-deep.el-image__inner {
             height: unset;
           }
         }
@@ -981,7 +981,7 @@ export default {
       margin: 0;
       box-shadow: none;
       background-image: none;
-      /deep/.operate {
+      ::v-deep.operate {
         span {
           &:nth-child(3) {
             color: rgba(0, 0, 0, 0.8) !important;
@@ -1026,17 +1026,17 @@ export default {
     background-image: none;
     width: auto;
     margin: 0;
-    /deep/.operate {
+    ::v-deep.operate {
       span {
         &:nth-child(3) {
           color: rgba(0, 0, 0, 0.8) !important;
         }
       }
     }
-    /deep/.slider {
+    ::v-deep.slider {
       display: none;
     }
-    /deep/.icon-notificationfill {
+    ::v-deep.icon-notificationfill {
       &:before {
         content: "\E66A";
         display: none;
@@ -1055,7 +1055,7 @@ export default {
                 width: 25em !important;
                 height: 11em !important;
                 top: 0;
-                /deep/.el-image__inner {
+                ::v-deep.el-image__inner {
                   height: unset;
                 }
               }
@@ -1069,7 +1069,7 @@ export default {
             width: 25em !important;
             height: 11em !important;
             top: 0;
-            /deep/.el-image__inner {
+            ::v-deep.el-image__inner {
               height: unset;
             }
           }
@@ -1155,17 +1155,17 @@ export default {
       background-image: none;
       width: auto;
       margin: 0;
-      /deep/.operate {
+      ::v-deep.operate {
         span {
           &:nth-child(3) {
             color: rgba(0, 0, 0, 0.8) !important;
           }
         }
       }
-      /deep/.slider {
+      ::v-deep.slider {
         display: none;
       }
-      /deep/.icon-notificationfill {
+      ::v-deep.icon-notificationfill {
         &:before {
           content: "\E66A";
           display: none;
@@ -1240,7 +1240,7 @@ export default {
 .link-style {
   padding: 10px 0;
 }
-/deep/.linkified {
+::v-deep.linkified {
   color: #10686e;
   text-decoration: none;
 }

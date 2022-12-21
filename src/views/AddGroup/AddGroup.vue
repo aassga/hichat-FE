@@ -297,7 +297,7 @@ export default {
     }
   }
   .home-content {
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -346,7 +346,7 @@ export default {
     margin: 1em;
     background-color: #fff;
     border-radius: 10px;
-    /deep/.el-form {
+    ::v-deep.el-form {
       .el-form-item {
         margin-bottom: 0px;
         .el-form-item__label {
@@ -376,7 +376,7 @@ export default {
     }
   }
 }
-/deep/.el-dialog__wrapper {
+::v-deep.el-dialog__wrapper {
   .el-dialog {
     .el-dialog__body {
       .upload-demo {
@@ -431,7 +431,7 @@ export default {
       }
     }
     .user-edit-form {
-      /deep/.el-form {
+      ::v-deep.el-form {
         border-radius: 8px;
         background-color: rgba(0, 0, 0, 0.05);
         .el-form-item {
@@ -451,7 +451,7 @@ export default {
     }
   }
   .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding: 0 !important;
       .el-button {
         &:nth-child(2) {

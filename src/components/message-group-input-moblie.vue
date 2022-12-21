@@ -955,7 +955,7 @@ export default {
     font-size: 20px;
     cursor: pointer;
   }
-  /deep/.el-avatar {
+  ::v-deep.el-avatar {
     overflow: initial;
     img {
       border-radius: 4px;

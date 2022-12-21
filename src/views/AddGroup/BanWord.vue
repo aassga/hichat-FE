@@ -342,7 +342,7 @@ export default {
   }
   .el-dialog-loginOut {
     overflow: auto;
-    /deep/.el-dialog {
+    ::v-deep.el-dialog {
       margin: 0 auto 50px;
       background: #ffffff;
       border-radius: 10px;
@@ -395,7 +395,7 @@ export default {
       }
     }
     .el-dialog-loginOut {
-      /deep/.el-dialog {
+      ::v-deep.el-dialog {
         .el-dialog__footer {
           padding: 0;
           .el-button {

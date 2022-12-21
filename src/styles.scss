@@ -230,7 +230,7 @@ body {
         flex-direction: column;
         box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
-        /deep/.el-row {
+        ::v-deep.el-row {
           float: right;
 
           .el-button {
@@ -475,7 +475,7 @@ body {
   .el-dialog-loginOut {
     overflow: auto;
 
-    /deep/.el-dialog {
+    ::v-deep.el-dialog {
       position: relative;
       margin: 0 auto 50px;
       background: #ffffff;
@@ -971,7 +971,7 @@ body {
 .custom-class .menu_item {
   font-size: 15px !important;
 }
-/deep/.el-dialog-msg-show{
+::v-deep.el-dialog-msg-show{
   .el-dialog{
     position: fixed;
   }

@@ -489,7 +489,7 @@ $light_gray: #eee;
       margin: 1em 0 2em 0;
       display: flex;
       justify-content: space-between;
-      /deep/.is-checked {
+      ::v-deep.is-checked {
         .is-active {
           color: rgba(0, 0, 0, 0.8);
         }
@@ -501,10 +501,10 @@ $light_gray: #eee;
     }
     .read-check-box {
       margin-bottom: 3em;
-      /deep/.el-checkbox__input.is-checked + .el-checkbox__label {
+      ::v-deep.el-checkbox__input.is-checked + .el-checkbox__label {
         color: rgba(0, 0, 0, 0.8);
       }
-      /deep/.el-checkbox {
+      ::v-deep.el-checkbox {
         .el-checkbox__input {
           .el-checkbox__inner {
             width: 20px;
@@ -545,7 +545,7 @@ $light_gray: #eee;
       height: 17px;
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -611,7 +611,7 @@ $light_gray: #eee;
       margin: 1em 0 2em 0;
       display: flex;
       justify-content: space-between;
-      /deep/.is-checked {
+      ::v-deep.is-checked {
         .is-active {
           color: rgba(0, 0, 0, 0.8);
         }

@@ -230,7 +230,7 @@ export default {
     top: 3em;
     background-color: #eaf5fa;
     z-index: 9;
-    /deep/.el-input {
+    ::v-deep.el-input {
       .el-input__inner {
         background-color: #e9e8e8;
         color: #666666;
@@ -247,7 +247,7 @@ export default {
   .home-content {
     overflow-x: hidden;
     overflow-y: auto;
-    /deep/.el-radio {
+    ::v-deep.el-radio {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -288,7 +288,7 @@ export default {
       }
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -358,7 +358,7 @@ export default {
           margin: 1em;
           .el-input {
             width: 95%;
-            /deep/.el-input__inner {
+            ::v-deep.el-input__inner {
               background-color: #e9e8e8;
               color: #666666;
             }
@@ -380,7 +380,7 @@ export default {
       }
     }
     .el-dialog-loginOut {
-      /deep/.el-dialog {
+      ::v-deep.el-dialog {
         .el-dialog__footer {
           padding: 0;
           .el-button {

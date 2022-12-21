@@ -210,7 +210,7 @@ export default {
     margin: 1em;
     background-color: #fff;
     border-radius: 10px;
-    /deep/.el-form {
+    ::v-deep.el-form {
       .el-form-item__label {
         font-size: 17px;
       }
@@ -241,7 +241,7 @@ export default {
     }
   }
   .user-edit-form {
-    /deep/.el-form {
+    ::v-deep.el-form {
       border-radius: 8px;
       background-color: rgba(0, 0, 0, 0.05);
       .el-form-item {
@@ -260,7 +260,7 @@ export default {
     cursor: pointer;
   }
   .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding: 0;
       .el-button {
         &:nth-child(2) {

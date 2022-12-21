@@ -497,7 +497,7 @@ export default {
           display: inline-block;
           height: 47px;
           width: 85%;
-          /deep/.el-input__inner {
+          ::v-deep.el-input__inner {
             border: 0 !important;
           }
         }
@@ -549,7 +549,7 @@ export default {
       width: 100%;
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -634,7 +634,7 @@ export default {
       .el-form-item{
         .el-input{
            width:60%;
-          /deep/.el-input__inner{
+          ::v-deep.el-input__inner{
             vertical-align: middle;
           }
         }

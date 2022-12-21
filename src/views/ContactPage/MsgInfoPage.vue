@@ -756,7 +756,7 @@ export default {
       color: #ee5253 !important;
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -813,7 +813,7 @@ export default {
 .hichat-pc {
   .home-wrapper {
     .el-dialog-loginOut {
-      /deep/.el-dialog {
+      ::v-deep.el-dialog {
         .el-dialog__footer {
           padding: 0;
           .el-button {

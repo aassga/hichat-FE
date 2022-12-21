@@ -625,7 +625,7 @@ export default {
       display: flex;
       flex-direction: column;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-      /deep/.el-row {
+      ::v-deep.el-row {
         float: right;
         .el-button {
           background-image: linear-gradient(#579fff, #3481e8);
@@ -934,7 +934,7 @@ export default {
     font-size: 20px;
     cursor: pointer;
   }
-  /deep/.el-avatar {
+  ::v-deep.el-avatar {
     overflow: initial;
     img {
       border-radius: 4px;
@@ -965,7 +965,7 @@ export default {
     height: 1.2em;
   }
 }
-/deep/.el-dialog-loginOut {
+::v-deep.el-dialog-loginOut {
   overflow: auto;
   .el-dialog {
     position: relative;

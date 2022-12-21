@@ -342,7 +342,7 @@ export default {
           display: flex;
           justify-content: space-between;
         }
-        /deep/.el-switch__label.is-active{
+        ::v-deep.el-switch__label.is-active{
           color: #333333;
         }        
       }
