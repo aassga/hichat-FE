@@ -5,143 +5,89 @@
         <div class="now-time">
           <span>{{ index }}</span>
         </div>
-        <li
-          v-for="(el, index) in item"
-          :key="index"
-          :class="judgeClass(item[index])"
-        >
+        <li v-for="(el, index) in item" :key="index" :class="judgeClass(item[index])">
           <p>
-            <span
-              class="message-classic"
-              v-if="el.chatType === 'SRV_USER_SEND'"
-              @contextmenu.prevent.stop="onContextmenu(el)"
-            >
+            <span class="message-classic" v-if="el.chatType === 'SRV_USER_SEND'"
+              @contextmenu.prevent.stop="onContextmenu(el)">
               <div>
-                <span
-                  v-if="!IsURL(isBase64(el.chat.text))"
-                  @click.prevent.stop="
-                    device === 'moblie' ? onContextmenu(el) : false
-                  "
-                  v-html="isBase64(el.chat.text)"
-                ></span>
-                <div
-                  v-else-if="IsURL(isBase64(el.chat.text))"
-                >
-                  <div
-                    v-if="device === 'moblie'"
-                    class="images-more-btn"
-                    style="top: 5px"
-                    @click.prevent.stop="
-                      device === 'moblie' ? onContextmenu(el) : false
-                    "
-                  >
+                <span v-if="!IsURL(isBase64(el.chat.text))" @click.prevent.stop="
+                  device === 'mobile' ? onContextmenu(el) : false
+                  " v-html="isBase64(el.chat.text)"></span>
+                <div v-else-if="IsURL(isBase64(el.chat.text))">
+                  <div v-if="device === 'mobile'" class="images-more-btn" style="top: 5px" @click.prevent.stop="
+                    device === 'mobile' ? onContextmenu(el) : false
+                    ">
                     <i class="el-icon-more"></i>
                   </div>
-                  <div
-                    v-html="isBase64(el.chat.text)"
-                    v-linkified
-                    :class="device === 'moblie' ? 'link-style' : ''"
-                  ></div>
+                  <div v-html="isBase64(el.chat.text)" v-linkified :class="device === 'mobile' ? 'link-style' : ''"></div>
                 </div>
                 <span v-else v-html="isBase64(el.chat.text)"></span>
               </div>
             </span>
-            <span
-              class="message-classic"
-              v-else-if="el.chatType === 'SRV_USER_FILE'"
-              @contextmenu.prevent.stop="onContextmenu(el)"
-              @dblclick="dblclick(el)" 
-              @click.prevent.stop="
-                device === 'moblie' ? onContextmenu(el) : false
-              "
-            >
+            <span class="message-classic" v-else-if="el.chatType === 'SRV_USER_FILE'"
+              @contextmenu.prevent.stop="onContextmenu(el)" @dblclick="dblclick(el)" @click.prevent.stop="
+                device === 'mobile' ? onContextmenu(el) : false
+                ">
               <div class="message-file-box" id="file-download">
                 <div class="file-box"></div>
                 <div class="file-message">
-                  <span>{{fileData(isBase64(el.chat.text),'content')}}</span>
-                  <span>档案大小　: {{ fileData(el.chat.fileSize,'size') }}</span>                      
+                  <span>{{ fileData(isBase64(el.chat.text), 'content') }}</span>
+                  <span>档案大小　: {{ fileData(el.chat.fileSize, 'size') }}</span>
                 </div>
 
               </div>
-            </span>            
-            <span
-              class="message-mini-audio"
-              v-else-if="el.chatType === 'SRV_USER_AUDIO'"
-              @contextmenu.prevent.stop="onContextmenu(el)"
-            >
-              <div
-                v-if="device === 'moblie'"
-                class="images-more-btn"
-                @click.prevent.stop="
-                  device === 'moblie' ? onContextmenu(el) : false
-                "
-              >
+            </span>
+            <span class="message-mini-audio" v-else-if="el.chatType === 'SRV_USER_AUDIO'"
+              @contextmenu.prevent.stop="onContextmenu(el)">
+              <div v-if="device === 'mobile'" class="images-more-btn" @click.prevent.stop="
+                device === 'mobile' ? onContextmenu(el) : false
+                ">
                 <i class="el-icon-more"></i>
               </div>
-              <mini-audio
+              <!-- <mini-audio
                 class="message-audio"
                 :audio-source="isBase64(el.chat.text)"
-              ></mini-audio>
+              ></mini-audio> -->
+              <audio controls="controls" class="user-audio">
+                <source :src="isBase64(el.chat.text)" type="audio/mpeg">
+              </audio>
             </span>
-            <span
-              class="message-image"
-              v-else-if="el.chatType === 'SRV_USER_IMAGE'"
-              @contextmenu.prevent.stop="onContextmenu(el)"
-            >
-              <div
-                v-if="device === 'moblie'"
-                class="images-more-btn"
-                @click.prevent.stop="
-                  device === 'moblie' ? onContextmenu(el) : false
-                "
-              >
+            <span class="message-image" v-else-if="el.chatType === 'SRV_USER_IMAGE'"
+              @contextmenu.prevent.stop="onContextmenu(el)">
+              <div v-if="device === 'mobile'" class="images-more-btn" @click.prevent.stop="
+                device === 'mobile' ? onContextmenu(el) : false
+                ">
                 <i class="el-icon-more"></i>
               </div>
-              <el-image
-                :src="isBase64(el.chat.text)"
-                :preview-src-list="[isBase64(el.chat.text)]"
-              />
+              <el-image :src="isBase64(el.chat.text)" :preview-src-list="[isBase64(el.chat.text)]" />
             </span>
             <span class="nickname-time">
-              <img
-                class="go-message"
-                src="./../../static/images/gotomessage.png"
-                alt=""
-                @click="goMessageAction(el.chat)"
-              />
+              <img class="go-message" src="./../../static/images/gotomessage.png" alt=""
+                @click="goMessageAction(el.chat)" />
               <span>{{ $root.formatTimeSecound(el.chat.sendTime) }}</span>
             </span>
           </p>
           <div class="read-check-box">
-            <span class="read-check" v-if="el.isRead"
-              ><img src="./../../static/images/check.png" alt=""
-            /></span>
-            <span class="read-check2"
-              ><img src="./../../static/images/check.png" alt=""
-            /></span>
+            <span class="read-check" v-if="el.isRead"><img src="./../../static/images/check.png" alt="" /></span>
+            <span class="read-check2"><img src="./../../static/images/check.png" alt="" /></span>
           </div>
         </li>
       </div>
     </ul>
     <div style="width: 90%; text-align: right;">
-      <el-button
-        class="scroll-bottom-btn"
-        v-show="showScrollBar"
-        size="medium"
-        icon="el-icon-arrow-down"
-        circle
-        @click="$root.gotoBottom()"
-      ></el-button>
+      <el-button class="scroll-bottom-btn" v-show="showScrollBar" size="medium" icon="el-icon-arrow-down" circle
+        @click="$root.gotoBottom()"></el-button>
     </div>
   </div>
 </template>
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { pinList,unpinHistory } from '@/api/chatController'
+import { pinList, unpinHistory } from '@/api/chatController'
 import { fileBoxName, formatFileSize } from "@/utils/FileSizeName.js";
 import { copyPaste } from "@/utils/urlCopy.js";
 import AESBase64 from "@/utils/AESBase64.js";
+import { audioPlay,removeAudioPlay } from "@/utils/audio";
 
 export default {
   name: "MessagePabel",
@@ -175,7 +121,7 @@ export default {
   computed: {
     ...mapState({
       chatUser: (state) => state.ws.chatUser,
-      soundNofiy: (state) => state.ws.soundNofiy,
+      soundNotify: (state) => state.ws.soundNotify,
       topMsgShow: (state) => state.ws.topMsgShow,
     }),
   },
@@ -183,28 +129,36 @@ export default {
     window.addEventListener(
       "scroll",
       () => {
-        let scrollTop =  document.querySelector(".message-pabel-box")
-        this.showScrollBar = !(
-          (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.199951171875 : 0.60009765625)  <=
-          scrollTop.clientHeight
+        let scrollTop = document.querySelector(".message-pabel-box")
+        // this.showScrollBar = !(
+        //   (scrollTop.scrollHeight - scrollTop.scrollTop) - (this.device==="pc" ? 0.199951171875 : 0.60009765625)  <=
+        //   scrollTop.clientHeight
+        // );
+        this.showScrollBar = !(scrollTop.scrollHeight - scrollTop.scrollTop - 1 <= scrollTop.clientHeight
         );
       },
       true
     );
     this.getPinList();
+    setTimeout(() => {
+      audioPlay()
+    }, 1000);
+  },
+  beforeDestroy() {
+    removeAudioPlay()
   },
   methods: {
     ...mapMutations({
       setTopMsgShow: "ws/setTopMsgShow",
       setGoAnchorMessage: "ws/setGoAnchorMessage",
     }),
-    fileData(data,type){
-      if(type === "content"){
+    fileData(data, type) {
+      if (type === "content") {
         return fileBoxName(data)
-      }else{
+      } else {
         return formatFileSize(data)
       }
-    },    
+    },
     IsURL(str_url) {
       var strRegex =
         /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
@@ -214,7 +168,7 @@ export default {
       } else {
         return false;
       }
-    },       
+    },
     goMessageAction(data) {
       this.setGoAnchorMessage(data);
       this.setTopMsgShow(true);
@@ -224,7 +178,7 @@ export default {
         toChatId: this.chatUser.toChatId,
         order: 0,
       };
-      if (this.contactUser !== undefined) {
+      if (this.contactUser) {
         params.toChatId = this.contactUser.toChatId;
       } else {
         params.toChatId = this.chatUser.toChatId;
@@ -245,7 +199,8 @@ export default {
             this.newMessageData[this.$root.formatTimeDay(el.chat.sendTime)] =
               newData;
           });
-          if(JSON.stringify(this.newMessageData) === '{}') {
+
+          if (Object.keys(this.newMessageData).length === 0) {
             this.setTopMsgShow(true);
             this.$emit("resetPinMsg");
           }
@@ -255,14 +210,7 @@ export default {
     },
     //判斷是否base64
     isBase64(data) {
-      return AESBase64(data, this.aesKey ,this.aesIv)
-    },
-    noIconShow(iconData) {
-      if ([undefined, null, ""].includes(iconData.icon)) {
-        return require("./../../static/images/image_user_defult.png");
-      } else {
-        return iconData.icon;
-      }
+      return AESBase64(data, this.aesKey, this.aesIv)
     },
     // 判断讯息Class名称
     judgeClass(item) {
@@ -301,13 +249,13 @@ export default {
           },
         },
       ];
-      if (data.chatType === "SRV_USER_SEND") {
-        this.newItem = item.filter(list => list.name !== "share" && list.name !== "download");
-      } else if (data.chatType === "SRV_USER_IMAGE" || data.chatType === "SRV_USER_FILE") {
-        this.newItem = item.filter(list => list.name !== "copy");
-      } else if (data.chatType === "SRV_USER_AUDIO") {
-        this.newItem = item.filter(list => list.name === "upDown");
+      const srvChatType = {
+        "SRV_USER_SEND": ["copy", "upDown"],
+        "SRV_USER_IMAGE": ["download", "share", "upDown"],
+        "SRV_USER_FILE": ["download", "share", "upDown"],
+        "SRV_USER_AUDIO": ["upDown"],
       }
+      this.newItem = item.filter(list => srvChatType[data.chatType].includes(list.name));
       this.$contextmenu({
         items: this.newItem,
         // event,
@@ -374,62 +322,75 @@ export default {
       .message-layout-left {
         p {
           user-select: text;
+
           .el-image {
             width: -webkit-fill-available !important;
             height: 11em !important;
             top: 0;
-            /deep/.el-image__inner {
+
+            ::v-deep.el-image__inner {
               height: 100%;
             }
           }
         }
+
         .reply {
           .message-classic {
             padding: 0;
           }
         }
       }
+
       .message-layout-right {
         p {
           user-select: text;
+
           .el-image {
             width: -webkit-fill-available !important;
             height: 11em !important;
             top: 0;
-            /deep/.el-image__inner {
+
+            ::v-deep.el-image__inner {
               height: 100%;
             }
           }
         }
+
         .reply {
           .message-classic {
             padding: 0;
           }
         }
+
         .message-image {
           background-color: #ffffff;
         }
       }
+
       .message-audio {
         width: 190px;
         display: flex;
       }
+
       .vueAudioBetter {
         box-shadow: none;
         background-image: none;
         width: auto;
         margin: 0;
-        /deep/.operate {
+
+        ::v-deep.operate {
           span {
             &:nth-child(3) {
               color: rgba(0, 0, 0, 0.8) !important;
             }
           }
         }
-        /deep/.slider {
+
+        ::v-deep.slider {
           display: none;
         }
-        /deep/.icon-notificationfill {
+
+        ::v-deep.icon-notificationfill {
           &:before {
             content: "\E66A";
             display: none;
@@ -437,7 +398,8 @@ export default {
         }
       }
     }
-    /deep/.el-dialog-takePicture {
+
+    ::v-deep.el-dialog-takePicture {
       .el-dialog {
         width: 450px !important;
       }
@@ -450,11 +412,13 @@ export default {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+
   .now-time {
     width: 100%;
     font-size: 12px;
     text-align: center;
     margin: 2em 0;
+
     span {
       background-color: rgba(0, 0, 0, 0.05);
       padding: 4px 15px;
@@ -464,6 +428,7 @@ export default {
 
   .message-styles-box {
     margin-bottom: 20px;
+
     .message-layout-left,
     .message-layout-right {
       margin-top: 20px;
@@ -474,28 +439,34 @@ export default {
       p {
         display: flex;
         align-items: flex-end;
+
         .message-audio {
           border-radius: 0 10px 10px 10px;
           background-color: rgba(0, 0, 0, 0.05);
         }
+
         audio {
           width: 210px;
         }
+
         .el-image {
           width: -webkit-fill-available !important;
           height: 11em !important;
           top: 0;
-          /deep/.el-image__inner {
+
+          ::v-deep.el-image__inner {
             height: unset;
           }
         }
       }
+
       .message-avatar {
         float: left;
         margin-right: 10px;
         border-radius: 10px;
         border: 0;
       }
+
       .message-classic {
         background-color: rgba(0, 0, 0, 0.05);
         line-height: 1.4rem;
@@ -504,6 +475,7 @@ export default {
         border-radius: 0 8px 8px 8px;
         user-select: text;
       }
+
       .nickname-time {
         display: flex;
         flex-direction: column;
@@ -511,6 +483,7 @@ export default {
         color: #777777;
         font-size: 12px;
         padding-left: 10px;
+
         .go-message {
           height: 1.5em;
           display: table;
@@ -518,6 +491,7 @@ export default {
           cursor: pointer;
         }
       }
+
       .read-check-box {
         display: none;
       }
@@ -530,6 +504,7 @@ export default {
       position: relative;
       border-radius: 5px;
       padding: 10px;
+
       ul {
         li {
           line-height: 2em;
@@ -538,6 +513,7 @@ export default {
           padding: 5px;
           color: #403f3f;
           cursor: pointer;
+
           &:hover {
             background-color: #dadadacb;
             border-radius: 5px;
@@ -551,26 +527,32 @@ export default {
         display: flex;
         align-items: flex-end;
         flex-flow: row-reverse;
+
         .message-audio {
-          border-radius: 0 10px 10px 10px;
+          border-radius: 10px 0px 10px 10px;
           background-color: rgba(0, 0, 0, 0.05);
+
           audio {
             width: 190px;
           }
         }
+
         .el-image {
           width: -webkit-fill-available !important;
           height: 11em !important;
           top: 0;
-          /deep/.el-image__inner {
+
+          ::v-deep.el-image__inner {
             height: unset;
           }
         }
       }
+
       .message-avatar {
         float: right;
         margin-left: 10px;
       }
+
       .message-classic {
         text-align: left;
         color: #000000;
@@ -581,6 +563,7 @@ export default {
         border-radius: 8px 0 8px 8px;
         user-select: text;
       }
+
       .nickname-time {
         display: flex;
         flex-direction: column;
@@ -589,6 +572,7 @@ export default {
         font-size: 12px;
         padding-right: 10px;
         align-items: flex-end;
+
         .go-message {
           height: 1.5em;
           display: table;
@@ -596,18 +580,22 @@ export default {
           cursor: pointer;
         }
       }
+
       .read-check-box {
         display: flex;
         justify-content: flex-end;
+
         span {
           img {
             height: 1em;
           }
         }
+
         .read-check {
           position: relative;
           left: 0.5em;
         }
+
         .read-check2 {
           left: 1em;
         }
@@ -624,50 +612,52 @@ export default {
     .message-classic,
     .message-disabled {
       position: relative;
-      // max-width: 45%;
-      // margin-top: 5px;
       display: inline-block;
       padding: 9px 12px;
       font-size: 14px;
       color: #333333;
       white-space: pre-line;
       word-break: break-all;
+
       .red {
         height: 1.5em;
       }
+
       img {
         height: 6em;
       }
     }
-    .message-classic{
-      .message-file-box{
+
+    .message-classic {
+      .message-file-box {
         display: flex;
         align-items: center;
         padding-right: 45px;
-        .file-box{
+
+        .file-box {
           width: 4em;
           height: 4em;
           background-color: #000;
           border-radius: 10px;
           background-image: url("./../../static/images/icon_file.svg");
           background-repeat: no-repeat;
-          background-size:65%;        
+          background-size: 65%;
           background-position: center;
         }
-        .file-message{
+
+        .file-message {
           display: flex;
           flex-direction: column;
           padding-left: 10px;
         }
       }
-    }    
+    }
+
     .message-audio {
       width: 190px;
-      height: 2.5em;
-      
       display: inline-block;
-      // border: 1px solid #eeeeee;
     }
+
     .message-image {
       position: relative;
       display: inline-block;
@@ -675,35 +665,41 @@ export default {
       color: #333333;
       background-color: #e5e4e4;
       border-radius: 10px;
-      font-weight: 600;      
+      font-weight: 600;
+
       img {
         border-radius: 8px;
         width: 6em;
       }
     }
+
     .message-mini-audio {
       position: relative;
-      
+
       display: inline-block;
       border-radius: 10px;
     }
   }
+
   .vueAudioBetter {
     box-shadow: none;
     background-image: none;
     width: auto;
     margin: 0;
-    /deep/.operate {
+
+    ::v-deep.operate {
       span {
         &:nth-child(3) {
           color: rgba(0, 0, 0, 0.8) !important;
         }
       }
     }
-    /deep/.slider {
+
+    ::v-deep.slider {
       display: none;
     }
-    /deep/.icon-notificationfill {
+
+    ::v-deep.icon-notificationfill {
       &:before {
         content: "\E66A";
         display: none;
@@ -711,7 +707,8 @@ export default {
     }
   }
 }
-.reply-aduio {
+
+.reply-Audio {
   .message-classic {
     max-width: 100% !important;
   }
@@ -722,65 +719,76 @@ export default {
   cursor: pointer;
   border-radius: 5px;
   position: absolute;
-  top: 10px;
+  top: 17px;
   right: 10px;
   z-index: 9;
   text-align: center;
   background-color: #fff;
+
   .el-icon-more {
     font-size: 20px;
   }
 }
+
 .reply-box {
   display: flex;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   cursor: pointer;
+
   .reply-msg {
     padding: 9px 12px 9px 5px;
   }
+
   .reply-img {
     margin-right: 5px;
     padding: 9px 0px 9px 12px;
+
     img {
       width: 3em !important;
       height: 3em !important;
       border-radius: 10px;
     }
   }
+
   .goAnchor-box {
     cursor: pointer;
+
     .goAnchor {
       color: rgba(0, 0, 0, 0.8);
       text-decoration: none;
     }
+
     .reply-audio-box {
       display: block;
-      // background-color: #000000;
-      // width: 12em;
       height: 40px;
       position: absolute;
       z-index: 9;
     }
+
     .message-audio {
       width: 200px !important;
       border: 0 !important;
     }
+
     .vueAudioBetter {
       box-shadow: none;
       background-image: none;
       width: auto;
       margin: 0;
-      /deep/.operate {
+
+      ::v-deep.operate {
         span {
           &:nth-child(3) {
             color: rgba(0, 0, 0, 0.8) !important;
           }
         }
       }
-      /deep/.slider {
+
+      ::v-deep.slider {
         display: none;
       }
-      /deep/.icon-notificationfill {
+
+      ::v-deep.icon-notificationfill {
         &:before {
           content: "\E66A";
           display: none;
@@ -789,9 +797,11 @@ export default {
     }
   }
 }
+
 .reply-content {
   padding: 5px 12px 5px 12px;
 }
+
 /* 定义keyframe动画，命名为blink */
 @keyframes blink {
   0% {
@@ -802,39 +812,48 @@ export default {
     opacity: 0;
   }
 }
+
 /* 添加兼容性前缀 */
 @-webkit-keyframes blink {
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
 }
+
 @-moz-keyframes blink {
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
 }
+
 @-ms-keyframes blink {
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
 }
+
 @-o-keyframes blink {
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
 }
+
 .blink {
   color: red;
   background: #0000000d;
@@ -845,6 +864,7 @@ export default {
   -ms-animation: blink 2s linear 1;
   -o-animation: blink 2s linear 1;
 }
+
 .scroll-bottom-btn {
   position: fixed;
   right: 30px;
@@ -853,22 +873,25 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 9;
 }
+
 .link-style {
   padding: 10px 0;
 }
-/deep/.linkified {
+
+::v-deep.linkified {
   color: #10686e;
   text-decoration: none;
 }
+
 .top-msg-style {
   width: 100%;
   font-size: 12px;
   text-align: center;
   margin: 2em 0;
+
   span {
     background-color: rgba(0, 0, 0, 0.05);
     padding: 4px 15px;
     border-radius: 10px;
   }
-}
-</style>
+}</style>

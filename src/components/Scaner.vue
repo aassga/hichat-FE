@@ -150,9 +150,9 @@ export default {
         this.canvas = this.$refs.canvas.getContext("2d");
         const facingMode = this.useBackCamera ? { exact: 'environment' } : 'user';
         const handleSuccess = stream => {
-           if (this.$refs.video.srcObject !== undefined) {
+           if (this.$refs.video.srcObject) {
             this.$refs.video.srcObject = stream;
-          } else if (window.videoEl.mozSrcObject !== undefined) {
+          } else if (window.videoEl.mozSrcObject) {
             this.$refs.video.mozSrcObject = stream;
           } else if (window.URL.createObjectURL) {
             this.$refs.video.src = window.URL.createObjectURL(stream);

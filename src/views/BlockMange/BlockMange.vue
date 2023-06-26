@@ -1,35 +1,43 @@
 <template>
   <div class="home-wrapper">
     <el-container>
-      <el-aside :width="device === 'moblie' ? '100%' : '300px'">
-        <el-header :height="device === 'moblie' ? '55px' : '70px'">
-          <template v-if="device === 'moblie'">
+      <el-aside :width="device === 'mobile' ? '100%' : '370px'">
+        <el-header :height="device === 'mobile' ? '55px' : '70px'">
+          <template v-if="device === 'mobile'">
             <div class="home-header">
               <router-link :to="'/Setting'">
                 <div class="home-user"></div>
               </router-link>
               <span class="home-header-title">封锁名单</span>
               <template v-if="editBtnShow">
-                <div class="home-user-edit" :class="{'hidden':blockData.length <= 0}" @click="editBtnShow = false"></div>
+                <div
+                  class="home-user-edit"
+                  :class="{ hidden: blockData.length <= 0 }"
+                  @click="editBtnShow = false"
+                ></div>
               </template>
               <template v-else>
-                <div class="cancel"  @click="editBtnShow = true">取消</div>
+                <div class="cancel" @click="editBtnShow = true">取消</div>
               </template>
             </div>
           </template>
           <template v-else>
-            <div class="home-header" >
-              <div style="display: flex; align-items: center; cursor: pointer;" >
+            <div class="home-header">
+              <div style="display: flex; align-items: center; cursor: pointer">
                 <router-link :to="'/Setting'">
                   <div class="home-user-pc"></div>
                 </router-link>
                 <span class="home-header-title">封锁名单</span>
               </div>
               <template v-if="editBtnShow">
-                <div class="home-add-user home-edit-img" :class="{'hidden':blockData.length <= 0}" @click="editBtnShow = false"></div>
+                <div
+                  class="home-add-user home-edit-img"
+                  :class="{ hidden: blockData.length <= 0 }"
+                  @click="editBtnShow = false"
+                ></div>
               </template>
               <template v-else>
-                <div class="clear-check"  @click="clearCheckList">取消</div>
+                <div class="clear-check" @click="clearCheckList">取消</div>
               </template>
             </div>
           </template>
@@ -47,17 +55,25 @@
                 :label="item.blockId"
                 :key="index"
                 :disabled="editBtnShow"
-                :class="{'hidden':editBtnShow}"
+                :class="{ hidden: editBtnShow }"
               >
                 <div class="address-box">
-                  <el-image :src="item.icon === undefined ? noIcon:item.icon" />
-                  <div class="msg-box">
-                    <span>{{ item.name }}</span>
+                  <div
+                    :class="{ 'service-icon': item.isCustomerService }"
+                  ></div>
+                  <el-image
+                    :src="!item.icon ? noIcon : noIconShow(item, 'user')"
+                  />
+                  <div class="content-box">
+                    <div class="msg-box" style="align-items: center">
+                      <span>{{ item.name }}</span>
+                    </div>
+                    <div class="content-border-bottom"></div>
                   </div>
                 </div>
               </el-checkbox>
             </el-checkbox-group>
-          </div>  
+          </div>
         </template>
         <div class="home-footer-btn" v-if="!editBtnShow">
           <el-button
@@ -70,7 +86,7 @@
       </el-aside>
     </el-container>
     <el-dialog
-      :title="device === 'pc'?'封锁名单':''"
+      :title="device === 'pc' ? '封锁名单' : ''"
       :visible.sync="settingDialogShow"
       class="el-dialog-loginOut"
       width="70%"
@@ -79,26 +95,32 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'"><img src="./../../../static/images/warn.svg" alt="" /></div>
+        <div v-if="device === 'mobile'">
+          <img src="./../../../static/images/warn.png" alt="" />
+        </div>
         <span>确认是否将所选联络人解除封锁？</span>
       </div>
       <span slot="footer" class="dialog-footer">
-        <template v-if="device ==='moblie'">
+        <template v-if="device === 'mobile'">
           <el-button class="border-red" @click="settingDialogShow = false"
-          >取消</el-button
+            >取消</el-button
           >
           <el-button class="background-red" @click="unblockDialogShow = true"
             >确认</el-button
           >
         </template>
         <template v-else>
-          <el-button class="background-gray" @click="settingDialogShow = false">取消</el-button>
-          <el-button class="background-orange" @click="unblockDialogShow = true">确认</el-button>
+          <el-button class="background-gray" @click="settingDialogShow = false"
+            >取消</el-button
+          >
+          <el-button class="background-orange" @click="unblockDialogShow = true"
+            >确认</el-button
+          >
         </template>
       </span>
     </el-dialog>
     <el-dialog
-      :title="device === 'pc'?'封锁名单':''"
+      :title="device === 'pc' ? '封锁名单' : ''"
       :visible.sync="unblockDialogShow"
       class="el-dialog-loginOut"
       width="70%"
@@ -107,36 +129,44 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'"><img src="./../../../static/images/success.png" alt="" /></div>
+        <div v-if="device === 'mobile'">
+          <img src="./../../../static/images/success.png" alt="" />
+        </div>
         <span>封锁已解除</span>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button class="background-orange" @click="unBlockSubmit">確認</el-button>
+        <el-button class="background-orange" @click="unBlockSubmit"
+          >確認</el-button
+        >
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { mapState,mapMutations } from "vuex";
-import { unBlockContactUser,blockListMember } from '@/api/memberBlockController'
+import { mapState, mapMutations } from "vuex";
+import {
+  unBlockContactUser,
+  blockListMember,
+} from "@/api/memberBlockController";
+import { showIcon } from "@/utils/icon";
 
 export default {
   name: "BlockMange",
   data() {
     return {
-      blockData:[],
+      blockData: [],
       checkList: [],
       noIcon: require("./../../../static/images/image_user_defult.png"),
       disabled: true,
-      editBtnShow:true,
-      settingDialogShow:false,
-      unblockDialogShow:false,
+      editBtnShow: true,
+      settingDialogShow: false,
+      unblockDialogShow: false,
       device: localStorage.getItem("device"),
     };
   },
   mounted() {
-    this.getBlockDataList()
+    this.getBlockDataList();
   },
   watch: {
     checkList(val) {
@@ -145,53 +175,61 @@ export default {
   },
   computed: {
     ...mapState({
-      chatUser:(state) => state.ws.chatUser,
+      chatUser: (state) => state.ws.chatUser,
       contactUser: (state) => state.ws.contactUser,
     }),
   },
   methods: {
     ...mapMutations({
-      setChatUser:"ws/setChatUser",
-      setContactUser:"ws/setContactUser",
+      setChatUser: "ws/setChatUser",
+      setContactUser: "ws/setContactUser",
     }),
-    getBlockDataList(){
-      blockListMember().then((res)=>{
-        if(res.code === 200){
-          this.blockData = res.data;
-        }
-      })
-      .catch((err) => {
-        this.$message({ message: err, type: "error"});
-        return false;
-      });
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
     },
-    unBlockSubmit(){
-      let blockIdList = this.checkList
-      unBlockContactUser({blockIdList}).then((res) => {
-        if(res.code === 200){
-          this.settingDialogShow = false;
-          this.unblockDialogShow = false;
-          this.editBtnShow = true;
-          blockIdList.forEach(el => {
-            if(this.chatUser.toChatId !== undefined && (el === this.chatUser.toChatId.replace("u", ""))){
-              this.chatUser.isBlock = false
-              this.setChatUser(this.chatUser)
-            }else{
-              this.contactUser.isBlock = false
-              this.setContactUser(this.contactUser)
-            }
-          })
-          this.getBlockDataList()
-        }
-      })
-      .catch((err) => {
-        this.$message({ message: err, type: "error"});
-        return false;
-      });
+    getBlockDataList() {
+      blockListMember()
+        .then((res) => {
+          if (res.code === 200) {
+            this.blockData = res.data;
+          }
+        })
+        .catch((err) => {
+          this.$message({ message: err, type: "error" });
+          return false;
+        });
     },
-    clearCheckList(){
-      this.checkList = []
-    }
+    unBlockSubmit() {
+      let blockIdList = this.checkList;
+      unBlockContactUser({ blockIdList })
+        .then((res) => {
+          if (res.code === 200) {
+            this.settingDialogShow = false;
+            this.unblockDialogShow = false;
+            this.editBtnShow = true;
+            blockIdList.forEach((el) => {
+              if (
+                this.chatUser.toChatId &&
+                el === this.chatUser.toChatId.replace("u", "")
+              ) {
+                this.chatUser.isBlock = false;
+                this.setChatUser(this.chatUser);
+              } else {
+                this.contactUser.isBlock = false;
+                this.setContactUser(this.contactUser);
+              }
+            });
+            this.getBlockDataList();
+          }
+        })
+        .catch((err) => {
+          this.$message({ message: err, type: "error" });
+          return false;
+        });
+    },
+    clearCheckList() {
+      this.checkList = [];
+    },
   },
 };
 </script>
@@ -219,21 +257,20 @@ export default {
     }
     .home-user-edit.hidden {
       visibility: hidden;
-    }    
-    .cancel{
-      width: 2em;
-      color:#fe5f3f;
-      font-weight:550;
-      font-size:16px
     }
-
+    .cancel {
+      width: 2em;
+      color: #fe5f3f;
+      font-weight: 550;
+      font-size: 16px;
+    }
   }
   .home-content {
     padding: 1em 0 0 0;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -245,7 +282,7 @@ export default {
           border-radius: 10px;
         }
       }
-      .is-disabled{
+      .is-disabled {
         visibility: hidden;
       }
       .el-checkbox__label {
@@ -254,18 +291,7 @@ export default {
         .address-box {
           .msg-box {
             span {
-              display: block;
-              padding-left: 1em;
-              font-size: 16px;
               color: #666666;
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                margin-top: 0.5em;
-                width: 100%;
-                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
-              }
             }
           }
           .checkBox {
@@ -283,7 +309,7 @@ export default {
     color: #444444;
     font-size: 14px;
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -334,44 +360,44 @@ export default {
     }
   }
 }
-.hichat-pc{
+.hichat-pc {
   .home-header {
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
     }
-    .home-header-title{
+    .home-header-title {
       margin-left: 5px;
     }
-    .home-edit-img{
+    .home-edit-img {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/edit_info.svg");     
+      background-image: url("./../../../static/images/pc/edit_info.png");
     }
     .home-edit-img.hidden {
       visibility: hidden;
-    } 
+    }
   }
-  .home-content{
-    .el-checkbox{
+  .home-content {
+    .el-checkbox {
       width: 100%;
     }
   }
-  .no-data{
+  .no-data {
     margin: 2em 0;
   }
-  .el-dialog-loginOut{
-    /deep/.el-dialog__footer {
-      padding:0 !important;
-      .el-button{
-        &:nth-child(2){
+  .el-dialog-loginOut {
+    ::v-deep.el-dialog__footer {
+      padding: 0 !important;
+      .el-button {
+        &:nth-child(2) {
           border-left: 1px solid #efefef;
         }
       }
     }
   }
-  .clear-check{
+  .clear-check {
     color: #939393;
-    font-size:16px;
+    font-size: 16px;
     cursor: pointer;
   }
 }

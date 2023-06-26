@@ -1,4 +1,6 @@
-import { maybeKnow} from "@/api/memberContactController";
+import Socket from "@/utils/socket";
+import { getToken } from "_util/utils.js";
+import { maybeKnow } from "@/api/memberContactController";
 import { mapMutations } from "vuex";
 
 const rootMixins = {
@@ -14,12 +16,24 @@ const rootMixins = {
     ...mapMutations({
       setReplyMsg:"ws/setReplyMsg",
       setEditMsg:"ws/setEditMsg",
+      setMaybeKnowList:"ws/setMaybeKnowList",
       setMaybeKnowNum:"ws/setMaybeKnowNum",
     }),
     getMaybeKnow(){
       maybeKnow().then((res) => {
+        this.setMaybeKnowList(res.data)
         this.setMaybeKnowNum(res.data.length)
       })
+    },
+    getHiChatDataList() {
+      let chatMsgKey = {
+        chatType: "CLI_RECENT_CHAT",
+        id: Math.random(),
+        tokenType: 0,
+        token: getToken("token"),
+        deviceId: localStorage.getItem("UUID"),
+      };
+      Socket.send(chatMsgKey);
     },
     closeReplyMessage() {
       this.setReplyMsg({
@@ -27,11 +41,14 @@ const rootMixins = {
         icon: "",
         chatType: "",
         clickType: "",
-        innerText: "",
+        // innerText: "",
         replyHistoryId: "",
         fileSize:"",   
       });
-      this.setEditMsg({ innerText: "" });
+      this.setEditMsg({ 
+        edit:false, 
+        // innerText: "" 
+      });
     },    
     //鎖定滾動
     handleTouch (e) {
@@ -40,11 +57,12 @@ const rootMixins = {
     // 置底
     gotoBottom() {
       let box = document.getElementsByClassName('message-pabel-box')[0]
-      if(box !== undefined){
+      if(box){
         this.$nextTick(() => {
           setTimeout(() =>{
             box.scrollTop = box.scrollHeight
-          },500)
+          },50)
+          
         })
       }
 
@@ -81,7 +99,7 @@ const rootMixins = {
     },
     // 转换时间为YYYY-MM-DD格式
     formatTime(time) {
-      return this.$moment(time).format('YYYY-MM-DD')
+      return this.$moment(time).format('YYYY/MM/DD')
     },
     formatTime2(time) {
       return this.$moment(time).format('YYYYMMDD')
@@ -90,12 +108,20 @@ const rootMixins = {
     formatTimeS(time) {
       return this.$moment(time).format('YYYY/MM/DD HH:mm:ss')
     },
+    // 转换时间为YYY-MM-DD HH:mm-SS
+    formatTimeXS(time) {
+      return this.$moment(time).format('YYYY/MM/DD HH:mm')
+    },
     formatTimeDay(time) {
       return this.$moment(time).format('MM-DD')
     },
     formatTimeSecound(time) {
       return this.$moment(time).format('HH:mm')
     },
+    formatNowYear(time) {
+      return this.$moment(time).format('MM/DD HH:mm')
+    },
+
     formatNowTime(time) {
       return this.$moment.unix(time).format('YYYY-MM-DD HH:mm:ss')
     },

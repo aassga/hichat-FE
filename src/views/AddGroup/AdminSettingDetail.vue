@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper" @touchmove="$root.handleTouch">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="60px">
           <div class="home-header">
@@ -10,21 +10,98 @@
           </div>
         </el-header>
         <div class="home-content">
-          <div class="setting-title">管理员权限</div>
+          <div class="user-data">            
+            <div class="info-box">
+              <div :class="{ 'service-icon': $route.params.isCustomerService }"></div>
+                <el-image
+                :src="$route.params.icon"
+                :preview-src-list="[$route.params.icon]"
+              />
+            </div>
+            <div>
+              <span>{{ groupName($route.params) }}</span>
+            </div>
+          </div>
+
+          <div class="setting-title">群组成员</div>
           <div
-            class="setting-button"
             v-for="(item, index) in groupManagerAuthorityVO"
-            :key="item + index"
+            :key="item + index + 1"
           >
-            <div class="setting-box">
-              <div class="setting-button-left">
-                <el-switch
-                  v-model="item.isCheck"
-                  :inactive-text="item.name"
-                  active-color="#fd5f3f"
-                  inactive-color="#666666"
-                >
-                </el-switch>
+            <div
+              class="setting-button"
+              v-if="
+                [
+                  'addUser',
+                  'delUser',
+                  'updateGroupInfo',
+                  'delUserMessage',
+                  'checkUserInfo',
+                ].includes(item.key)
+              "
+            >
+              <div class="setting-box">
+                <div class="setting-button-left">
+                  <el-switch
+                    v-model="item.isCheck"
+                    :inactive-text="item.name"
+                    active-color="#fd5f3f"
+                    inactive-color="#666666"
+                  >
+                  </el-switch>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-title">信息传递</div>
+          <div
+            v-for="(item, index) in groupManagerAuthorityVO"
+            :key="item + index + 2"
+          >
+            <div
+              class="setting-button"
+              v-if="
+                [
+                  'sendMessage',
+                  'sendImage',
+                  'sendLink',
+                  'pin',
+                  'startGroupCall',
+                ].includes(item.key)
+              "
+            >
+              <div class="setting-box">
+                <div class="setting-button-left">
+                  <el-switch
+                    v-model="item.isCheck"
+                    :inactive-text="item.name"
+                    active-color="#fd5f3f"
+                    inactive-color="#666666"
+                  >
+                  </el-switch>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-title">禁言与禁用字词</div>
+          <div
+            v-for="(item, index) in groupManagerAuthorityVO"
+            :key="item + index + 3"
+          >
+            <div
+              class="setting-button"
+              v-if="['banUserPost', 'disabledWord'].includes(item.key)"
+            >
+              <div class="setting-box">
+                <div class="setting-button-left">
+                  <el-switch
+                    v-model="item.isCheck"
+                    :inactive-text="item.name"
+                    active-color="#fd5f3f"
+                    inactive-color="#666666"
+                  >
+                  </el-switch>
+                </div>
               </div>
             </div>
           </div>
@@ -37,7 +114,7 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="320px">
         <el-header height="70px">
           <div
             class="home-header flex-start"
@@ -52,7 +129,7 @@
               class="home-header-title"
               :style="
                 !groupPermissionData.addGroup
-                  ? 'position: relative; left: 1px; top: 1px;'
+                  ? 'position: relative; top: 1px;'
                   : ''
               "
               >管理员权限设定</span
@@ -61,21 +138,106 @@
           </div>
         </el-header>
         <div class="home-content">
-          <div class="setting-title">管理员权限</div>
+          <div class="user-data">
+            <div
+              style="
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+              "
+            >
+              <div class="info-box">
+                <div :class="{ 'service-icon': msgInfoPage.data.isCustomerService }"></div>
+                <el-image
+                  :src="msgInfoPage.data.icon"
+                  :preview-src-list="[msgInfoPage.data.icon]"
+                />
+              </div>
+
+              
+              <span>{{ groupName(msgInfoPage.data) }}</span>
+            </div>
+          </div>
+          <div class="setting-title">群组成员</div>
           <div
-            class="setting-button"
             v-for="(item, index) in groupManagerAuthorityVO"
-            :key="item + index"
+            :key="item + index + 1"
           >
-            <div class="setting-box">
-              <div class="setting-button-left">
-                <el-switch
-                  v-model="item.isCheck"
-                  :inactive-text="item.name"
-                  active-color="#fd5f3f"
-                  inactive-color="#666666"
-                >
-                </el-switch>
+            <div
+              class="setting-button"
+              v-if="
+                [
+                  'addUser',
+                  'delUser',
+                  'updateGroupInfo',
+                  'delUserMessage',
+                  'checkUserInfo',
+                ].includes(item.key)
+              "
+            >
+              <div class="setting-box">
+                <div class="setting-button-left">
+                  <el-switch
+                    v-model="item.isCheck"
+                    :inactive-text="item.name"
+                    active-color="#fd5f3f"
+                    inactive-color="#666666"
+                  >
+                  </el-switch>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-title">信息传递</div>
+          <div
+            v-for="(item, index) in groupManagerAuthorityVO"
+            :key="item + index + 2"
+          >
+            <div
+              class="setting-button"
+              v-if="
+                [
+                  'sendMessage',
+                  'sendImage',
+                  'sendLink',
+                  'pin',
+                  'startGroupCall',
+                ].includes(item.key)
+              "
+            >
+              <div class="setting-box">
+                <div class="setting-button-left">
+                  <el-switch
+                    v-model="item.isCheck"
+                    :inactive-text="item.name"
+                    active-color="#fd5f3f"
+                    inactive-color="#666666"
+                  >
+                  </el-switch>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="setting-title">禁言与禁用字词</div>
+          <div
+            v-for="(item, index) in groupManagerAuthorityVO"
+            :key="item + index + 3"
+          >
+            <div
+              class="setting-button"
+              v-if="['banUserPost', 'disabledWord'].includes(item.key)"
+            >
+              <div class="setting-box">
+                <div class="setting-button-left">
+                  <el-switch
+                    v-model="item.isCheck"
+                    :inactive-text="item.name"
+                    active-color="#fd5f3f"
+                    inactive-color="#666666"
+                  >
+                  </el-switch>
+                </div>
               </div>
             </div>
           </div>
@@ -92,7 +254,12 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { listMember,addManager,setManagerAuthority } from '@/api/groupController'
+import {
+  listMember,
+  addManager,
+  setManagerAuthority,
+} from "@/api/groupController";
+import { nameTidy } from "@/utils/name";
 
 export default {
   name: "AdminSetting",
@@ -100,42 +267,12 @@ export default {
     return {
       groupManagerAuthorityVO: [
         {
-          name: "传送文字讯息",
-          key: "sendMessage",
-          isCheck: true,
-        },
-        {
-          name:"传送图片或语音讯息",
-          key: "sendImage",
-          isCheck:true,
-        },
-        {
-          name:"传送档案或链接网址",
-          key: "sendLink",
-          isCheck:true,
-        },    
-        {
-          name: "置顶讯息",
-          key: "pin",
-          isCheck: false,
-        },
-        {
-          name: "禁言设定",
-          key: "banUserPost",
-          isCheck: false,
-        },
-        {
-          name: "禁言字词设定",
-          key: "disabledWord",
-          isCheck: false,
-        },
-        {
-          name: "加入成員",
+          name: "加入成员",
           key: "addUser",
           isCheck: false,
         },
         {
-          name: "踢除成員",
+          name: "踢除成员",
           key: "delUser",
           isCheck: false,
         },
@@ -154,25 +291,59 @@ export default {
           key: "checkUserInfo",
           isCheck: false,
         },
+        {
+          name: "传送文字讯息",
+          key: "sendMessage",
+          isCheck: true,
+        },
+        {
+          name: "传送图片或语音讯息",
+          key: "sendImage",
+          isCheck: true,
+        },
+        {
+          name: "传送档案或链接网址",
+          key: "sendLink",
+          isCheck: true,
+        },
+        {
+          name: "置顶讯息",
+          key: "pin",
+          isCheck: false,
+        },
+        {
+          name: "发起群组通话",
+          key: "startGroupCall",
+          isCheck: false,
+        },
+        {
+          name: "禁言设定",
+          key: "banUserPost",
+          isCheck: false,
+        },
+        {
+          name: "禁言字词设定",
+          key: "disabledWord",
+          isCheck: false,
+        },
       ],
       device: localStorage.getItem("device"),
     };
   },
   created() {
-    if (this.device === "moblie") {
+    if (this.device === "mobile") {
       this.groupData = JSON.parse(localStorage.getItem("groupData"));
     } else {
       this.groupData = this.groupUser;
     }
   },
-  mounted() {
-    this.getGroupListMember();
-  },
+  mounted() {},
   computed: {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
       msgInfoPage: (state) => state.ws.msgInfoPage,
       groupPermissionData: (state) => state.ws.groupPermissionData,
+      authorityGroupData: (state) => state.ws.authorityGroupData,
     }),
   },
   methods: {
@@ -180,7 +351,17 @@ export default {
       setMsgInfoPage: "ws/setMsgInfoPage",
       setGroupPermissionData: "ws/setGroupPermissionData",
     }),
-    
+    groupName(el) {
+      let name = "";
+      if (!el.groupNickname) {
+        name = !el.groupNumber ? el.name : el.groupNumber;
+      } else if (el.groupNickname) {
+        name = el.groupNickname;
+      }
+      let showGroupNumber = this.authorityGroupData.showGroupNumber;
+      let editGroupNickname = this.authorityGroupData.editGroupNickname;
+      return nameTidy({name,el,showGroupNumber,editGroupNickname})
+    },
     addGroupMsg() {
       this.newManagerAuthorityData = {};
       this.groupManagerAuthorityVO.forEach((el) => {
@@ -191,22 +372,23 @@ export default {
         this.newManagerAuthorityData[el.key] = newData[0].isCheck;
       });
       if (!this.groupPermissionData.addGroup) {
-        let parmasData = this.device === "moblie" ? this.$route.params : this.msgInfoPage.data;
+        let paramsData =
+          this.device === "mobile" ? this.$route.params : this.msgInfoPage.data;
         let params = {
-          groupId: parmasData.groupId,
+          groupId: paramsData.groupId,
           groupManagerAuthorityVO: this.newManagerAuthorityData,
-          memberId: parmasData.memberId,
+          memberId: paramsData.memberId,
         };
-        if (!parmasData.isManager || parmasData.isManager === undefined) {
+        if (!paramsData.isManager) {
           addManager(params).then((res) => {
             if (res.code === 200) {
-              this.groupActionCurrent()
+              this.groupActionCurrent();
             }
           });
         } else {
           setManagerAuthority(params).then((res) => {
             if (res.code === 200) {
-              this.groupActionCurrent()
+              this.groupActionCurrent();
             }
           });
         }
@@ -215,10 +397,10 @@ export default {
         if (this.$route.params.isManager) {
           this.groupPermissionData.groupManagerAuthority.forEach((el) => {
             if (el.memberId === this.$route.params.contactId) {
-              for (let key in el) {
-                for (let key in this.newManagerAuthorityData) {
-                  if(key === key){
-                    el[key] = this.newManagerAuthorityData[key]
+              for (let key1 in el) {
+                for (let key2 in this.newManagerAuthorityData) {
+                  if (key1 === key2) {
+                    el[key1] = this.newManagerAuthorityData[key2];
                   }
                 }
               }
@@ -235,18 +417,18 @@ export default {
             res.authority = this.newManagerAuthorityData;
           }
         });
-        this.setGroupPermissionData(this.groupPermissionData)
+        this.setGroupPermissionData(this.groupPermissionData);
         this.$router.push({ path: "/AdminSetting" });
       }
     },
-    groupActionCurrent(){
-      if (this.device === "moblie") {
+    groupActionCurrent() {
+      if (this.device === "mobile") {
         this.$router.push({ path: "/AdminSetting" });
       } else {
         if (this.msgInfoPage.pageAdd) {
-          this.setMsgInfoPage({ pageShow: false, type: "AdminSettingPage", });
+          this.setMsgInfoPage({ pageShow: false, type: "AdminSettingPage" });
         } else {
-          this.setMsgInfoPage({ pageShow: false, type: "AdminSetting", });
+          this.setMsgInfoPage({ pageShow: false, type: "AdminSetting" });
         }
       }
     },
@@ -255,14 +437,14 @@ export default {
         let groupId = this.groupData.groupId;
         listMember({ groupId }).then((res) => {
           let parmaMemberId =
-            this.device === "moblie"
+            this.device === "mobile"
               ? this.$route.params.memberId
               : this.msgInfoPage.data.memberId;
           this.newData = res.data.list.filter((el) => {
             return el.memberId === parmaMemberId;
           });
           let managerAuthority = this.newData[0].authority;
-          if (managerAuthority !== undefined) {
+          if (managerAuthority) {
             for (let item in managerAuthority) {
               this.groupManagerAuthorityVO.forEach((res) => {
                 if (item === res.key) {
@@ -274,7 +456,7 @@ export default {
         });
       } else {
         let managerAuthority = this.$route.params.authority;
-        if (managerAuthority !== undefined) {
+        if (managerAuthority) {
           for (let item in managerAuthority) {
             this.groupManagerAuthorityVO.forEach((res) => {
               if (item === res.key) {
@@ -286,7 +468,7 @@ export default {
       }
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         if (this.groupPermissionData.addGroup) {
@@ -313,11 +495,19 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
   }
   .home-content {
+    .user-data {
+      span {
+        display: block;
+        text-align: center;
+        height: 0;
+        font-weight: 600;
+      }
+    }
     .setting-title {
       padding: 15px 20px;
       color: rgba(0, 0, 0, 0.4);
@@ -361,7 +551,7 @@ export default {
           display: flex;
           justify-content: space-between;
         }
-        /deep/.el-switch__label.is-active {
+        ::v-deep.el-switch__label.is-active {
           color: #333333;
         }
       }
@@ -377,6 +567,22 @@ export default {
         }
       }
     }
+  }
+}
+.info-box{
+  display: flex;
+  justify-content: center;
+}
+.hichat-mobile{
+  .service-icon{
+    width: 3em;
+    height: 3em;
+  }
+}
+.hichat-pc{
+  .service-icon{
+    width: 6em;
+    height: 6em;
   }
 }
 </style>

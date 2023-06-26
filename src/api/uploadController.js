@@ -31,11 +31,13 @@ export const uploadMessageImage = data => {
 }
 
 // 上傳檔案
-export const uploadMessageFile = data => {
+export const uploadMessageFile = (data,config = {} ) => {
   let postData = {
     url: '/file/upload/uploadMessageFile',
     method: 'post',
-    data
+    data:data,
+    ...config,
   }
+
   return axios.request(postData)
 }

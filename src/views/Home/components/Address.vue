@@ -2,109 +2,74 @@
   <div class="home-content" @touchmove="$root.handleTouch">
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="联络人" name="address">
-        <div
-          class="address-box"
-          v-for="(item, index) in contactList"
-          :key="index"
-          @click="goContactPage(item, 'ContactPage')"
-        >
+        <div class="address-box" v-for="(item, index) in newContactList" :key="index"
+          @click="goContactPage(item, 'ContactPage')">
+          <div :class="{ 'service-icon': serviceIcon(item) }"></div>
           <el-image :src="noIconShow(item, 'user')" />
-          <div class="contont-box">
+          <div class="content-box">
             <div class="msg-box">
-              <div :class="{ 'noOnline-tip': onlineMsg(item) === '' }">
-                <span style="margin-top: 1px">{{ item.name }}</span>
-                <span
-                  class="content-text"
-                  :class="
-                    onlineMsg(item) === '在线' ? 'green-text' : 'gray-text'
-                  "
-                  v-if="onlineMsg(item) !== ''"
-                  ><span>{{ onlineMsg(item) }}</span></span
-                >
+              <div :class="{ 'noOnline-tip': item.isOnline === '' }">
+                <span style="margin-top: 1px">{{
+                  item.name.slice(0, 10)
+                }}</span>
+                <span class="content-text" :class="item.isOnline === '在线' ? 'green-text' : 'gray-text'"
+                  v-if="item.isOnline !== ''"><span>{{ item.isOnline }}</span></span>
               </div>
             </div>
-            <div class="contont-border-bottom"></div>
+            <div class="content-border-bottom"></div>
           </div>
         </div>
       </el-tab-pane>
       <el-tab-pane label="群组" name="group">
-        <div
-          class="address-box"
-          v-for="(item, index) in groupData"
-          :key="index"
-          @click="goContactPage(item, 'GroupPage')"
-        >
+        <div class="address-box" v-for="(item, index) in groupData" :key="index"
+          @click="goContactPage(item, 'GroupPage')">
           <el-image :src="noIconShow(item, 'group')" />
-          <div class="contont-box">
+          <div class="content-box">
             <div class="msg-box">
               <div class="noOnline-tip">
-                <span>{{ item.groupName }}</span>
+                <span>{{ item.groupName.slice(0, 10) }}</span>
               </div>
             </div>
-            <div class="contont-border-bottom"></div>
+            <div class="content-border-bottom"></div>
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane
-        label="可能认识"
-        name="maybeKnow"
-        v-if="maybeKnowDataList.length !== 0"
-      >
-        <div
-          class="address-box"
-          v-for="(item, index) in maybeKnowDataList"
-          :key="index"
-        >
+      <el-tab-pane label="可能认识" name="maybeKnow" v-if="maybeKnowList.length !== 0">
+        <span slot="label" v-if="maybeKnowList.length !== 0">
+          <span>可能认识</span>
+          <el-badge v-if="maybeKnowList.length > 0" :value="maybeKnowList.length > 999 ? 999 : maybeKnowList.length
+            " class="contact-badge"></el-badge>
+        </span>
+        <div class="address-box" v-for="(item, index) in maybeKnowList" :key="index">
+          <div :class="{ 'service-icon': serviceIcon(item) }"></div>
           <el-image :src="noIconShow(item, 'user')" />
-          <div class="contont-box">
+          <div class="content-box">
             <div class="msg-box">
               <div class="noOnline-tip">
-                <span>{{ item.nickname }}</span>
-                <span
-                  style="position: absolute; right: 1.5em; margin-top: -5px"
-                  @click="addContactBoxShow(item)"
-                >
-                  <img
-                    v-if="device === 'pc'"
-                    src="./../../../../static/images/pc/user-plus.svg"
-                    alt=""
-                  />
-                  <img
-                    v-else
-                    src="./../../../../static/images/add_user.png"
-                    alt=""
-                    style="height: 1.5em"
-                  />
+                <span>{{ item.nickname.slice(0, 10) }}</span>
+                <span class="add-img-style" @click="addContactBoxShow(item)">
+                  <img v-if="device === 'pc'" src="./../../../../static/images/pc/user-plus.png" alt=""
+                    style="height: 2em" />
+                  <img v-else src="./../../../../static/images/add_user.png" alt="" style="height: 1.5em" />
                 </span>
               </div>
             </div>
-            <div class="contont-border-bottom"></div>
+            <div class="content-border-bottom"></div>
           </div>
         </div>
       </el-tab-pane>
     </el-tabs>
-    <el-dialog
-      :title="device === 'pc' ? '添加联络人' : ''"
-      :visible.sync="addContactShow"
-      class="el-dialog-loginOut"
-      width="70%"
-      :show-close="false"
-      :modal-append-to-body="false"
-      :close-on-click-modal="false"
-      center
-    >
+    <el-dialog :title="device === 'pc' ? '添加联络人' : ''" :visible.sync="addContactShow" class="el-dialog-loginOut"
+      width="70%" :show-close="false" :modal-append-to-body="false" :close-on-click-modal="false" center>
       <div class="loginOut-box">
         <div v-if="device !== 'pc'">
-          <img src="./../../../../static/images/warn.svg" alt="" />
+          <img src="./../../../../static/images/warn.png" alt="" />
         </div>
         <span>确认是否添加为联络人</span>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button
-          :class="device === 'pc' ? 'background-gray' : 'border-red'"
-          @click="addContactShow = false"
-          >取消</el-button
-        >
+        <el-button :class="device === 'pc' ? 'background-gray' : 'border-red'"
+          @click="addContactShow = false">取消</el-button>
         <el-button class="background-red" @click="addContact()">确认</el-button>
       </span>
     </el-dialog>
@@ -115,10 +80,16 @@
 import Socket from "@/utils/socket";
 import { getToken } from "_util/utils.js";
 import { mapState, mapMutations } from "vuex";
-import { getMemberActivity,getSearchById } from "@/api/memberProfileController";
-import { addContactUser,getContactList,maybeKnow } from "@/api/memberContactController";
-import { getGroupList } from '@/api/groupController'
-
+import {
+  getMemberActivity,
+} from "@/api/memberProfileController";
+import {
+  addContactUser,
+  getContactList,
+  maybeKnow,
+} from "@/api/memberContactController";
+import { getGroupList } from "@/api/groupController";
+import { showIcon, showServiceIcon } from "@/utils/icon";
 export default {
   name: "Address",
   data() {
@@ -127,14 +98,13 @@ export default {
       addInfo: {},
       groupData: [],
       contactList: [],
+      newContactList: [],
       memberActivityData: [],
-      maybeKnowDataList: [],
       addContactShow: false,
       device: localStorage.getItem("device"),
     };
   },
   created() {
-    this.getDataList();
     this.getMaybeKnow();
     this.setActiveName(this.activeName);
     this.userData = JSON.parse(localStorage.getItem("userData"));
@@ -163,13 +133,10 @@ export default {
   },
   watch: {
     chatUser(val) {
-      if (JSON.stringify(val) === "{}") {
-        this.getDataList();
-        this.getMaybeKnow();
-      }
+      if (Object.keys(val).length !== 0) this.getMaybeKnow();
     },
     myContactDataList(val) {
-      this.contactList = val;
+      this.newContactList = val;
     },
     groupList(val) {
       this.groupData = val;
@@ -188,13 +155,14 @@ export default {
       setMsgInfoPage: "ws/setMsgInfoPage",
       setActiveName: "ws/setActiveName",
       setMaybeKnowNum: "ws/setMaybeKnowNum",
+      setMaybeKnowList:"ws/setMaybeKnowList",
       setMyContactDataList: "ws/setMyContactDataList",
     }),
     homeScrollHeight() {
       let scrollTop = document.querySelector(".home-content");
       let headerScrollTop = document.querySelector(".is-top");
       let tabsContentHeight =
-        scrollTop.scrollHeight - headerScrollTop.scrollHeight;
+        scrollTop.clientHeight - headerScrollTop.scrollHeight;
       document.querySelector(".el-tabs__content").style.height =
         tabsContentHeight + "px";
     },
@@ -203,11 +171,10 @@ export default {
       this.addInfo = data;
     },
     addContact() {
-      let parmas = {
+      let params = {
         contactId: this.addInfo.memberId,
-        name: this.addInfo.nickname,
       };
-      addContactUser(parmas).then((res) => {
+      addContactUser(params).then((res) => {
         if (res.code === 200) {
           this.$message({ message: "添加成功", type: "success" });
           this.addContactShow = false;
@@ -223,6 +190,8 @@ export default {
         this.memberTime = setInterval(() => {
           this.getUserMemberActivity(this.memberActivityData);
         }, 30000);
+      } else if(this.activeName === "maybeKnow"){
+        this.getMaybeKnow()
       } else {
         clearInterval(this.memberTime);
       }
@@ -235,7 +204,7 @@ export default {
             el.name = "嗨聊记事本";
             el.icon = require("./../../../../static/images/image_savemessage.png");
             el.toChatId = "u" + el.memberId;
-          } else if (el.icon === undefined) {
+          } else if (!el.icon) {
             el.icon = require(`./../../../../static/images/image_user_defult.png`);
           }
           this.memberActivityData.push(el.contactId);
@@ -243,30 +212,23 @@ export default {
         this.getUserMemberActivity(this.memberActivityData);
       });
       getGroupList().then((res) => {
-        this.groupData = res.data.list
-        this.groupData.forEach((el)=>{
-          if(el.icon === undefined){
-            el.icon = require("./../../../../static/images/image_group_defult.png");
-          }
-          return el.groupName !== undefined
-        })
+        this.groupData = res.data.list;
         this.setGroupList(this.groupData);
       });
     },
     getMaybeKnow() {
       maybeKnow().then((res) => {
-        this.maybeKnowDataList = res.data;
-        if (this.maybeKnowDataList.length === 0) this.activeName = "address";
-        this.setMaybeKnowNum(this.maybeKnowDataList.length);
+        if (res.data.length === 0) this.activeName = "address";
+        this.setMaybeKnowNum(res.data.length);
+        this.setMaybeKnowList(res.data);
         this.getDataList();
       });
     },
+    serviceIcon(icon) {
+      return showServiceIcon(icon)
+    },
     noIconShow(iconData, key) {
-      if ([undefined, null, ""].includes(iconData.icon)) {
-        return require(`./../../../../static/images/image_${key}_defult.png`);
-      } else {
-        return iconData.icon;
-      }
+      return showIcon(iconData, key);
     },
     getUserMemberActivity(data) {
       let memberId = data;
@@ -276,8 +238,20 @@ export default {
           this.contactList.forEach((list) => {
             this.userTimeData.forEach((data) => {
               if (list.contactId === JSON.stringify(data.memberId)) {
-                list.currentTime = data.currentTime;
-                list.lastActivityTime = data.lastActivityTime;
+                if (data.lastActivityTime === 0 || list.name === "嗨聊记事本") {
+                  return "";
+                } else {
+                  let nowTime = data.currentTime;
+                  let lastTime = data.lastActivityTime;
+
+                  const diffInMills = nowTime - lastTime;
+                  if (diffInMills / 1000 < 300) {
+                    return (list.isOnline = "在线");
+                  } else {
+                    return (list.isOnline =
+                      "上次上线于" + this.$root.formatTimeS(lastTime));
+                  }
+                }
               }
             });
           });
@@ -285,41 +259,11 @@ export default {
         }
       });
     },
-    onlineMsg(data) {
-      if (data.lastActivityTime === 0 || data.name === "嗨聊记事本") {
-        return "";
-      } else {
-        let nowTime = data.currentTime;
-        let lastTime = data.lastActivityTime;
-        const diffInMills = nowTime - lastTime;
-        if (diffInMills / 1000 < 300) {
-          return "在线";
-        } else {
-          return "上次上线于" + this.$root.formatTimeS(data.lastActivityTime);
-        }
-      }
-    },
-    getUserId(data) {
-      let id = data.contactId;
-      getSearchById({ id }).then((res) => {
-        if (res.data.id === this.myUserInfo.id) {
-          data.name = "嗨聊记事本";
-          data.forChatId = "u" + res.data.id;
-          data.icon = require("./../../../../static/images/image_savemessage.png");
-        } else {
-          data.name = res.data.name;
-        }
-        data.isBlock = res.data.isBlock;
-        data.isContact = res.data.isContact;
-        data.username = res.data.username;
-        this.setChatUser(data);
-      });
-    },
     goContactPage(data, path) {
       if (path === "ContactPage") {
         data.toChatId = "u" + data.contactId;
         data.type = this.device === "pc" ? "address" : "";
-        this.device === "pc" ? this.getUserId(data) : this.setChatUser(data);
+        this.setChatUser(data);
       } else {
         data.toChatId = "g" + data.groupId;
         data.type = this.device === "pc" ? "address" : "";
@@ -332,7 +276,7 @@ export default {
           localStorage.removeItem("authority");
         }
       }
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.push({ name: path });
       } else {
         this.setMsgInfoPage({ pageShow: true, type: "" });
@@ -354,22 +298,13 @@ export default {
         case "SRV_GROUP_IMAGE":
         case "SRV_GROUP_AUDIO":
         case "SRV_GROUP_SEND":
-          this.getHiChatDataList();
-          break;
         case "SRV_EDIT_CONTACT":
-          this.getMaybeKnow();
+          if (userInfo.chatType === "SRV_EDIT_CONTACT") {
+            this.getMaybeKnow();
+          }
+          this.$root.getHiChatDataList();
           break;
       }
-    },
-    getHiChatDataList() {
-      let chatMsgKey = {
-        chatType: "CLI_RECENT_CHAT",
-        id: Math.random(),
-        tokenType: 0,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      };
-      Socket.send(chatMsgKey);
     },
   },
 };
@@ -377,13 +312,14 @@ export default {
 <style lang="scss" scoped>
 .home-content {
   overflow: hidden !important;
+
   .address-box {
     cursor: pointer;
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-    }
-    .contont-box {
+
+    .content-box {
       .msg-box {
+        width: auto;
+
         .content-text {
           span {
             &:nth-child(2) {
@@ -397,7 +333,7 @@ export default {
   }
 }
 
-/deep/.el-dialog-loginOut {
+::v-deep.el-dialog-loginOut {
   .el-dialog__footer {
     padding: 0 !important;
 
@@ -411,17 +347,26 @@ export default {
     }
   }
 }
-.hichat-moblie {
+
+.contact-badge {
+  vertical-align: initial;
+  top: -9px;
+}
+
+.hichat-mobile {
   .el-dialog-loginOut {
-    /deep/.el-dialog {
+    ::v-deep.el-dialog {
       border-radius: 20px;
       position: relative;
+
       .el-dialog__header {
         padding: 10px;
       }
+
       .el-dialog__body {
         text-align: center;
         padding: 25px 25px 15px;
+
         .loginOut-box {
           img {
             height: 5em;
@@ -429,23 +374,28 @@ export default {
           }
         }
       }
+
       .el-dialog__footer {
         padding: 20px !important;
         padding-top: 10px !important;
         text-align: right;
         box-sizing: border-box;
+
         .dialog-footer {
           display: flex;
           justify-content: space-between;
+
           .el-button {
             width: 100%;
             border-radius: 8px !important;
             padding: 12px 20px !important;
           }
+
           .background-red {
             background-color: #ee5253;
             color: #fff;
           }
+
           .border-red {
             border: 1px solid #fe5f3f;
             color: #fe5f3f;
@@ -454,6 +404,12 @@ export default {
       }
     }
   }
+}
+
+.add-img-style {
+  position: absolute;
+  right: 1.5em;
+  margin-top: -5px
 }
 </style>
 

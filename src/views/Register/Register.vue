@@ -1,377 +1,118 @@
 <template>
-  <div
-    :class="[
-      { 'register-container-pc': device === 'pc' },
-      { 'register-container-moblie': device === 'moblie' },
-    ]"
-  >
-    <template v-if="device === 'moblie'">
-      <div class="register-header">
-        <router-link :to="'/Login'"
-          ><div class="register-back"></div
-        ></router-link>
+  <div :class="`register-container-${device}`">
+    <div class="register-header">
+      <template v-if="device === 'mobile'">
+        <router-link :to="'/Login'">
+          <div class="register-back"></div>
+        </router-link>
         <span class="register-header-title">注册</span>
+      </template>
+      <div class="title-container" v-else>
+        <img src="./../../../static/images/material_ic_logo.png" alt="" />
+        <span class="register-header-title">注册 嗨聊</span>
       </div>
-      <div class="register-content">
-        <el-form
-          ref="loginForm"
-          :model="loginForm"
-          class="login-form"
-          label-position="top"
-        >
-          <el-form-item prop="phone">
-            <span class="svg-container">
-              <img src="./../../../static/images/mail.png" alt="" />
-            </span>
-            <el-input
-              ref="phone"
-              placeholder="手机号码"
-              v-model.trim="loginForm.phone"
-              name="phone"
-              type="text"
-              tabindex="1"
-              maxLength="13"
-              @input="
-                (v) => (loginForm.phone = v.replace(/^[\u4E00-\u9FA5_a-zA-Z]+$/, ''))
-              "
-            >
-            </el-input>
-          </el-form-item>
-          <el-form-item prop="password">
-            <span class="svg-container">
-              <img src="./../../../static/images/lock.png" alt="" />
-            </span>
-            <el-input
-              ref="password"
-              placeholder="登录密码"
-              v-model.trim="loginForm.password"
-              name="password"
-              :type="passwordType === 'password' ? 'password' : 'text'"
-              tabindex="2"
-              maxLength="12"
-              @input="
-                (v) =>
-                  (loginForm.password = v.replace(/^[\u4E00-\u9FA5]+$/, ''))
-              "
-            >
-            </el-input>
-            <span class="show-pwd" @click="showPwd('password')">
-              <img
-                :src="
-                  passwordType === 'password'
-                    ? require('../../../static/images/eye_closed.png')
-                    : require('./../../../static/images/eye-solid.svg')
-                "
-                alt=""
-              />
-            </span>
-          </el-form-item>
-          <span class="tip-text"
-            >密码长度为4至12个字元。</span
-          >
-          <el-form-item prop="passwordAganin">
-            <span class="svg-container">
-              <img src="./../../../static/images/lock.png" alt="" />
-            </span>
-            <el-input
-              ref="passwordAganin"
-              placeholder="再次确认登录密码"
-              v-model.trim="loginForm.passwordAganin"
-              name="passwordAganin"
-              :type="passwordTypeAgain === 'password' ? 'password' : 'text'"
-              tabindex="2"
-              maxLength="12"
-              @input="
-                (v) =>
-                  (loginForm.passwordAganin = v.replace(
-                    /^[\u4E00-\u9FA5]+$/,
-                    ''
-                  ))
-              "
-            >
-            </el-input>
-            <span class="show-pwd" @click="showPwd('passwordAgain')">
-              <img
-                :src="
-                  passwordTypeAgain === 'password'
-                    ? require('../../../static/images/eye_closed.png')
-                    : require('./../../../static/images/eye-solid.svg')
-                "
-                alt=""
-              />
-            </span>
-          </el-form-item>
-          <el-form-item prop="username">
-            <span class="svg-container">
-              <img src="./../../../static/images/at.png" alt="" />
-            </span>
-            <el-input
-              ref="username"
-              placeholder="用户ID"
-              v-model.trim="loginForm.username"
-              name="username"
-              type="text"
-              tabindex="1"
-              maxLength="18"
-              @input="
-                (v) =>
-                  (loginForm.username = v.replace(/^[\u4E00-\u9FA5]+$/, ''))
-              "
-            >
-            </el-input>
-          </el-form-item>
-          <span class="tip-text"
-            >ID 长度为5至18个字元，允许混用英文字母、数字和底线。</span
-          >
-          <el-form-item prop="nickname">
-            <span class="svg-container">
-              <img src="./../../../static/images/user.png" alt="" />
-            </span>
-            <el-input
-              ref="nickname"
-              placeholder="名称"
-              v-model.trim="loginForm.nickname"
-              name="nickname"
-              type="text"
-              tabindex="1"
-              maxLength="18"
-            >
-            </el-input>
-          </el-form-item>
-          <el-form-item prop="authCode">
-            <span class="svg-container">
-              <img src="./../../../static/images/code.png" alt="" />
-            </span>
-            <el-input
-              ref="authCode"
-              placeholder="验证码"
-              v-model.trim="loginForm.authCode"
-              name="authCode"
-              type="authCode"
-              tabindex="2"
-              maxLength="6"
-              @input="(v) => (loginForm.authCode = v.replace(/[^\d]/g, ''))"
-              @blur="recover"
-            >
-            </el-input>
-            <el-button
-              class="verification-style"
-              :style="
-                disabledTime ? 'border: 1px solid #b3b3b3;color: #b3b3b3;' : ''
-              "
-              plain
-              :disabled="disabledTime"
-              @click="getAuthCodeData(loginForm.phone, true)"
-              >获取驗證碼 <span v-if="timer">({{ count }})</span>
-            </el-button>
-          </el-form-item>
-          <div class="register-footer">
-            <el-button
-              style="width: 100%; margin-bottom: 30px"
-              :class="disabled ? 'gray-btn' : 'orange-btn'"
-              :disabled="disabled"
-              @click="submitForm('loginForm')"
-              >提交</el-button
-            >
+    </div>
+    <div class="register-content">
+      <el-form ref="loginForm" :model="loginForm" class="login-form" label-position="top">
+        <el-form-item prop="country" v-if="device === 'pc'">
+          <div class="drop" @click="countryShow = !countryShow">
+            <div class="dropOption">
+              <span class="svg-container">
+                <span>区域代码</span>
+              </span>
+              <el-input ref="country" v-model.trim="countryName" :placeholder="device === 'mobile' ? '手机号码' : ''"
+                name="phone" type="text" tabindex="1" maxLength="30" @blur="recover" class="country-box_input">
+              </el-input>
+            </div>
+            <country v-show="countryShow" page="register" :countryName="countryName" @changeCountry="changeCountry" />
           </div>
-        </el-form>
-      </div>
-    </template>
-    <template v-else>
-      <div class="register-header">
-        <div class="title-container">
-          <img src="./../../../static/images/material_ic_logo.png" alt="" />
-          <span class="register-header-title">注册 嗨聊</span>
+        </el-form-item>
+        <el-form-item prop="phone">
+          <span class="svg-container" :class="{ brr: device === 'pc' }" @click="showCountryList">
+            <span>{{ filterCountry(country) }}
+              <i class="el-icon-arrow-down" v-if="device === 'mobile'"></i></span>
+          </span>
+          <el-input ref="phone" v-model.trim="loginForm.phone" :placeholder="device === 'mobile' ? '手机号码' : ''"
+            name="phone" type="text" tabindex="1" maxLength="30" @blur="recover">
+          </el-input>
+          <country v-if="showCountryModule()" page="register" @changeCountry="changeCountry" />
+        </el-form-item>
+        <el-form-item prop="password">
+          <span class="svg-container">登录密码</span>
+          <el-input ref="password" v-model.trim="loginForm.password" placeholder="登录密码" name="password"
+            :type="passwordType === 'password' ? 'password' : 'text'" tabindex="2" maxLength="12" @input="(v) => (loginForm.password = v.replace(/^[\u4E00-\u9FA5]+$/, ''))
+              " @blur="recover">
+          </el-input>
+          <span class="show-pwd" :class="{ 'eye-off': passwordType === 'password' }" @click="showPwd('password')">
+            <img :src="passwordType === 'password'
+                ? require('./../../../static/images/pc/eye-off.png')
+                : require('./../../../static/images/pc/eye.svg')
+              " alt="" />
+          </span>
+        </el-form-item>
+        <span class="tip-text">密码长度为4至12个字元。</span>
+        <el-form-item prop="passwordAgain">
+          <span class="svg-container">确认密码</span>
+          <el-input ref="passwordAgain" v-model.trim="loginForm.passwordAgain" placeholder="再次确认登录密码"
+            name="passwordAgain" :type="passwordTypeAgain === 'password' ? 'password' : 'text'" tabindex="2"
+            maxLength="12" @input="(v) =>
+                (loginForm.passwordAgain = v.replace(/^[\u4E00-\u9FA5]+$/, ''))
+              " @blur="recover">
+          </el-input>
+          <span class="show-pwd" :class="{ 'eye-off': passwordTypeAgain === 'password' }"
+            @click="showPwd('passwordAgain')">
+            <img :src="passwordTypeAgain === 'password'
+                ? require('./../../../static/images/pc/eye-off.png')
+                : require('./../../../static/images/pc/eye.svg')
+              " alt="" />
+          </span>
+        </el-form-item>
+        <el-form-item prop="username">
+          <span class="svg-container">帐号 ID</span>
+          <el-input ref="username" v-model.trim="loginForm.username" placeholder="用户ID" name="username" type="text"
+            tabindex="1" maxLength="18" @input="(v) => (loginForm.username = v.replace(/^[\u4E00-\u9FA5]+$/, ''))
+              " @blur="recover">
+          </el-input>
+        </el-form-item>
+        <span class="tip-text">ID 长度为5至18个字元，允许混用英文字母、数字和底线。</span>
+        <el-form-item prop="nickname">
+          <span class="svg-container">昵称</span>
+          <el-input ref="nickname" v-model.trim="loginForm.nickname" placeholder="名称" name="nickname" type="text"
+            tabindex="1" maxLength="18">
+          </el-input>
+        </el-form-item>
+        <el-form-item prop="authCode">
+          <span class="svg-container"> 验证码 </span>
+          <el-input ref="authCode" v-model.trim="loginForm.authCode" placeholder="验证码" name="authCode" type="authCode"
+            tabindex="2" maxLength="6" @input="(v) => (loginForm.authCode = v.replace(/[^\d]/g, ''))" @blur="recover">
+          </el-input>
+          <el-button class="verification-style" :style="disabledTime ? 'border: 1px solid #b3b3b3;color: #b3b3b3;' : ''
+            " plain :disabled="disabledTime" @click="getAuthCodeData(loginForm.phone, true)">获取驗證碼 <span
+              v-if="timer">({{ count }})</span>
+          </el-button>
+        </el-form-item>
+        <div class="register-footer">
+          <div>
+            <el-button style="width: 100%; margin-bottom: 30px" :class="disabled ? 'gray-btn' : 'orange-btn'"
+              :disabled="disabled" @click="submitForm('loginForm')">注册</el-button>
+          </div>
+          <div v-if="device === 'pc'">
+            <router-link :to="'/Login'">
+              <el-button style="
+                  width: 100%;
+                  background-color: #67c23a00;
+                  border: 1px solid #fd5f3f;
+                  color: #fd5f3f;
+                ">回到登录</el-button>
+            </router-link>
+          </div>
         </div>
-      </div>
-      <div class="register-content">
-        <el-form
-          ref="loginForm"
-          :model="loginForm"
-          class="login-form"
-          label-position="top"
-        >
-          <el-form-item prop="phone">
-            <span class="svg-container">手机号码</span>
-            <el-input
-              ref="phone"
-              v-model.trim="loginForm.phone"
-              name="phone"
-              type="text"
-              tabindex="1"
-              maxLength="13"
-              @input="
-                (v) => (loginForm.phone = v.replace(/^[\u4E00-\u9FA5_a-zA-Z]+$/, ''))
-              "
-              @blur="recover"
-            >
-            </el-input>
-          </el-form-item>
-          <el-form-item prop="password">
-            <span class="svg-container">登录密码</span>
-            <el-input
-              ref="password"
-              v-model.trim="loginForm.password"
-              name="password"
-              :type="passwordType === 'password' ? 'password' : 'text'"
-              tabindex="2"
-              maxLength="12"
-              @input="
-                (v) =>
-                  (loginForm.password = v.replace(/^[\u4E00-\u9FA5]+$/, ''))
-              "
-              @blur="recover"
-            >
-            </el-input>
-            <span
-              class="show-pwd"
-              :class="{ 'eye-off': passwordType === 'password' }"
-              @click="showPwd('password')"
-            >
-              <img
-                :src="
-                  passwordType === 'password'
-                    ? require('./../../../static/images/pc/eye-off.svg')
-                    : require('./../../../static/images/pc/eye.svg')
-                "
-                alt=""
-              />
-            </span>
-          </el-form-item>
-          <!-- <span class="tip-text"
-            >密码长度为6至12个字元，至少包含1个大写、1个小写英文及1个数字。</span
-          > -->
-          <span class="tip-text"
-            >密码长度为4至12个字元。</span
-          >
-          <el-form-item prop="passwordAganin">
-            <span class="svg-container">确认密码</span>
-            <el-input
-              ref="passwordAganin"
-              v-model.trim="loginForm.passwordAganin"
-              name="passwordAganin"
-              :type="passwordTypeAgain === 'password' ? 'password' : 'text'"
-              tabindex="2"
-              maxLength="12"
-              @input="
-                (v) =>
-                  (loginForm.passwordAganin = v.replace(
-                    /^[\u4E00-\u9FA5]+$/,
-                    ''
-                  ))
-              "
-              @blur="recover"
-            >
-            </el-input>
-            <span
-              class="show-pwd"
-              :class="{ 'eye-off': passwordTypeAgain === 'password' }"
-              @click="showPwd('passwordAgain')"
-            >
-              <img
-                :src="
-                  passwordTypeAgain === 'password'
-                    ? require('./../../../static/images/pc/eye-off.svg')
-                    : require('./../../../static/images/pc/eye.svg')
-                "
-                alt=""
-              />
-            </span>
-          </el-form-item>
-          <el-form-item prop="username">
-            <span class="svg-container">帐号 ID</span>
-            <el-input
-              ref="username"
-              v-model.trim="loginForm.username"
-              name="username"
-              type="text"
-              tabindex="1"
-              maxLength="18"
-              @input="
-                (v) =>
-                  (loginForm.username = v.replace(/^[\u4E00-\u9FA5]+$/, ''))
-              "
-              @blur="recover"
-            >
-            </el-input>
-          </el-form-item>
-          <span class="tip-text"
-            >ID 长度为5至18个字元，允许混用英文字母、数字和底线。</span
-          >
-          <el-form-item prop="nickname">
-            <span class="svg-container">昵称</span>
-            <el-input
-              ref="nickname"
-              v-model.trim="loginForm.nickname"
-              name="nickname"
-              type="text"
-              tabindex="1"
-              maxLength="18"
-            >
-            </el-input>
-          </el-form-item>
-          <el-form-item prop="authCode">
-            <span class="svg-container"> 验证码 </span>
-            <el-input
-              ref="authCode"
-              v-model.trim="loginForm.authCode"
-              name="authCode"
-              type="authCode"
-              tabindex="2"
-              maxLength="6"
-              @input="(v) => (loginForm.authCode = v.replace(/[^\d]/g, ''))"
-              @blur="recover"
-            >
-            </el-input>
-            <el-button
-              class="verification-style"
-              :style="
-                disabledTime ? 'border: 1px solid #b3b3b3;color: #b3b3b3;' : ''
-              "
-              plain
-              :disabled="disabledTime"
-              @click="getAuthCodeData(loginForm.phone, true)"
-              >获取驗證碼 <span v-if="timer">({{ count }})</span>
-            </el-button>
-          </el-form-item>        
-          <div class="register-footer">
-            <div>
-              <el-button
-                style="width: 100%; margin-bottom: 30px"
-                :class="disabled ? 'gray-btn' : 'orange-btn'"
-                :disabled="disabled"
-                @click="submitForm('loginForm')"
-                >注册</el-button
-              >
-            </div>
-            <div>
-              <router-link :to="'/Login'">
-                <el-button
-                  style="
-                    width: 100%;
-                    background-color: #67c23a00;
-                    border: 1px solid #fd5f3f;
-                    color: #fd5f3f;
-                  "
-                  >回到登录</el-button
-                >
-              </router-link>
-            </div>
-          </div>
-        </el-form>
-      </div>
-    </template>
-    <el-dialog
-      :title="device === 'pc' ? '会员注册' : ''"
-      :visible.sync="dialogShow"
-      class="el-dialog-loginOut"
-      :show-close="false"
-      :close-on-click-modal="false"
-      width="70%"
-      center
-    >
+      </el-form>
+    </div>
+    <el-dialog :title="device === 'pc' ? '会员注册' : ''" :visible.sync="dialogShow" class="el-dialog-loginOut"
+      :show-close="false" :close-on-click-modal="false" width="70%" center>
       <div class="loginOut-box">
-        <template v-if="device === 'moblie'">
+        <template v-if="device === 'mobile'">
           <div><img src="./../../../static/images/success.png" alt="" /></div>
           <span>注册完成，系统将自动登录</span>
         </template>
@@ -381,13 +122,8 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <router-link to="/Home">
-          <el-button
-            :class="
-              device === 'moblie' ? 'background-orange' : 'background-red'
-            "
-            @click="dialogShow = false"
-            >确认</el-button
-          >
+          <el-button :class="device === 'mobile' ? 'background-orange' : 'background-red'
+            " @click="dialogShow = false">确认</el-button>
         </router-link>
       </span>
     </el-dialog>
@@ -397,17 +133,20 @@
 <script>
 import { register, genAuthCode } from "@/api";
 import { Encrypt, Decrypt } from "@/utils/AESUtils.js";
-import * as phoneValidator from '@/utils/phoneValidator';
+import * as phoneValidator from "@/utils/phoneValidator";
 import { setToken } from "_util/utils.js";
-
+import country from "@/components/country.vue";
+import { filterCountry } from "@/utils/countryName";
 export default {
+  components: { country },
+
   data() {
     return {
       loginForm: {
         authCode: "",
         nickname: "",
         password: "",
-        passwordAganin: "",
+        passwordAgain: "",
         phone: "",
         username: "",
         version: 1,
@@ -415,33 +154,46 @@ export default {
         deviceId: localStorage.getItem("UUID"),
         deviceName: "",
         deviceType: 0,
+        country: "CN",
       },
+      country: {},
+      countryName: "",
       passwordType: "password",
       passwordTypeAgain: "password",
       count: 60,
       timer: false,
+      countryShow: false,
       disabledTime: false,
       disabled: true,
       dialogShow: false,
+      countryCodeShow: false,
       device: localStorage.getItem("device"),
 
       //加解密 key iv
       aesKey: "142c7ec1b64ae0c6",
       aesIv: "0000000000000000",
+      options: [
+        {
+          value: "CN",
+          label: "中国 (86)",
+        },
+      ],
+      value: "CN",
     };
   },
   watch: {
     loginForm: {
       handler(val) {
-        let newNum = []
-        Array.from(val.phone).forEach((num)=>{
-          if(!/^[\u4E00-\u9FA5_a-zA-Z/@~!#$%.^&*=<>:?"{}()]+$/.test(num)) newNum.push(num)
-        })
-        this.loginForm.phone = newNum.toString().replace(/,/g, "")
-        if (
-          Object.values(val).every((el) => el !== "") &&
+        let newNum = [];
+        Array.from(val.phone).forEach((num) => {
+          if (!/^[\u4E00-\u9FA5_a-zA-Z/@~!#$%.^&*=<>:?"{}()]+$/.test(num))
+            newNum.push(num);
+        });
+        this.loginForm.phone = newNum.toString().replace(/,/g, "");
+        const disabledForm = !!val.nickname && !!val.password && !!val.passwordAgain && !!val.phone && !!val.username && !!val.authCode
+        if (disabledForm &&
           val.password.toString().length >= 4 &&
-          val.passwordAganin.toString().length >= 4 &&
+          val.passwordAgain.toString().length >= 4 &&
           /^[A-Za-z0-9_\_]{5,}$/.test(val.username)
         ) {
           this.disabled = false;
@@ -453,9 +205,58 @@ export default {
     },
   },
   created() {
-    this.browserType()
+    this.browserType();
+    this.countryInitial();
+  },
+  beforeDestroy() {
+    document.removeEventListener("click", this.onClickEvent);
+  },
+  mounted() {
+    document.addEventListener("click", this.onClickEvent);
   },
   methods: {
+    showCountryModule() {
+      return (this.device === 'mobile' && this.countryCodeShow)
+    },
+    countryInitial() {
+      const countryCode = JSON.parse(localStorage.getItem("countryCode"));
+      if (!countryCode || countryCode.countryCode === "other") {
+        const cnCountry = {
+          countryCode: "86",
+          countryName: "中国",
+          regionCode: "CN",
+        };
+        this.countryName = cnCountry.countryName;
+        this.country = cnCountry;
+        localStorage.setItem("countryCode", JSON.stringify(cnCountry));
+      } else {
+        this.countryName = countryCode.countryName;
+        this.country = countryCode;
+      }
+    },
+    filterCountry(list) {
+      return filterCountry(list);
+    },
+    onClickEvent(event) {
+      const mobileClick =
+        this.device === "mobile" &&
+        event.target.className === "country-select__mobile";
+      const pcClick = this.device === "pc" &&
+        event.target.className === "hichat-pc";
+      if (mobileClick) {
+        this.countryCodeShow = false;
+      } else if (pcClick) {
+        this.countryShow = false
+      }
+    },
+    showCountryList() {
+      this.countryCodeShow = true;
+    },
+    changeCountry(item) {
+      this.country = item;
+      this.countryName = item.countryName;
+      this.countryCodeShow = false;
+    },
     browserType() {
       var userAgent = navigator.userAgent; //取得瀏覽器的userAgent字串
       var isOpera = userAgent.indexOf("Opera") > -1; //判斷是否Opera瀏覽器
@@ -482,20 +283,22 @@ export default {
       } else if (isChrome) {
         this.loginForm.deviceName = "Chrome";
       }
-    },    
-    recover(){
-		  let agentValue = navigator.userAgent;
+    },
+    recover() {
+      let agentValue = navigator.userAgent;
       // userAgent属性是一个只读的字符串，声明了浏览器用于 HTTP 请求的用户代理头的值，用于判断是Android设备还是IOS设备
-      let isIOS = !!agentValue.match( /\(i[^;]+;( U;)? CPU.+Mac OS X/ ); // 判断是否是ios终端
-      if( isIOS ) {
-          window.scrollTo( 0, 0 ); // 如果是ios终端，则在失焦的时候使页面返回顶部
+      let isIOS = !!agentValue.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); // 判断是否是ios终端
+      if (isIOS) {
+        window.scrollTo(0, 0); // 如果是ios终端，则在失焦的时候使页面返回顶部
       }
     },
     getAuthCodeData(phone, key) {
+      const countryCode = JSON.parse(localStorage.getItem("countryCode"));
+      const validatePhone = countryCode.regionCode === "CN" && !phoneValidator.isPhoneNumberValid(this.loginForm.phone, "CN")
       if (phone === "") {
         this.$message({ message: "手机号码尚未输入", type: "error" });
         return;
-      } else if(!phoneValidator.isPhoneNumberValid(phone, "CN")){
+      } else if (validatePhone) {
         this.$message({
           message: "請輸入正確手机号码格式!",
           type: "error",
@@ -503,10 +306,13 @@ export default {
         return;
       }
       this.disabledTime = true;
-      let params = { phoneNo: phone, forRegister: key };
+      let params = { phoneNo: phone, forRegister: key, country: countryCode.regionCode, };
       genAuthCode(params).then((res) => {
         if (res.code === 200) {
-          this.$message({ message: "请至注册手机号码确认验证码", type: "success" });
+          this.$message({
+            message: "请至注册手机号码确认验证码",
+            type: "success",
+          });
           this.timer = true;
           let time = null;
           time = setInterval(() => {
@@ -540,13 +346,16 @@ export default {
     },
     //登录&&註冊
     submitForm(rules) {
-      if (this.loginForm.password !== this.loginForm.passwordAganin) {
+      const countryCode = JSON.parse(localStorage.getItem("countryCode"));
+      const validatePhone = countryCode.regionCode === "CN" && !phoneValidator.isPhoneNumberValid(this.loginForm.phone, "CN")
+      this.loginForm.country = countryCode.regionCode
+      if (this.loginForm.password !== this.loginForm.passwordAgain) {
         this.$message({
           message: "两次输入密码不一致!",
           type: "error",
         });
         return;
-      } else if(!phoneValidator.isPhoneNumberValid(this.loginForm.phone, "CN")){
+      } else if (validatePhone) {
         this.$message({
           message: "請輸入正確手机号码格式!",
           type: "error",
@@ -562,8 +371,12 @@ export default {
           });
           return;
         }
-        delete this.loginForm.passwordAganin;
-        this.loginForm.password = Encrypt(this.loginForm.password,this.aesKey,this.aesIv)
+        delete this.loginForm.passwordAgain;
+        this.loginForm.password = Encrypt(
+          this.loginForm.password,
+          this.aesKey,
+          this.aesIv
+        );
         this.disabled = true;
         register(this.loginForm)
           .then((res) => {
@@ -572,9 +385,17 @@ export default {
               setToken(res.data.tokenHead + res.data.token);
               localStorage.setItem("phone", this.loginForm.phone);
               this.dialogShow = true;
-              this.loginForm.password = Decrypt(this.loginForm.password,this.aesKey,this.aesIv)
-            }else{
-              this.loginForm.password = Decrypt(this.loginForm.password,this.aesKey,this.aesIv)
+              this.loginForm.password = Decrypt(
+                this.loginForm.password,
+                this.aesKey,
+                this.aesIv
+              );
+            } else {
+              this.loginForm.password = Decrypt(
+                this.loginForm.password,
+                this.aesKey,
+                this.aesIv
+              );
             }
           })
           .catch((err) => {
@@ -593,15 +414,17 @@ export default {
 <style lang="scss" scoped>
 //H5 PC 共同樣式
 .register-container-pc,
-.register-container-moblie {
+.register-container-mobile {
   width: 100%;
   height: 100%;
   background-color: #eaf5fa;
   overflow: hidden;
+
   .register-header {
     margin: 1em;
     display: flex;
     align-items: center;
+
     .register-back {
       width: 2em;
       height: 2em;
@@ -612,6 +435,7 @@ export default {
       background-position: center;
       background-repeat: no-repeat;
     }
+
     .register-header-title {
       margin: 0 auto;
       position: relative;
@@ -619,6 +443,7 @@ export default {
       color: #10686e;
     }
   }
+
   .register-content {
     .tip-text {
       font-size: 12px;
@@ -626,6 +451,7 @@ export default {
       position: relative;
       top: -10px;
     }
+
     .login-form {
       position: relative;
       height: 80vh;
@@ -633,20 +459,40 @@ export default {
       padding: 0.5em 0;
       margin: 1em;
       overflow: hidden;
+
       .el-form-item {
         background: #ffffff;
         border-radius: 10px;
         color: #454545;
         margin-bottom: 20px;
+
         .el-input {
           display: inline-block;
           height: 47px;
-          width: 85%;
-          /deep/.el-input__inner {
+          width: 65%;
+
+          ::v-deep.el-input__inner {
             border: 0 !important;
           }
         }
+
+        ::v-deep.el-select {
+          width: 115px;
+
+          .el-input {
+            display: inline-block;
+            height: 47px;
+            width: 100%;
+
+            .el-input__inner {
+              vertical-align: middle;
+              background-color: #ffffff !important;
+              border: none;
+            }
+          }
+        }
       }
+
       .verification-style {
         border-radius: 5px !important;
         padding: 8px 10px;
@@ -659,51 +505,62 @@ export default {
         color: #fd5f3f;
         border-radius: 5px;
       }
+
       .gray-btn {
         background-color: #b3b3b3;
         color: #fff;
       }
+
       .orange-btn {
         background-color: #fe5f3f;
         color: #fff;
       }
     }
+
     .show-pwd {
       height: 2.1em;
       line-height: 2.1em;
       position: absolute;
       top: 1em;
       right: 1em;
+
       img {
         height: 1.2em;
       }
     }
+
     .svg-container {
       padding: 6px 0 6px 15px;
       vertical-align: middle;
-      width: 20px;
-      font-size: 22px;
+      font-size: 14px;
+      width: 60px;
       display: inline-block;
+
       img {
         height: 17px;
       }
     }
+
     .register-footer {
       position: relative;
       top: 2em;
     }
   }
+
   .read-check-box {
     margin-bottom: 1em;
-    /deep/.el-checkbox__input.is-checked + .el-checkbox__label {
+
+    ::v-deep.el-checkbox__input.is-checked+.el-checkbox__label {
       color: rgba(0, 0, 0, 0.8);
     }
-    /deep/.el-checkbox {
+
+    ::v-deep.el-checkbox {
       .el-checkbox__input {
         .el-checkbox__inner {
           width: 20px;
           height: 20px;
           border-radius: 50%;
+
           &:after {
             border: 2px solid #ffffff;
             border-left: 0;
@@ -722,8 +579,10 @@ export default {
       }
     }
   }
-  /deep/.el-dialog-loginOut {
+
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
+
     .el-dialog {
       position: relative;
       margin: 0 auto 50px;
@@ -731,12 +590,15 @@ export default {
       border-radius: 10px;
       box-sizing: border-box;
       width: 50%;
+
       .el-dialog__header {
         padding: 10px;
       }
+
       .el-dialog__body {
         text-align: center;
         padding: 25px 25px 15px;
+
         .loginOut-box {
           img {
             height: 5em;
@@ -744,29 +606,36 @@ export default {
           }
         }
       }
+
       .el-dialog__footer {
         padding: 20px;
         padding-top: 10px;
         text-align: right;
         box-sizing: border-box;
+
         .dialog-footer {
           display: flex;
           justify-content: space-between;
+
           a {
             width: 100vw;
           }
+
           .el-button {
             width: 100%;
             border-radius: 8px;
           }
+
           .background-red {
             background-color: #ee5253;
             color: #fff;
           }
+
           .background-orange {
             background-color: #fe5f3f;
             color: #fff;
           }
+
           .border-red {
             border: 1px solid #fe5f3f;
             color: #fe5f3f;
@@ -782,61 +651,84 @@ export default {
   width: 370px;
   margin: 3em auto;
   overflow: initial;
+
   .register-header {
     justify-content: center;
+
     .register-header-title {
       left: 0;
       color: #474747;
       margin: 20px 0;
       font-size: 20px;
     }
+
     .title-container {
       display: flex;
       align-items: center;
       flex-direction: column;
+
       img {
         height: 5em;
       }
     }
   }
+
   .register-content {
     .svg-container {
       font-size: 14px;
       width: 60px;
     }
+
     .login-form {
+      margin: 1em 0;
+
       .el-form-item {
-        .el-input {
-          width: 60%;
-          /deep/.el-input__inner {
-            vertical-align: middle;
-            background-color: #ffffff !important;
+        ::v-deep.el-select {
+          width: 115px;
+
+          .el-input {
+            display: inline-block;
+            height: 47px;
+            width: 100%;
+
+            .el-input__inner {
+              vertical-align: middle;
+              background-color: #ffffff !important;
+              border: none;
+            }
           }
         }
       }
     }
+
     .register-footer {
       top: 0;
     }
+
     .show-pwd {
       cursor: pointer;
+
       img {
         height: 1.5em;
       }
     }
+
     .eye-off {
       img {
         height: 1.5em;
       }
     }
   }
+
   .verification-style {
     font-size: 14px !important;
     border: 0 !important;
     right: 0.5em;
   }
-  /deep/.el-dialog-loginOut {
+
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
+
     .el-dialog {
       .el-dialog__footer {
         padding: 0 !important;
@@ -844,6 +736,7 @@ export default {
     }
   }
 }
+
 .-webkit-input-placeholder {
   background-color: #ffffff;
 }

@@ -2,7 +2,7 @@
   <div class="home-wrapper" @touchmove="$root.handleTouch">
     <el-container>
       <el-main>
-        <template v-if="device === 'moblie'">
+        <template v-if="device === 'mobile'">
           <el-header height="125px">
             <div class="home-header">
               <template v-if="!editBtnShow">
@@ -24,12 +24,18 @@
                   !editBtnShow ? contactList.length : checkDataList.length
                 }})
               </span>
-              <template v-if="(groupData.isAdmin || groupData.isManager) && !editBtnShow">
+              <template
+                v-if="
+                  (groupData.isAdmin || groupData.isManager) && !editBtnShow
+                "
+              >
                 <router-link
                   v-if="groupData.isAdmin || authority.addUser"
                   :to="'GroupAddPeople'"
                   style="position: absolute; right: 50px"
-                  :style="!groupData.isAdmin && !authority.delUser ? 'right: 5px' : ''"
+                  :style="
+                    !groupData.isAdmin && !authority.delUser ? 'right: 5px' : ''
+                  "
                 >
                   <div class="home-add-user"></div>
                 </router-link>
@@ -75,11 +81,20 @@
                 }})
               </span>
 
-              <template v-if="(groupData.isAdmin || groupData.isManager) && !editBtnShow">
+              <template
+                v-if="
+                  (groupData.isAdmin || groupData.isManager) && !editBtnShow
+                "
+              >
                 <div
+                  v-if="groupData.isAdmin || authority.addUser"
                   class="home-add-user"
                   @click="addGroupPeople"
-                  style="position: absolute; right: 50px"
+                  :style="
+                    groupData.isAdmin || authority.delUser
+                      ? 'position: absolute; right: 50px'
+                      : 'position: absolute; right: 0px'
+                  "
                 ></div>
                 <div
                   v-if="groupData.isAdmin || authority.delUser"
@@ -112,36 +127,43 @@
                     :key="index"
                     @click="goContactPage(item)"
                   >
-                    <el-image :src="item.icon" />
-                    <div class="contont-box">
+                    <div
+                      :class="{ 'service-icon': item.isCustomerService }"
+                    ></div>
+                    <el-image :src="groupIconShow(item)" />
+                    <div class="content-box">
                       <div class="msg-box">
-                        <div :class="{'noOnline-tip':onlineMsg(item) === ''}">
+                        <div
+                          :class="{ 'noOnline-tip': onlineMsg(item) === '' }"
+                        >
                           <span style="margin-bottom: 3px"
-                            >{{ item.name }}
-                            <span
-                    
-                              style="
-                                color: #fe5f3f;
-                                padding-left: 0.5em;
-                                display: inline-block;
-                                margin-bottom: 0;
-                              "
-                              >{{item.isAdmin ? '♔ 群主' : item.isManager ? '★ 管理员':  ''}}</span
-                            >
+                            >{{ groupName(item) }}
                           </span>
                           <span
+                            v-if="!onlineMsg(item)"
                             class="content-text"
                             :class="
                               onlineMsg(item) === '在线'
                                 ? 'green-text'
                                 : 'gray-text'
                             "
-                            v-if="onlineMsg(item) !== ''"
                             >{{ onlineMsg(item) }}</span
                           >
                         </div>
                       </div>
-                      <div class="contont-border-bottom"></div>
+                      <div class="admin-manager-icon">
+                        <span v-if="item.isAdmin">
+                          <img
+                            src="./../../../static/images/phone_icon/crown.png"
+                            alt=""
+                        /></span>
+                        <span v-if="item.isManager">
+                          <img
+                            src="./../../../static/images/phone_icon/star.png"
+                            alt=""
+                        /></span>
+                      </div>
+                      <div class="content-border-bottom"></div>
                     </div>
                   </div>
                 </span>
@@ -158,10 +180,29 @@
                 :key="index"
               >
                 <div class="address-box">
-                  <el-image :src="item.icon" />
-                  <div class="contont-box group">
-                    <span>{{ item.name }}</span>
-                    <div class="contont-border-bottom"></div>
+                  <div
+                    :class="{ 'service-icon': item.isCustomerService }"
+                  ></div>
+                  <el-image :src="groupIconShow(item)" />
+                  <div class="content-box">
+                    <div class="msg-box">
+                      <div :class="{ 'noOnline-tip': onlineMsg(item) === '' }">
+                        <span style="margin-bottom: 10px"
+                          >{{ groupName(item) }}
+                        </span>
+                        <span
+                          class="content-text"
+                          :class="
+                            onlineMsg(item) === '在线'
+                              ? 'green-text'
+                              : 'gray-text'
+                          "
+                          v-if="!onlineMsg(item)"
+                          >{{ onlineMsg(item) }}</span
+                        >
+                      </div>
+                    </div>
+                    <div class="content-border-bottom"></div>
                   </div>
                 </div>
               </el-checkbox>
@@ -179,23 +220,23 @@
       </el-main>
     </el-container>
     <el-dialog
-      :title="device === 'pc' ? '編輯成員' : ''"
+      :title="device === 'pc' ? '編輯成员' : ''"
       :visible.sync="leaveUserDialogShow"
-      class="el-dialog-loginOut"
+      class="el-dialog-loginOut el-edit"
       width="70%"
       :show-close="false"
       :close-on-click-modal="false"
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
-          <img src="./../../../static/images/warn.svg" alt="" />
+        <div v-if="device === 'mobile'">
+          <img src="./../../../static/images/warn.png" alt="" />
         </div>
         <span>确认是否将所选的成员退出群组？</span>
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button
-          :class="device === 'moblie' ? 'border-red' : 'background-gray'"
+          :class="device === 'mobile' ? 'border-red' : 'background-gray'"
           @click="leaveUserDialogShow = false"
           >取消</el-button
         >
@@ -228,9 +269,13 @@
 <script>
 import Socket from "@/utils/socket";
 import { getMemberActivity } from "@/api/memberProfileController";
-import { listMember,getGroupAuthoritySetting, removeMember } from '@/api/groupController'
+import {
+  listMember,
+  getGroupAuthoritySetting,
+  removeMember,
+} from "@/api/groupController";
 import { mapState, mapMutations } from "vuex";
-
+import { groupIcon } from "@/utils/icon";
 export default {
   name: "GroupPeople",
   data() {
@@ -238,8 +283,10 @@ export default {
       authority: {},
       groupData: {},
       checkList: [],
+      authorityData: {},
       contactList: [],
       newContactList: [],
+
       checkDataList: [],
       newCheckDataList: [],
       searchKey: "",
@@ -251,14 +298,15 @@ export default {
     };
   },
   created() {
-    this.groupData = JSON.stringify(this.groupUser) === '{}' ? JSON.parse(localStorage.getItem("groupData")) :this.groupUser;
+    this.groupData = this.groupUser
     this.memberTime = setInterval(() => {
-      this.getUserMemberActivity(this.newContactList)
+      this.getUserMemberActivity(this.newContactList);
     }, 30000);
     Socket.$on("message", this.handleGetMessage);
   },
   beforeDestroy() {
-    clearInterval(this.memberTime)
+    Socket.$off("message", this.handleGetMessage);
+    clearInterval(this.memberTime);
   },
   mounted() {
     this.getGroupListMember();
@@ -270,21 +318,16 @@ export default {
     },
     searchKey(val) {
       let searchKeyData = val.split(" ");
+      searchKeyData.forEach((el) => {
+        const searchCase = !this.editBtnShow ? this.contactList : this.checkDataList
+        this.searchData = searchCase.filter((item) => {
+          const nameItem =  !this.editBtnShow ? this.groupName(item) : this.groupName(item).name
+          return nameItem.indexOf(el.replace("@", "")) !== -1;
+        });
+      });
       if (!this.editBtnShow) {
-        searchKeyData.forEach((el) => {
-          let searchCase = this.contactList;
-          this.searchData = searchCase.filter((item) => {
-            return item.name.indexOf(el.replace("@", "")) !== -1;
-          });
-        });
-        this.newContactList = this.searchData;
-      } else {
-        searchKeyData.forEach((el) => {
-          let searchCase = this.checkDataList;
-          this.searchData = searchCase.filter((item) => {
-            return item.name.indexOf(el.replace("@", "")) !== -1;
-          });
-        });
+        this.newContactList = this.searchData
+      }else{
         this.newCheckDataList = this.searchData;
       }
     },
@@ -293,7 +336,9 @@ export default {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
       infoMsg: (state) => state.ws.infoMsg,
+      myUserInfo: (state) => state.ws.myUserInfo,
       myContactDataList: (state) => state.ws.myContactDataList,
+      authorityGroupData: (state) => state.ws.authorityGroupData,
     }),
   },
   methods: {
@@ -301,9 +346,36 @@ export default {
       setInfoMsg: "ws/setInfoMsg",
       setChatUser: "ws/setChatUser",
       setMsgInfoPage: "ws/setMsgInfoPage",
-      setGroupUserCheck:"ws/setGroupUserCheck",
+      setGroupUserCheck: "ws/setGroupUserCheck",
       setContactListData: "ws/setContactListData",
+      setAuthorityGroupData: "ws/setAuthorityGroupData",
     }),
+    groupIconShow(data) {
+      let groupUser = this.groupUser;
+      let authority = this.authority;
+      let authorityGroupData = this.authorityGroupData;
+      return groupIcon(data, { groupUser, authority, authorityGroupData });
+    },
+    groupName(el) {
+      let name = "";
+      if (!el.groupNickname) {
+        name = !el.groupNumber ? el.name : el.groupNumber;
+      } else if (el.groupNickname) {
+        name = el.groupNickname;
+      }
+      let showGroupNumber = this.authorityGroupData.showGroupNumber;
+      let editGroupNickname = this.authorityGroupData.editGroupNickname;
+      if (showGroupNumber && editGroupNickname) {
+        return name;
+      } else if (showGroupNumber && !editGroupNickname) {
+        return el.groupNumber;
+      } else if (!showGroupNumber && !editGroupNickname) {
+        const num = this.device === "mobile" ? 30 : 10;
+        return el.name.length > 30
+        ? el.name.slice(0, num) + "..."
+        : el.name;
+      }
+    },
     // 收取 socket 回来讯息 (全局讯息)
     handleGetMessage(msg) {
       let userInfo = JSON.parse(msg);
@@ -313,9 +385,9 @@ export default {
         case "SRV_GROUP_ADD_MANAGER_HISTORY":
         case "SRV_GROUP_REMOVE_MANAGER_HISTORY":
         case "SRV_GROUP_CHANGE_ADMIN_HISTORY":
-          this.getGroupListMember();
-          break
-        //變更權限          
+          // this.getGroupListMember();
+          break;
+        //變更權限
         case "SRV_GROUP_AUTHORITY":
           this.getGroupAuthority();
           break;
@@ -323,7 +395,6 @@ export default {
         case "SRV_GROUP_ADMIN_CHANGE":
         case "SRV_GROUP_BAN_POST":
           this.getGroupListMember();
-  
       }
     },
     getGroupListMember() {
@@ -331,10 +402,13 @@ export default {
       listMember({ groupId }).then((res) => {
         this.contactList = res.data.list;
         this.contactList.forEach((item) => {
+          item.groupNumber = "成员" + item.groupNumber;
           if (item.memberId === this.groupData.memberId) {
             this.groupData.isAdmin = item.isAdmin;
             this.groupData.isBanPost = item.isBanPost;
             this.groupData.isManager = item.isManager;
+            this.groupData.groupNickname = item.groupNickname;
+            this.groupData.groupNumber = item.groupNumber;
             if (item.memberId === Number(localStorage.getItem("id"))) {
               if (item.isAdmin) {
                 localStorage.removeItem("authority");
@@ -345,18 +419,24 @@ export default {
               }
             }
           }
-          if (item.icon === undefined) {
+          if (!item.icon) {
             item.icon = require("./../../../static/images/image_user_defult.png");
           }
         });
         this.setContactListData(this.contactList);
+        if (this.groupData.isAdmin) {
+          this.checkDataList = this.contactList.filter(
+            (el) => el.memberId !== this.groupData.memberId
+          );
+        } else {
+          this.checkDataList = this.contactList.filter(
+            (el) =>
+              el.memberId !== this.groupData.memberId &&
+              !el.isAdmin &&
+              !el.isManager
+          );
+        }
 
-        this.checkDataList = this.contactList.filter(
-          (el) =>
-            el.memberId !== this.groupData.memberId &&
-            !el.isAdmin &&
-            !el.isManager
-        );
         this.newCheckDataList = this.checkDataList;
         this.getUserMemberActivity(this.contactList);
       });
@@ -368,7 +448,7 @@ export default {
       });
       getMemberActivity({ memberId }).then((res) => {
         if (res.code === 200) {
-          this.newContactList = []
+          this.newContactList = [];
           this.userTimeData = res.data;
           this.contactList.forEach((list) => {
             this.userTimeData.forEach((data) => {
@@ -378,7 +458,7 @@ export default {
               }
             });
           });
-          this.newContactList = this.contactList
+          this.newContactList = this.contactList;
         }
       });
     },
@@ -392,15 +472,17 @@ export default {
         if (diffInMills / 1000 < 300) {
           return "在线";
         } else {
-          return "上次上线于" + this.$root.formatTimeS(data.lastActivityTime);
+          return "上次上线于" + this.$root.formatTimeS(lastTime);
         }
       }
-    },    
+    },
     getGroupAuthority() {
       let groupId = this.groupData.groupId;
       getGroupAuthoritySetting({ groupId }).then((res) => {
         if (res.code === 200) {
-          this.checkGroupPeople = res.data.checkUserInfo;
+          this.authorityData = res.data
+          this.checkUserInfo = res.data.checkUserInfo;
+          this.setAuthorityGroupData(this.authorityData);
         }
       });
     },
@@ -418,7 +500,9 @@ export default {
             this.editBtnShow = false;
             this.successDialogShow = false;
             this.leaveUserDialogShow = false;
-            this.getGroupListMember();
+            setTimeout(() => {
+              this.getGroupListMember();
+            }, 600);
           }
         })
         .catch((err) => {
@@ -426,7 +510,7 @@ export default {
         });
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         if (this.infoMsg.infoMsgMap === "address") {
@@ -438,103 +522,86 @@ export default {
           });
           this.setMsgInfoPage({ pageShow: true, type: "" });
         } else {
-          this.setInfoMsg({ infoMsgShow: true, infoMsgChat: true, infoMsgNav: "GroupPage", });
+          this.setInfoMsg({
+            infoMsgShow: true,
+            infoMsgNav: "GroupPage",
+            infoMsgChat: true,
+          });
           this.setMsgInfoPage({ pageShow: true });
         }
       }
     },
     goInfoMsgContactPage(data) {
-      // if (data.memberId === JSON.parse(localStorage.getItem("id"))) {
-      //   // this.$message({ message: "此即为您的帐号", type: "warning" });
-      //   data.contactId = data.toChatId.replace("u", "");
-      //   data.memberId = data.toChatId.replace("u", "");
-        
-      // } else {
-        data.toChatId = "u" + data.memberId;
-        if (this.device === "moblie") {
-          if (data.memberId === JSON.parse(localStorage.getItem("id"))){
-            data.contactId = data.toChatId.replace("u", "");
-            data.memberId = data.toChatId.replace("u", "");
-            data.isContact = true
-            data.name = "嗨聊记事本"
-            data.icon = require("./../../../static/images/image_savemessage.png");
-            this.$router.push({ name: "ChatMsg" });
-          }else{
-            this.$router.push({ name: "ContactPage" });
-          }
-          this.setChatUser(data);
-          
+      data.toChatId = "u" + data.memberId;
+      if (this.device === "mobile") {
+        if (data.memberId === JSON.parse(localStorage.getItem("id"))) {
+          data.contactId = data.toChatId.replace("u", "");
+          data.memberId = data.toChatId.replace("u", "");
+          data.isContact = true;
+          data.name = "嗨聊记事本";
+          data.icon = require("./../../../static/images/image_savemessage.png");
+          this.$router.push({ name: "ChatMsg" });
         } else {
-          this.isContact = this.contactList.filter((el)=>{
-            return "u"+ el.memberId === data.toChatId
-          })
-          if(this.isContact[0].length !== 0 ){
-            this.isContact[0].isContact = true
-          } else{
-            data.isContact = false
-            this.isContact[0] = data
-          }
-          if (data.memberId === JSON.parse(localStorage.getItem("id"))){
-            this.isContact[0].name = "嗨聊记事本"
-            this.isContact[0].icon = require("./../../../static/images/image_savemessage.png");
-          }
-          this.isContact[0].toChatId = "u" + data.memberId;
-          this.setInfoMsg({
-            infoMsgShow: true,
-            infoMsgChat: true,
-            infoMsgNav: "ContactPage",
-            infoMsgMap: "GroupPeople",
-          });
-          this.setMsgInfoPage({
-            pageShow: true,
-            type: "ContactPage",
-            page: "GroupPeople",
-          });
-          this.setGroupUserCheck(this.isContact[0])
+          this.$router.push({ name: "ContactPage" });
         }
-        // 
-      // }
+        this.setChatUser(data);
+      } else {
+        this.isContact = this.myContactDataList.filter((el) => {
+          return "u" + el.contactId === data.toChatId;
+        });
+
+        if (this.isContact.length !== 0) {
+          this.isContact[0].isContact = true;
+        } else {
+          data.isContact = false;
+          this.isContact[0] = data;
+        }
+        if (data.memberId === JSON.parse(localStorage.getItem("id"))) {
+          this.isContact[0].name = "嗨聊记事本";
+          this.isContact[0].icon = require("./../../../static/images/image_savemessage.png");
+        }
+        this.isContact[0].toChatId = "u" + data.memberId;
+        this.setInfoMsg({
+          infoMsgShow: true,
+          infoMsgChat: true,
+          infoMsgNav: "ContactPage",
+          infoMsgMap: "GroupPeople",
+        });
+        this.setMsgInfoPage({
+          pageShow: true,
+          type: "ContactPage",
+          page: "GroupPeople",
+        });
+        this.setGroupUserCheck(this.isContact[0]);
+      }
     },
     goContactPage(data) {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.setInfoMsg({ infoMsgMap: "GroupPeople" });
       }
-      if (!this.checkGroupPeople) {
-        if (this.groupData.isAdmin) {
-          this.goInfoMsgContactPage(data);
-        } else if (
-          this.groupData.isManager &&
-          !JSON.parse(localStorage.getItem("authority")).checkUserInfo
-        ) {
-          if (data.isAdmin || data.isManager) {
-            this.goInfoMsgContactPage(data);
-          }
-        } else if (
-          this.groupData.isManager &&
-          JSON.parse(localStorage.getItem("authority")).checkUserInfo
+      let isAdmin = this.groupData.isAdmin;
+      let isManager = this.groupData.isManager;
+      let authority = JSON.parse(localStorage.getItem("authority"));
+
+      if (!this.checkUserInfo) {
+        if (
+          isAdmin ||
+          (isManager &&
+            (authority.checkUserInfo ||
+              (!authority.checkUserInfo && (data.isAdmin || data.isManager))))
         ) {
           this.goInfoMsgContactPage(data);
-        } else if (!this.groupData.isAdmin && !this.groupData.isManager) {
-          if (data.isAdmin || data.isManager) {
+        } else if (!isAdmin && !isManager) {
+          if (
+            data.isAdmin ||
+            data.isManager ||
+            data.memberId === this.myUserInfo.id
+          ) {
             this.goInfoMsgContactPage(data);
           }
         }
       } else {
-        if (this.groupData.isAdmin) {
-          this.goInfoMsgContactPage(data);
-        } else if (
-          this.groupData.isManager &&
-          JSON.parse(localStorage.getItem("authority")).checkUserInfo
-        ) {
-          this.goInfoMsgContactPage(data);
-        } else if (
-          this.groupData.isManager &&
-          !JSON.parse(localStorage.getItem("authority")).checkUserInfo
-        ) {
-          this.goInfoMsgContactPage(data);
-        } else if (!this.groupData.isAdmin && !this.groupData.isManager) {
-          this.goInfoMsgContactPage(data);
-        }
+        this.goInfoMsgContactPage(data);
       }
     },
   },
@@ -571,7 +638,7 @@ export default {
       right: 14px;
       color: #fe5f3f;
       font-weight: 550;
-      font-size: 17px;
+      font-size: 16px;
     }
   }
   .home-search {
@@ -580,7 +647,7 @@ export default {
     top: 3em;
     background-color: #eaf5fa;
     z-index: 9;
-    /deep/.el-input {
+    ::v-deep.el-input {
       .el-input__inner {
         background-color: #e9e8e8;
         color: #666666;
@@ -599,7 +666,7 @@ export default {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -618,7 +685,7 @@ export default {
     }
   }
 
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -679,13 +746,13 @@ export default {
           .home-user {
             background-size: 75%;
             background-color: #fff;
-            background-image: url("./../../../static/images/pc/arrow-left.svg");
+            background-image: url("./../../../static/images/pc/arrow-left.png");
             cursor: pointer;
           }
           .home-add-user {
             background-size: 70%;
             background-color: #fff;
-            background-image: url("./../../../static/images/pc/add.svg");
+            background-image: url("./../../../static/images/pc/add.png");
             cursor: pointer;
           }
           .home-header-title {
@@ -694,7 +761,7 @@ export default {
           .home-user-edit {
             background-size: 70%;
             background-color: #fff;
-            background-image: url("./../../../static/images/pc/edit_info.svg");
+            background-image: url("./../../../static/images/pc/edit_info.png");
             cursor: pointer;
           }
         }
@@ -705,7 +772,7 @@ export default {
           margin: 1em;
           .el-input {
             width: 95%;
-            /deep/.el-input__inner {
+            ::v-deep.el-input__inner {
               background-color: #e9e8e8;
               color: #666666;
             }
@@ -715,18 +782,8 @@ export default {
           .el-checkbox-group {
             .el-checkbox {
               width: 100%;
-              /deep/.el-checkbox__label {
-                font-size: 17px;
-                .address-box {
-                  .msg-box {
-                    span {
-                      &::after {
-                        content: "";
-                        margin-top: 0.95em;
-                      }
-                    }
-                  }
-                }
+              ::v-deep.el-checkbox__label {
+                font-size: 16px;
               }
             }
           }
@@ -739,10 +796,10 @@ export default {
       }
     }
     .el-dialog-loginOut {
-      /deep/.el-dialog {
-        .el-dialog__header{
-          padding:0;
-          border-bottom:0;
+      ::v-deep.el-dialog {
+        .el-dialog__header {
+          padding: 0;
+          border-bottom: 0;
         }
         .el-dialog__footer {
           padding: 0;
@@ -754,6 +811,24 @@ export default {
         }
       }
     }
+    .el-edit {
+      ::v-deep.el-dialog {
+        .el-dialog__header {
+          padding: 10px;
+          border-bottom: 1px solid #efefef;
+        }
+      }
+    }
+  }
+}
+.admin-manager-icon {
+  color: rgb(254, 95, 63);
+  margin-bottom: 0px;
+  position: absolute;
+  right: 15px;
+  margin-top: -38px;
+  img{
+    height: 20px;
   }
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper" @touchmove="$root.handleTouch">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="60px">
           <div class="home-header">
@@ -14,7 +14,7 @@
             <span
               ><el-image
                 :src="
-                  groupIcon === ''
+                  !groupIcon
                     ? require('./../../../static/images/image_group_defult.png')
                     : groupIcon
                 "
@@ -43,9 +43,16 @@
                 v-for="(item, index) in checkList"
                 :key="index"
               >
-                <el-image :src="item.icon" />
-                <div class="msg-box">
-                  <span>{{ item.name }}</span>
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image
+                  :src="noIconShow(item, 'user')"
+                  :preview-src-list="[noIconShow(item, 'user')]"
+                />
+                <div class="content-box">
+                  <div class="msg-box" style="align-items: center">
+                    <span>{{ item.name }}</span>
+                  </div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </span>
@@ -64,9 +71,9 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="320px">
         <el-header height="70px">
-          <div class="home-header flex-start" >
+          <div class="home-header flex-start">
             <div class="home-user-pc" @click="back()"></div>
             <span class="home-header-title">创建群组</span>
           </div>
@@ -76,7 +83,7 @@
             <span
               ><el-image
                 :src="
-                  groupIcon === ''
+                  !groupIcon
                     ? require('./../../../static/images/image_group_defult.png')
                     : groupIcon
                 "
@@ -105,9 +112,16 @@
                 v-for="(item, index) in checkList"
                 :key="index"
               >
-                <el-image :src="item.icon" />
-                <div class="msg-box">
-                  <span>{{ item.name }}</span>
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image
+                  :src="noIconShow(item, 'user')"
+                  :preview-src-list="[noIconShow(item, 'user')]"
+                />
+                <div class="content-box">
+                  <div class="msg-box" style="align-items: center">
+                    <span>{{ item.name }}</span>
+                  </div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </span>
@@ -124,7 +138,7 @@
           <!-- @click="editSubmit" -->
         </div>
       </el-aside>
-    </el-container>    
+    </el-container>
     <el-dialog
       title="上傳群组照片"
       :visible.sync="uploadImgShow"
@@ -142,20 +156,19 @@
         list-type="picture"
       >
         <el-button type="primary">点击上传</el-button>
-        <!-- <div slot="tip" class="el-upload__tip">
-          只能上传 jpg / png 圖片，且不超过500kb
-        </div> -->
       </el-upload>
       <span slot="footer" class="dialog-footer">
-        <template v-if="device === 'moblie'">
-          <el-button type="success" @click="submitAvatarUpload">确认</el-button>
+        <template v-if="device === 'mobile'">
+          <el-button type="success" @click="submitAvatarUpload()"
+            >确认</el-button
+          >
           <el-button @click="uploadImgShow = false">取 消</el-button>
         </template>
         <template v-else>
           <el-button class="background-gray" @click="uploadImgShow = false"
             >取消</el-button
           >
-          <el-button class="background-orange" @click="submitAvatarUpload"
+          <el-button class="background-orange" @click="submitAvatarUpload()"
             >确认</el-button
           >
         </template>
@@ -165,8 +178,9 @@
 </template>
 
 <script>
-import { mapState,mapMutations } from "vuex";
-import { uploadGroupIcon } from '@/api/uploadController'
+import { mapState, mapMutations } from "vuex";
+import { uploadGroupIcon } from "@/api/uploadController";
+import { showIcon } from "@/utils/icon";
 
 export default {
   name: "AddGroupList",
@@ -188,8 +202,8 @@ export default {
   },
   created() {
     this.checkList = this.groupPermissionData.peopleData;
-    this.groupForm.name = this.groupPermissionData.groupName
-    this.groupIcon = this.groupPermissionData.icon
+    this.groupForm.name = this.groupPermissionData.groupName;
+    this.groupIcon = this.groupPermissionData.icon;
   },
   watch: {
     checkList(val) {
@@ -206,13 +220,16 @@ export default {
     ...mapState({
       groupPermissionData: (state) => state.ws.groupPermissionData,
     }),
-  },  
+  },
   methods: {
     ...mapMutations({
       setChatUser: "ws/setChatUser",
       setChatGroup: "ws/setChatGroup",
-      setGroupPermissionData:"ws/setGroupPermissionData",
+      setGroupPermissionData: "ws/setGroupPermissionData",
     }),
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
+    },
     createGroup() {
       if (this.checkList.length > 0) this.groupEditShow = false;
     },
@@ -227,34 +244,34 @@ export default {
           this.fileList = [];
           this.uploadImgShow = false;
           this.groupIcon = res.data;
-          this.groupPermissionData.icon = res.data
+          this.groupPermissionData.icon = res.data;
         }
       });
     },
-    settingGroup(){
-      this.groupPermissionData.groupName = this.groupForm.name
-      this.groupPermissionData.icon = this.groupIcon
-      this.groupPermissionData.peopleData.forEach(el => {
-        this.groupPermissionData.memberList.push(el.contactId)
+    settingGroup() {
+      this.groupPermissionData.groupName = this.groupForm.name;
+      this.groupPermissionData.icon = this.groupIcon;
+      this.groupPermissionData.peopleData.forEach((el) => {
+        this.groupPermissionData.memberList.push(el.contactId);
       });
-      let uniqueArr = [...new Set(this.groupPermissionData.memberList)]
-      this.groupPermissionData.memberList = uniqueArr
-      this.groupPermissionData.addGroup = true
+      let uniqueArr = [...new Set(this.groupPermissionData.memberList)];
+      this.groupPermissionData.memberList = uniqueArr;
+      this.groupPermissionData.addGroup = true;
       let groupList = {
-        groupName:this.groupForm.name,
-        icon:this.groupIcon,
-        isAdmin:true,
-      }
-      localStorage.setItem("addGroupData",JSON.stringify(groupList))
-      this.setGroupPermissionData(this.groupPermissionData)
-      this.$router.push({ path: '/SettingGroup'})
+        groupName: this.groupForm.name,
+        icon: this.groupIcon,
+        isAdmin: true,
+      };
+      localStorage.setItem("addGroupData", JSON.stringify(groupList));
+      this.setGroupPermissionData(this.groupPermissionData);
+      this.$router.push({ path: "/SettingGroup" });
     },
     back() {
-      this.groupPermissionData.groupName = ""
-      this.groupPermissionData.icon =""
-      this.setGroupPermissionData(this.groupPermissionData)
-      localStorage.removeItem("addGroupData")
-      this.$router.push({ path: "/AddGroup",});
+      this.groupPermissionData.groupName = "";
+      this.groupPermissionData.icon = "";
+      this.setGroupPermissionData(this.groupPermissionData);
+      localStorage.removeItem("addGroupData");
+      this.$router.push({ path: "/AddGroup" });
     },
   },
 };
@@ -269,12 +286,12 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
   }
   .home-content {
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -290,22 +307,6 @@ export default {
         width: 100%;
         padding-left: 0;
         .address-box {
-          .msg-box {
-            span {
-              display: block;
-              padding-left: 1em;
-              font-size: 16px;
-              color: #666666;
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                margin-top: 0.65em;
-                width: 100%;
-                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
-              }
-            }
-          }
           .checkBox {
             position: absolute;
             right: 1.5em;
@@ -319,11 +320,11 @@ export default {
     margin: 1em;
     background-color: #fff;
     border-radius: 10px;
-    /deep/.el-form {
+    ::v-deep.el-form {
       .el-form-item {
         margin-bottom: 0px;
         .el-form-item__label {
-          font-size: 17px;
+          font-size: 16px;
         }
         .el-input {
           font-size: 19px;
@@ -349,19 +350,6 @@ export default {
     }
   }
 }
-/deep/.el-dialog__wrapper {
-  .el-dialog {
-    .el-dialog__body {
-      .upload-demo {
-        .el-upload-list {
-          .el-upload-list__item {
-            margin-top: -72px;
-          }
-        }
-      }
-    }
-  }
-}
 
 .hichat-pc {
   .home-wrapper {
@@ -373,18 +361,6 @@ export default {
     .home-content {
       .el-checkbox {
         width: 100%;
-      }
-      .el-checkbox__label {
-        .address-box {
-          .msg-box {
-            span {
-              &::after {
-                content: "";
-                margin-top: 0.95em;
-              }
-            }
-          }
-        }
       }
     }
 
@@ -404,12 +380,12 @@ export default {
       }
     }
     .user-edit-form {
-      /deep/.el-form {
+      ::v-deep.el-form {
         border-radius: 8px;
         background-color: rgba(0, 0, 0, 0.05);
         .el-form-item {
           .el-form-item__label {
-            font-size: 17px;
+            font-size: 16px;
           }
           .el-input {
             .el-input__inner {
@@ -424,7 +400,7 @@ export default {
     }
   }
   .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding: 0 !important;
       .el-button {
         &:nth-child(2) {

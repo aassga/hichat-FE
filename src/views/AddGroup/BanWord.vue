@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper" @touchmove="$root.handleTouch">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="125px">
           <div class="home-header">
@@ -36,7 +36,7 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="320px">
         <el-header height="70px">
           <div class="home-header">
             <span class="home-header-title">
@@ -48,7 +48,7 @@
                 "
               >
                 <span style="padding-right: 10px" :style="groupPermissionData.addGroup ? 'margin-top:2px; margin-left:4px':''" @click="back()"
-                  ><img src="./../../../static/images/pc/arrow-left.svg" alt=""
+                  ><img src="./../../../static/images/pc/arrow-left.png" alt=""
                 /></span>
                 <span>禁用詞設定</span>
               </div>
@@ -97,7 +97,7 @@
         <el-input v-model="input" placeholder="请输入内容"></el-input>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button :class="device === 'moblie' ? 'border-red' : 'background-gray'" @click="closeAddBanShow"
+        <el-button :class="device === 'mobile' ? 'border-red' : 'background-gray'" @click="closeAddBanShow"
           >取消</el-button
         >
         <el-button class="background-red" @click="addBanAction">确认</el-button>
@@ -113,11 +113,11 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'"><img src="./../../../static/images/warn.svg" alt="" /></div>
+        <div v-if="device === 'mobile'"><img src="./../../../static/images/warn.png" alt="" /></div>
         <span>是否確定要刪除該則禁用字詞？</span>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button :class="device === 'moblie' ? 'border-red' : 'background-gray'" @click="unBanShow = false"
+        <el-button :class="device === 'mobile' ? 'border-red' : 'background-gray'" @click="unBanShow = false"
           >取消</el-button
         >
         <el-button class="background-red" @click="unBanAction">确认</el-button>
@@ -145,7 +145,7 @@ export default {
     };
   },
   created() {
-    if(this.device === "moblie"){
+    if(this.device === "mobile"){
       this.groupData = JSON.parse(localStorage.getItem("groupData"));
     }else{
       this.groupData = this.groupUser
@@ -224,7 +224,7 @@ export default {
       }
     },
     addBanAction(){
-      if(this.input === ""){
+      if(!this.input){
         this.$message({ message: "不可填入空白", type: "error" });
         return false
       }
@@ -252,7 +252,7 @@ export default {
       this.addBanShow = false
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         if(this.groupPermissionData.addGroup){
@@ -275,7 +275,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
     .home-add-user {
@@ -341,7 +341,7 @@ export default {
   }
   .el-dialog-loginOut {
     overflow: auto;
-    /deep/.el-dialog {
+    ::v-deep.el-dialog {
       margin: 0 auto 50px;
       background: #ffffff;
       border-radius: 10px;
@@ -394,7 +394,7 @@ export default {
       }
     }
     .el-dialog-loginOut {
-      /deep/.el-dialog {
+      ::v-deep.el-dialog {
         .el-dialog__footer {
           padding: 0;
           .el-button {

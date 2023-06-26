@@ -27,9 +27,16 @@
               :key="index"
             >
               <div class="address-box">
-                <el-image :src="item.icon" />
-                <div class="msg-box">
-                  <span>{{ item.name }}</span>
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image
+                  :src="noIconShow(item, 'user')"
+                  :preview-src-list="[noIconShow(item, 'user')]"
+                />
+                <div class="content-box">
+                  <div class="msg-box" style="align-items: center">
+                    <span>{{ item.name }}</span>
+                  </div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </el-checkbox>
@@ -50,6 +57,7 @@
 
 <script>
 import { getContactList } from "@/api/memberContactController";
+import { showIcon } from "@/utils/icon";
 
 export default {
   name: "SpreadChange",
@@ -82,13 +90,16 @@ export default {
     },
   },
   methods: {
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
+    },
     getAddressList() {
       getContactList().then((res) => {
         this.contactList = res.data.list.filter(
           (el) => el.contactId !== localStorage.getItem("id")
         );
         this.contactList.forEach((res) => {
-          if (res.icon === undefined) {
+          if (!res.icon) {
             res.icon = require("./../../../static/images/image_user_defult.png");
           }
         });
@@ -117,12 +128,12 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
   }
   .home-content {
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -140,18 +151,7 @@ export default {
         .address-box {
           .msg-box {
             span {
-              display: block;
-              padding-left: 1em;
-              font-size: 16px;
               color: #666666;
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                margin-top: 0.65em;
-                width: 100%;
-                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
-              }
             }
           }
           .checkBox {
@@ -167,11 +167,11 @@ export default {
     margin: 1em;
     background-color: #fff;
     border-radius: 10px;
-    /deep/.el-form {
+    ::v-deep.el-form {
       .el-form-item {
         margin-bottom: 0px;
         .el-form-item__label {
-          font-size: 17px;
+          font-size: 16px;
         }
         .el-input {
           font-size: 19px;
@@ -208,18 +208,6 @@ export default {
       .el-checkbox {
         width: 100%;
       }
-      .el-checkbox__label {
-        .address-box {
-          .msg-box {
-            span {
-              &::after {
-                content: "";
-                margin-top: 0.95em;
-              }
-            }
-          }
-        }
-      }
     }
 
     .el-container {
@@ -238,12 +226,12 @@ export default {
       }
     }
     .user-edit-form {
-      /deep/.el-form {
+      ::v-deep.el-form {
         border-radius: 8px;
         background-color: rgba(0, 0, 0, 0.05);
         .el-form-item {
           .el-form-item__label {
-            font-size: 17px;
+            font-size: 16px;
           }
           .el-input {
             .el-input__inner {
@@ -258,7 +246,7 @@ export default {
     }
   }
   .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding: 0 !important;
       .el-button {
         &:nth-child(2) {

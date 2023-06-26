@@ -2,7 +2,7 @@
   <div class="home-wrapper">
     <el-container>
       <el-main>
-        <template v-if="device === 'moblie'">
+        <template v-if="device === 'mobile'">
           <el-header height="55px">
             <div class="home-header">
               <div class="home-user" @click="back"></div>
@@ -21,7 +21,7 @@
                 >
                   <span style="padding-right: 10px"
                     ><img
-                      src="./../../../static/images/pc/arrow-left.svg"
+                      src="./../../../static/images/pc/arrow-left.png"
                       alt=""
                   /></span>
                   <span>编辑联络人</span>
@@ -36,20 +36,25 @@
         </template>
         <div class="home-content">
           <div class="user-data">
-            <el-image
-              v-if="userData.icon !== undefined"
-              :src="noIconShow(userData)"
-              :preview-src-list="[noIconShow(userData)]"
-            />
+            <div
+            style="display: flex; justify-content: center"
+            >
+              <div
+                :class="{ 'service-icon': userData.isCustomerService }"
+              ></div>
+              <el-image
+                :src="noIconShow(userData, 'user')"
+                :preview-src-list="[noIconShow(userData, 'user')]"
+              />
+            </div>
+
             <div>
               <span>{{ userData.name }}</span>
-              <span class="user-data-id" v-if="device === 'moblie'">
+              <span class="user-data-id" v-if="device === 'mobile'">
                 ID :
-                <span
-                  class="user-paste"
-                  @click="copyID()"
-                  >{{ userData.username }}</span
-                ></span
+                <span class="user-paste" @click="copyID()">{{
+                  userData.username
+                }}</span></span
               >
             </div>
           </div>
@@ -61,7 +66,7 @@
             </el-form>
           </div>
         </div>
-        <div class="home-footer-btn" v-if="device === 'moblie'">
+        <div class="home-footer-btn" v-if="device === 'mobile'">
           <el-button
             class="orange-btn"
             @click="editSubmit(userEditForm.nickname)"
@@ -75,9 +80,9 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { updateContactNickName} from "@/api/memberContactController";
+import { updateContactNickName } from "@/api/memberContactController";
 import { copyPaste } from "@/utils/urlCopy.js";
-
+import { showIcon } from "@/utils/icon";
 export default {
   name: "EditContact",
   data() {
@@ -105,24 +110,20 @@ export default {
       setMsgInfoPage: "ws/setMsgInfoPage",
       setMyContactDataList: "ws/setMyContactDataList",
     }),
-    copyID(){
-      copyPaste(this.userData.username)
-    },   
-    noIconShow(iconData) {
-      if ([undefined,null,""].includes(iconData.icon)) {
-        return require("./../../../static/images/image_user_defult.png");
-      } else {
-        return iconData.icon;
-      }
+    copyID() {
+      copyPaste(this.userData.username);
+    },
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
     },
     editSubmit(name) {
       let contactId =
-        this.userData.contactId === undefined
+        !this.userData.contactId
           ? this.userData.toChatId.replace("u", "")
           : this.userData.contactId;
       updateContactNickName({ name }, contactId).then((res) => {
         if (res.code === 200) {
-          if (res.data.icon === undefined) {
+          if (!res.data.icon) {
             res.data.icon = require("./../../../static/images/image_user_defult.png");
           }
           this.userData.name = res.data.name;
@@ -138,7 +139,7 @@ export default {
       });
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         this.setMsgInfoPage({ pageShow: true, type: "" });
@@ -188,9 +189,9 @@ export default {
     margin: 1em;
     background-color: #fff;
     border-radius: 10px;
-    /deep/.el-form {
+    ::v-deep.el-form {
       .el-form-item__label {
-        font-size: 17px;
+        font-size: 16px;
       }
       .el-input {
         font-size: 19px;
@@ -203,21 +204,32 @@ export default {
 }
 .hichat-pc {
   .user-edit-form {
-    /deep/.el-form {
+    ::v-deep.el-form {
       border-radius: 8px;
       background-color: rgba(0, 0, 0, 0.05);
       .el-form-item {
         .el-form-item__label {
-          font-size: 17px;
+          font-size: 16px;
         }
         .el-input {
           .el-input__inner {
-            
-            background:none;
+            background: none;
           }
         }
       }
     }
+  }
+  .service-icon {
+    width: 6em;
+    height: 6em;
+  }
+}
+
+
+.hichat-mobile{
+  .service-icon {
+    width: 4em;
+    height: 4em;
   }
 }
 </style>

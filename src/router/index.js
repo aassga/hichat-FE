@@ -9,6 +9,8 @@ Router.prototype.push = function push(location) {
 }
 Vue.use(VueRouter)
 
+import customerRouter from './modules/customer'
+import deleteRouter from './modules/delete'
 
 const routes = [
   {
@@ -59,14 +61,20 @@ const routes = [
         component: () => import("@/views/Home/components/Setting.vue"),
         meta: { keepAlive: false },
       },
-      {
-        path: "/Spread",
-        name: "Spread",
-        component: () => import("@/views/Home/components/Spread.vue"),
-        meta: { keepAlive: false },
+      // {
+      //   path: "/Spread",
+      //   name: "Spread",
+      //   component: () => import("@/views/Home/components/Spread.vue"),
+      //   meta: { keepAlive: false },
         
-      },
+      // },
     ]
+  },
+  {
+    path: "/Spread",
+    name: "Spread",
+    component: () => import(/* webpackChunkName: "Spread" */"@/views/Spread/Spread.vue"),
+    
   },
   {
     path: "/AddUser",
@@ -90,6 +98,7 @@ const routes = [
     component: () => import(/* webpackChunkName: "SettingGroup" */ '@/views/AddGroup/SettingGroup.vue'),
     meta: { keepAlive: false },
   },
+  
   {
     path: "/BanSetting",
     name: "BanSetting",
@@ -159,6 +168,21 @@ const routes = [
     name: "GroupAdminChange",
     component: () => import(/* webpackChunkName: "GroupPage" */ '@/views/GroupPage/GroupAdminChange.vue'),
   },  
+  {
+    path: "/MobileCard",
+    name: "MobileCard",
+    component: () => import(/* webpackChunkName: "MobileCard" */ '@/views/Card/MobileCard.vue'),
+  },
+  {
+    path: "/mobile-card-H5",
+    name: "MobileCard_H5",
+    component: () => import(/* webpackChunkName: "MobileCard_H5" */ '@/views/Card/MobileCard_H5.vue'),
+  },      
+  {
+    path: "/GroupNickName",
+    name: "GroupNickName",
+    component: () => import(/* webpackChunkName: "GroupPage" */ '@/views/GroupPage/GroupNickName.vue'),
+  },    
   {
     path: "/EditContact",
     name: "EditContact",
@@ -238,9 +262,17 @@ const routes = [
     meta: { keepAlive: false },
   },
   {
+    path: "/ZegoVideo",
+    name: "ZegoVideo",
+    component: () => import(/* webpackChunkName: "ZegoVideo" */ '@/views/ZegoVideo/ZegoVideo.vue'),
+    meta: { keepAlive: false },
+  },
+  {
     path: "*",
     redirect: "/login"
-  }
+  },
+  ...customerRouter,
+  ...deleteRouter,
 ]
 
 const router = new VueRouter({
@@ -263,11 +295,11 @@ router.beforeEach((to, from, next) => {
       setTimeout(() => {
         next({ path: '/login' });
       }, 2000);
-      alert("请注意:由于跳转页面失败，即将导回登录页，谢谢。");
+      // alert("请注意:由于跳转页面失败，即将导回登录页，谢谢。");
     })
   }
   if (!['Login','Register','ForgetPassword','ResetPassword'].includes(to.name)) {
-    if (localStorage.getItem("token") === null) next({ path: '/login' });
+    if (!localStorage.getItem("token")) next({ path: '/login' });
   }
   next();
 });

@@ -1,24 +1,123 @@
 /* theme color */
 $--color-primary: #0275d8;
+$--color-white: #ffffff;
+$--color-light-white: rgba(255, 255, 255, 0.85);
+$--color-light-blue: #eaf5fa;
+$--color-light-black: rgba(0, 0, 0, 0.05);
+$--color-green:#10686e;
+$--color-orange:#fe5f3f;
+$--color-gray:#666666;
 
 /* icon font path, required */
 $--font-path: '~element-ui/lib/theme-chalk/fonts';
 
 @import "~element-ui/packages/theme-chalk/src/index";
 
+// 自訂義 icon 
+@import "./../static/css/icon.scss";
+
+// 自訂義 scrollbar
+@import "./../static/css/scrollbar.scss";
+
+
+
 html,
 body {
   height: 100vh;
   min-height: -webkit-fill-available;
   overflow: hidden;
-  background-color: #eaf5fa;
+  background-color: $--color-light-blue;
 }
 
-.hichat-moblie,
+.drop {
+  position: relative;
+  display: block;
+  width: 100%;
+  &:hover {
+    .dropOption {
+      display: block;
+    }
+  }
+  &:hover {
+    .dropdown {
+      display: block;
+    }
+  }
+  &:hover {
+    .dropdown.close {
+      display: none;
+    }
+  }
+  .dropOption {
+    position: relative;
+    width: auto;
+    color: #666;
+    font-size: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-sizing: border-box;
+    cursor: pointer;
+    &::after {
+      content: "";
+      position: absolute;
+      top: 20px;
+      right: 12px;
+      border: 1px solid #00000066;
+      border-width: 0px 1px 1px 0;
+      display: inline-block;
+      padding: 3px;
+      transform: rotate(45deg);
+    }
+  }
+  .dropdown {
+    // display: none;
+    width: 100%;
+    max-height: 350px;
+    position: absolute;
+    color: #333;
+    padding: 0;
+    margin: 0;
+    background-color: #fff;
+    box-shadow: 0px 2px 3px 0px #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    overflow: auto;
+    z-index: 10;
+    margin-top: 1px;
+    > li {
+      color: #000;
+      cursor: pointer;
+      &:first-child {
+        margin-top: 10px;
+      }
+      &:last-child {
+        margin-bottom: 10px;
+      }
+      &:hover {
+        background-color: rgb(242, 242, 242);
+      }
+    }
+  }
+}
+
+.brr {
+  &::before {
+    content: "";
+    display: block;
+    top: 10px;
+    height: 30px;
+    position: absolute;
+    border-right: 1px solid #b3b3b3;
+    left: 60px;
+  }
+}
+
+.hichat-mobile,
 .hichat-pc {
   overflow: hidden;
   position: static;
-  background-color: #eaf5fa;
+  background-color: $--color-light-blue;
+
 
   .home-wrapper {
     min-height: 100vh;
@@ -42,8 +141,9 @@ body {
 
       .home-header-title {
         margin: 0 auto;
-        color: #10686e;
+        color: $--color-green;
         font-weight: 600;
+        font-size: 18px;
       }
     }
 
@@ -53,17 +153,17 @@ body {
       .el-input {
         .el-input__inner {
           border: 0;
-          background-color: rgba(0, 0, 0, 0.05);
-          color: #666666;
+          background-color: $--color-light-black;
+          color: $--color-gray;
         }
 
         .el-input__prefix {
-          color: #666666;
+          color: $--color-gray;
         }
 
         ::placeholder {
           /* CSS 3 標準 */
-          color: #666666;
+          color: $--color-gray;
         }
       }
     }
@@ -88,27 +188,29 @@ body {
 
         .photo-edit {
           height: 1.5em !important;
-          color: #fe5f3f;
+          color: $--color-orange;
         }
       }
     }
 
     //訊息內容
     .address-box {
-      background-color: #ffffff;
-      padding: 1em 1em 0 1em;
+      background-color: $--color-white;
+      padding: 1em 1em 0.5em 1em;
       display: flex;
       align-items: center;
       
-      .contont-box {
+      .content-box {
         padding-left: 1em;
-        height: 48px;    
+        height: 2em;    
         .msg-box {
           height: 48px;
           display: flex;
+          white-space: nowrap;
+          overflow: hidden;
           span {
             display: block;
-            font-size: 16px;
+            font-size: 14px;
             &:nth-child(1) {
               margin-bottom: 7px;
             }
@@ -120,7 +222,6 @@ body {
             height:20px;
             span {
               &:nth-child(1) {
-                width: 15em;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -131,6 +232,15 @@ body {
               &:nth-child(2) {
                 opacity: 1;
                 font-size: 14px;
+              }
+            }
+          }
+          .time{
+            .el-badge-box{
+              .el-badge{
+                .el-badge__content{
+                  background-color: #00000066;
+                }
               }
             }
           }
@@ -150,8 +260,8 @@ body {
     }
 
     .home-footer-nav {
-      background-color: rgba(255, 255, 255, 0.85);
-      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      background-color: $--color-light-white;
+      border-top: 1px solid $--color-light-black;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -177,7 +287,7 @@ body {
         }
 
         .router-link-exact-active {
-          color: #fe5f3f;
+          color: $--color-orange;
         }
       }
     }
@@ -187,7 +297,7 @@ body {
       display: flex;
       justify-content: center;
       align-items: center;
-      background-color: #eaf5fa;
+      background-color: $--color-light-blue;
 
       .el-button {
         width: 93%;
@@ -196,29 +306,28 @@ body {
 
       .gray-btn {
         background-color: #b3b3b3;
-        color: #fff;
+        color: $--color-white;
       }
 
       .red-btn {
         background-color: #ee5253;
-        color: #fff;
+        color: $--color-white;
       }
 
       .orange-btn {
-        background-color: #fe5f3f;
-        color: #fff;
+        background-color: $--color-orange;
+        color: $--color-white;
       }
     }
 
     .el-tabs {
-      width: 100vw;
       z-index: 8;
       
       .el-tabs__header {
         height: 50px;
         display: flex;
         justify-content: space-evenly;
-        background-color: #eaf5fa;
+        background-color: $--color-light-blue;
         margin: 0;
         z-index: 9;
         .el-tabs__nav-wrap {
@@ -242,7 +351,7 @@ body {
 
             .el-tabs__item {
               font-family: 'NotoSansCJKsc, Regular';
-              font-size: 18px;
+              font-size: 15px;
               font-weight: 600;
               padding: 0 10px;
               color: #858585c0;
@@ -253,7 +362,6 @@ body {
 
       .el-tabs__content {
         position: relative;
-        // top: 2.4em;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         z-index: 5;
@@ -274,12 +382,12 @@ body {
         flex-direction: column;
         box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
-        /deep/.el-row {
+        ::v-deep.el-row {
           float: right;
 
           .el-button {
             background-image: linear-gradient(#579fff, #3481e8);
-            color: #ffffff;
+            color: $--color-white;
           }
 
           .el-checkbox__inner {
@@ -294,11 +402,11 @@ body {
           }
 
           .el-checkbox__input.is-checked .el-checkbox__inner {
-            background-color: #ffffff;
+            background-color: $--color-white;
           }
 
           .el-checkbox__label {
-            color: #fff;
+            color: $--color-white;
           }
         }
       }
@@ -333,7 +441,7 @@ body {
 
         .title,
         .icon-message {
-          color: #ffffff;
+          color: $--color-white;
         }
 
         .icon-message {
@@ -350,14 +458,14 @@ body {
       }
 
       .contact-box {
-        background-color: #FFFFFF;
+        background-color: $--color-white;
         width: 100vw;
 
         ul {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background-color: #fff;
+          background-color: $--color-white;
           height: 3em;
           width: 55vw;
           margin: 0 auto;
@@ -379,16 +487,16 @@ body {
 
   .el-checkbox__input.is-checked {
     .el-checkbox__inner {
-      background-color: #fe5f3f;
-      border-color: #fe5f3f;
+      background-color: $--color-orange;
+      border-color: $--color-orange;
       border-radius: 10px;
     }
   }
 
   .el-radio__input.is-checked {
     .el-radio__inner {
-      background-color: #fe5f3f;
-      border-color: #fe5f3f;
+      background-color: $--color-orange;
+      border-color: $--color-orange;
 
       &::after {
         content: '';
@@ -417,14 +525,9 @@ body {
     overflow: hidden;
 
     .el-dialog {
-      margin: 0 auto;
-      border-radius: 20px 20px 0 0;
-      position: absolute;
-      bottom: 0;
-
       .el-dialog__header {
         .el-dialog__title {
-          color: #10686e;
+          color: $--color-green;
           font-weight: 600;
         }
 
@@ -462,7 +565,7 @@ body {
           display: block;
         }
         .promote-href-text{
-          color: #10686e;
+          color: $--color-green;
           font-weight: 600;
           position: relative;
           top: -15px;
@@ -481,13 +584,28 @@ body {
             overflow: auto;
             .el-upload-list__item {
               margin-top: 0;
-              width: 205px;
+              width: 300px;
               display: inline-block;
               margin: 10px 5px 0 5px;
               .el-upload-list__item-name{
                 font-size: 18px;
               }
             }
+          }
+          .hidden {
+            visibility: hidden;
+          }
+        }
+        .record-play {
+          .record-play-box {
+            margin-top: 1em;
+            width: 100%;
+          }
+          .record-time {
+            width: 100%;
+            text-align: center;
+            font-size: 2em;
+            font-family: monospace;
           }
         }
       }
@@ -515,7 +633,6 @@ body {
     width: 3em;
     height: 3em;
     border-radius: 10px;
-    top: -5px;
 
     .el-image__inner {
       height: -webkit-fill-available;
@@ -535,10 +652,10 @@ body {
   .el-dialog-loginOut {
     overflow: auto;
 
-    /deep/.el-dialog {
+    ::v-deep.el-dialog {
       position: relative;
       margin: 0 auto 50px;
-      background: #ffffff;
+      background: $--color-white;
       border-radius: 10px;
       box-sizing: border-box;
       width: 50%;
@@ -557,6 +674,7 @@ body {
             margin-bottom: 1.2em;
           }
         }
+        
       }
 
       .el-dialog__footer {
@@ -576,17 +694,17 @@ body {
 
           .background-red {
             background-color: #ee5253;
-            color: #fff;
+            color: $--color-white;
           }
 
           .background-orange {
-            background-color: #fe5f3f;
-            color: #fff;
+            background-color: $--color-orange;
+            color: $--color-white;
           }
 
           .border-red {
-            border: 1px solid #fe5f3f;
-            color: #fe5f3f;
+            border: 1px solid $--color-orange;
+            color: $--color-orange;
           }
         }
       }
@@ -594,7 +712,98 @@ body {
   }
 }
 
-.hichat-moblie {
+.message-input-box {
+  background-color: $--color-light-white;
+  border-top: 1px solid $--color-light-black;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  .input-tools-left,
+  .input-tools-right {
+    img {
+      height: 1.1em;
+      cursor: pointer;
+    }
+    .plus-btn {
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+  }
+  .text-send-box {
+    width: 230px;
+    min-height: 35px;
+    margin: 10px 0px;
+    display: flex;
+    align-items: center;
+    background-color: #f4f4f4;
+    border-radius: 5px;
+    .disable-box {
+      width: 250px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      background-color: #f4f4f4;
+      color: #959393;
+      font-size: 14px;
+      border-radius: 20px;
+      position: absolute;
+      justify-content: center;
+      z-index: 1;
+    }
+    .el-textarea {
+      .el-textarea__inner {
+        padding: 10px !important;
+        border-radius: 0;
+        border: 0;
+        background-color: transparent;
+      }
+    }
+    .footer-tools {
+      .send-button {
+        width: 90px;
+        padding: 7px 10px;
+        margin-right: 20px;
+        color: $--color-white;
+        background-image: linear-gradient(
+          180deg,
+          rgba(67, 141, 255, 0.8),
+          rgba(19, 99, 255, 0.8)
+        );
+      }
+      .face-icon {
+        .face-icon-box {
+          padding: 20px;
+          .face-box {
+            font-size: 1em;
+            word-break: break-word;
+            margin-bottom: 20px;
+            h5 {
+              font-weight: 600;
+            }
+          }
+          span {
+            cursor: pointer;
+            font-size: 1em;
+            margin-right: 10px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.hichat-mobile {
+  .wrapper {
+    .el-container {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      overflow: hidden;
+    }
+  }
   .home-wrapper {
     .home-footer-nav {
       height: 70px !important;
@@ -605,50 +814,8 @@ body {
       .footer-tools {
         .face-icon {
           left: 0;
-          background-color: #fff;
+          background-color: $--color-white;
           box-shadow: 0px 0 7px #ccc;
-          .face-box {
-            font-size: 1em;
-            span {
-              font-size: 1em;
-            }
-          }
-
-        }
-      }
-    }
-  }
-}
-.footer-tools {
-  .face-other-btn {
-    cursor: pointer;
-    width: 35px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    img {
-      height: 1.2em;
-    }
-  }
-  .face-icon {
-    position: absolute;
-    bottom: 57px;
-    width: 100%;
-    border-radius: 15px 15px 0 0;
-    height: 22em;
-    overflow: hidden;
-    line-height: 2em;
-    z-index: 9;
-    .emoji-picker{
-      width: inherit;
-      #Emojis{
-        max-width: 90%;
-        .container-emoji{
-          .grid-emojis{
-            .emoji{
-              font-size: 21px !important;
-            }
-          }
         }
       }
     }
@@ -657,7 +824,6 @@ body {
 
 .hichat-pc {
   overflow: auto !important;
-
   .home-wrapper {
     .home-header {
       margin: 1.3em 1em;
@@ -717,19 +883,19 @@ body {
       height: 100vh;
 
       .el-header {
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid $--color-light-black;
 
         img {
           top: 0 !important;
-          height: 1.5em;
+          height: 1.34em;
         }
       }
 
       .el-aside {
         border-radius: 0;
         box-shadow: none;
-        background-color: #FFFFFF;
-        border-right: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: $--color-white;
+        border-right: 1px solid $--color-light-black;
       }
 
       .el-main {
@@ -743,7 +909,7 @@ body {
       width: 100%;
       .el-tabs__header {
         height: 55px;
-        background-color: #FFFFFF !important;
+        background-color: $--color-white !important;
         .el-tabs__nav-wrap {
           display: flex;
           align-items: center;
@@ -752,7 +918,7 @@ body {
 
             .el-tabs__item {
               font-family: 'NotoSansCJKsc, Regular';
-              font-size: 15px;
+              font-size: 14px;
               font-weight: 600;
               color: #b3b3b3;
             }
@@ -765,9 +931,8 @@ body {
       }
 
       .el-tabs__content {
-        border-top: 0.01em solid rgba(0, 0, 0, 0.05);
+        border-top: 0.01em solid $--color-light-black;
         overflow-y: auto;
-        // top: 3.4em;
       }
     }
 
@@ -780,7 +945,7 @@ body {
 
       .setting-button-left {
         span {
-          font-size: 16px;
+          font-size: 14px;
         }
       }
 
@@ -788,7 +953,7 @@ body {
         margin: 1.5em auto 2em auto;
 
         .el-image {
-          width: auto !important;
+          width: 6em !important;
           height: 6em !important;
         }
 
@@ -830,11 +995,9 @@ body {
       padding: 0 15px;
 
       .text-send-box {
-        width: 80%;
-        // border-radius: 5px;
-        margin: 0 auto;
+        width: 90%;
         .disable-box{
-          width: 80%;
+          width: 90%;
         }
         .footer-tools {
           .emoji-picker{
@@ -852,21 +1015,11 @@ body {
             bottom: 60px ;
             right: 194px;
             width: 29em;
-            .face-box {
-              font-size: 1em;
-              span {
-                font-size: 1em;
-              }
-            }
-
           }
         }
       }
 
       .input-tools-left {
-        margin: 0 auto;
-        margin-left: -10px;
-
         img {
           cursor: pointer;
 
@@ -879,7 +1032,7 @@ body {
 
     .home-footer-btn {
       margin: 0;
-      background-color: #FFFFFF;
+      background-color: $--color-white;
 
       .el-button {
         width: 100%;
@@ -892,18 +1045,10 @@ body {
   }
 
   .address-box {
-    .el-image {
-      width: 3em;
-      height: 3em;
-    }
-
-    .contont-box {
+    .content-box {
       .msg-box {
         span {
           &:nth-child(1) {
-            // margin-bottom: 0 !important;
-            // height: 22px;
-            // line-height: 22px;
             img{
               height: 1em;
             }
@@ -925,10 +1070,8 @@ body {
 
   //彈出視窗樣式
   .el-dialog__wrapper {
-    overflow: hidden;
-
     .el-dialog {
-      width: 300px !important;
+      width: 400px !important;
       margin-top: 8em !important;
       position: relative;
       border-radius: 5px;
@@ -1014,13 +1157,13 @@ body {
 
           .background-orange {
             background-color: inherit !important;
-            color: #fe5f3f !important;
+            color: $--color-orange !important;
           }
 
           .border-red {
-            border: 1px solid #fe5f3f !important;
+            border: 1px solid $--color-orange !important;
             ;
-            color: #fe5f3f !important;
+            color: $--color-orange !important;
             ;
           }
 
@@ -1054,6 +1197,42 @@ body {
   }
 }
 
+.footer-tools {
+  .face-other-btn {
+    cursor: pointer;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    img {
+      height: 1.2em;
+    }
+  }
+  .face-icon {
+    position: absolute;
+    bottom: 57px;
+    width: 100%;
+    border-radius: 15px 15px 0 0;
+    height: 22em;
+    overflow: hidden;
+    line-height: 2em;
+    z-index: 9;
+    .emoji-picker{
+      width: inherit;
+      #Emojis{
+        max-width: 90%;
+        .container-emoji{
+          .grid-emojis{
+            .emoji{
+              font-size: 21px !important;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 .chat-more {
   .el-dropdown-menu__item {
     .logout-btn {
@@ -1069,16 +1248,18 @@ body {
     }
   }
 }
-
-.custom-class .menu_item__divided {
-  border-bottom: none !important;
-  color: #ff4050 !important;
+.custom-class{
+  z-index: 10 !important;
+  .menu_item {
+    font-size: 15px !important;
+  }
+  .menu_item__divided {
+    border-bottom: none !important;
+    color: #ff4050 !important;
+  }
 }
 
-.custom-class .menu_item {
-  font-size: 15px !important;
-}
-/deep/.el-dialog-msg-show{
+::v-deep.el-dialog-msg-show{
   .el-dialog{
     position: fixed;
   }
@@ -1089,32 +1270,37 @@ body {
     width: 12em;
   }
 }
+
 .el-badge__content.is-fixed.is-dot{
   top: auto;
   bottom: 0px;
   right: 8px;
 }
+
 .green-text{
   color: #219653;
 }
+
 .gray-text{
   opacity: 0.5;
   color: #000000;
 }
-.contont-border-bottom {
-  width: 100vw;
-  border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
+
+.content-border-bottom {
+  width: 100%;
+  border-bottom: 0.02em solid $--color-light-black;
   position: absolute;
-  margin-top: -1px;
 }
+
 .noOnline-tip{
   display: flex;
   align-items: center;
 }  
+
 .reply-message {
   height: 50px;
   background-color: rgba(225, 225, 225, 0.85);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: 1px solid $--color-light-black;
   display: flex;
   color: rgba(0, 0, 0, 0.4);
   align-items: center;
@@ -1147,55 +1333,34 @@ body {
     font-size: 20px;
     cursor: pointer;
   }
-  /deep/.el-avatar {
+  ::v-deep.el-avatar {
     overflow: initial;
     img {
       border-radius: 4px;
       width: -webkit-fill-available;
     }
   }
+ 
+  &__style{
+    height: 3em; 
+    width: 3em; 
+    border-radius: 5px
+  }
 }
 
-//scrollbar 自訂樣式
-.el-tabs__content::-webkit-scrollbar-track{
-	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-	background-color: #F5F5F5;
+.service-icon{
+  background: url('./../static/images/service.png');
+  background-repeat: no-repeat;
+  background-size: 40%;
+  background-position: top left;
+  z-index:2;
+  width: 3em;
+  height: 3em;
+  position: absolute;
 }
-.el-tabs__content::-webkit-scrollbar{
-	width: 6px;
-	background-color: #F5F5F5;
-}
-.el-tabs__content::-webkit-scrollbar-thumb{
-	background-color: rgba(0, 0, 0, 0.5);
-}
-
-
-
-
-/* 滚动条 */
-::-webkit-scrollbar-thumb:horizontal{ /*水平滚动条的样式*/
-  width: 4px;
-  background-color: #CCCCCC;
-  -webkit-border-radius: 6px;
-}
-::-webkit-scrollbar-track-piece {
-  // background-color: #fff; /*滚动条的背景颜色*/
-  -webkit-border-radius: 0; /*滚动条的圆角宽度*/
-}
-::-webkit-scrollbar {
-  width: 10px; /*滚动条的宽度*/
-  height: 8px; /*滚动条的高度*/
-}
-::-webkit-scrollbar-thumb:vertical { /*垂直滚动条的样式*/
-  height: 50px;
-  background-color: #999;
-  -webkit-border-radius: 4px;
-  outline: 2px solid #fff;
-  outline-offset: -2px;
-  border: 2px solid #fff;
-}
-::-webkit-scrollbar-thumb:hover { /*滚动条的hover样式*/
-  height: 50px;
-  background-color: #9f9f9f;
-  -webkit-border-radius: 4px;
+.home-user-photo{
+  .service-icon{
+    width: 2em;
+    height: 2em;
+  }
 }

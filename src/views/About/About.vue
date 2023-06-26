@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper">
-    <el-container>
+    <el-container  v-if="device === 'mobile'">
       <el-main>
         <el-header height="70px">
           <div class="home-header">
@@ -9,68 +9,41 @@
             <div class="home-add-user"></div>
           </div>
         </el-header>
-        <div class="home-content">
-          <div
-            class="setting-button"
-            v-for="(item, index) in aboutData"
-            :key="index"
-            :class="{ 'mt10 border-bottom': item.name === '服务条款' }"
-          >
-            <router-link :to="item.path">
-              <div class="setting-button-left">
-                <img :src="item.icon" alt="" />
-                <span>{{ item.name }}</span>
-              </div>
-              <div
-                class="setting-button-right version"
-                v-if="item.name === '使用版本'"
-              >
-                <span>{{ item.version }}</span>
-              </div>
-              <div class="setting-button-right" v-else>
-                <img src="./../../../static/images/next.png" alt="" />
-              </div>
-            </router-link>
-          </div>
-        </div>
+        <AboutMenu />
       </el-main>
+    </el-container>
+    <el-container v-else>
+      <el-aside width="370px">
+        <el-header height="70px">
+          <div class="home-header">
+            <div style="display: flex; align-items: center; cursor: pointer">
+              <router-link :to="'/Setting'">
+                <div class="home-user-pc"></div>
+              </router-link>
+              <span class="home-header-title">关于嗨聊</span>
+            </div>
+          </div>
+        </el-header>
+        <AboutMenu />
+      </el-aside>
     </el-container>
   </div>
 </template>
 
 <script>
-import { getAndroidVersion } from '@/api/version'
+import AboutMenu from "./components/AboutMenu.vue";
 
 export default {
   name: "About",
+  components: {
+    AboutMenu,
+  },
   data() {
     return {
-      aboutData: [
-        {
-          name: "使用版本",
-          path: "",
-          version: "",
-        },
-        // {
-        //   name: "服务条款",
-        //   path: "",
-        // },
-        // {
-        //   name: "隐私权政策",
-        //   path: "",
-        // },
-      ],
+      device: localStorage.getItem("device"),
     };
   },
-  created() {
-    this.androidVersion()
-  },
   methods: {
-    androidVersion(){
-      getAndroidVersion().then((res)=>{
-        this.aboutData[0].version = res.data.version
-      })
-    },
     back() {
       this.$router.back(-1);
     },
@@ -130,6 +103,17 @@ export default {
     }
     .border-bottom {
       border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+.hichat-pc {
+  .home-header {
+    .home-user-pc {
+      background-color: #fff;
+      background-image: url("./../../../static/images/pc/arrow-left.png");
+    }
+    .home-header-title {
+      margin-left: 5px;
     }
   }
 }

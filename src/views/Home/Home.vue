@@ -1,8 +1,8 @@
 <template>
   <div class="home-wrapper">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
-        <el-header :style="num === 2 ? 'height:55px' : 'height:120px'">
+        <el-header :style="num === 2 || num === 1 ? 'height:55px' : 'height:120px'">
           <div class="home-header">
             <div
               class="home-user"
@@ -36,12 +36,10 @@
               </template>
             </div>
             <div v-else-if="num === 2">
-              <router-link :to="'/EditUser'"
-                ><div class="home-add-user setting-img"></div
-              ></router-link>
+                <div class="home-add-user"></div>
             </div>
           </div>
-          <div class="home-search" v-if="num !== 2">
+          <div class="home-search" v-if="num === 0">
             <el-input
               placeholder="搜索"
               prefix-icon="el-icon-search"
@@ -67,13 +65,13 @@
               <span>
                 <div class="el-badge-box" v-if="index === 1 && badgeNum !== 0">
                   <el-badge
-                    :value="badgeNum"
+                    :value="badgeNum > 999 ? 999 : badgeNum"
                     class="item"
                   ></el-badge>
                 </div>
                 <div class="el-badge-box" v-if="index === 0 && maybeKnowNum !== 0">
                   <el-badge
-                    :value="maybeKnowNum"
+                    :value="maybeKnowNum > 999 ? 999 : maybeKnowNum"
                     class="item"
                   ></el-badge>
                 </div>
@@ -86,34 +84,38 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="315px">
+      <el-aside width="370px">
         <el-header style="height: 70px">
           <div class="home-header" v-if="num === 2">
             <span class="home-header-title">设定</span>
             <el-dropdown trigger="click">
               <span class="el-dropdown-link">
-                <img src="./../../../static/images/pc/more.svg" alt="" />
+                <img src="./../../../static/images/pc/more.png" alt="" />
               </span>
               <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item>
                   <div class="logout-btn" @click="logoutDialogShow = true">
-                    <img src="./../../../static/images/pc/logout.svg" alt="" />
+                    <img src="./../../../static/images/pc/logout.png" alt="" />
                     <span>登出</span>
                   </div>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
           </div>
-          <div class="home-search" v-else>
+          <div class="home-search">
             <el-input
+              v-if="num === 0"
               placeholder="搜索"
               prefix-icon="el-icon-search"
               v-model="searchKey"
               clearable
             >
             </el-input>
-            <div v-if="num === 0 || num === 1">
-              <template v-if="['address','maybeKnow'].includes(activeName || hichatNav.type)">
+            <div class="home-logo" v-if="num === 1">
+              <img src="./../../../static/images/ic_logo.png" alt="">嗨聊
+            </div>
+            <div v-if="num === 0 || num === 1" :style="num === 1 ? 'width: 69px':''">
+              <template v-if="spreadAddressShow()">
                 <router-link :to="'/Spread'" class="spread-style" v-if ="num === 1">
                   <img
                     src="./../../../static/images/pc/promotion.svg"
@@ -122,7 +124,7 @@
                 </router-link>    
                 <router-link :to="'/AddUser'" :class="{'addimg-style': num === 1}">
                   <img
-                    src="./../../../static/images/pc/user-plus.svg"
+                    src="./../../../static/images/pc/user-plus.png"
                     alt=""
                   />
                 </router-link>
@@ -131,18 +133,15 @@
               <template v-else-if="['group'].includes(activeName || hichatNav.type)">
                 <router-link :to="'/AddGroup'">
                   <img
-                    src="./../../../static/images/pc/message-plus.svg"
+                    src="./../../../static/images/pc/message-plus.png"
                     alt=""
+         
                   />
                 </router-link>
-                
               </template>
             </div>
           </div>
         </el-header>
-        <div class="home-header" v-if="$route.name === 'Spread'" style="justify-content: center;">
-          <span class="home-header-title" style="color: #b3b3b3; font-weight:normal;">请选择发送对象</span>
-        </div>
         <keep-alive>
           <router-view v-if="$route.meta.keepAlive"></router-view>
         </keep-alive>
@@ -178,25 +177,25 @@
         <template v-if="num === 1 && $route.name !== 'Spread'">
           <chat-msg
             v-if="
-              hichatNav.type === 'address' && chatUser.type !== 'address' && JSON.stringify(chatUser) !== '{}' 
+              hichatNav.type === 'address' && chatUser.type !== 'address' && Object.keys(chatUser).length !== 0 
             "
           />
           <chat-group-msg
             v-else-if="
-              hichatNav.type === 'group' && groupUser.type !== 'address' && JSON.stringify(groupUser) !== '{}'
+              hichatNav.type === 'group' && groupUser.type !== 'address' && Object.keys(groupUser).length !== 0
             "
           />
           <chat-contact
             v-else-if="
               hichatNav.type === 'contact' &&
               contactUser.type !== 'address' && 
-              JSON.stringify(contactUser) !== '{}'
+              Object.keys(contactUser).length !== 0
             "
           />
         </template>
         <template v-else-if="infoMsg.infoMsgShow && !infoMsg.infoMsgChat">
           <div class="go-room-style">
-            <img src="./../../../static/images/msg-btn.svg" alt="" />
+            <img src="./../../../static/images/msg-btn.png" alt="" />
             <el-button @click="goChatRoom(chatUser, activeName)"
               >開始聊天</el-button
             >
@@ -298,20 +297,33 @@ import { urlCopy } from "@/utils/urlCopy.js";
 import { getToken } from "_util/utils.js";
 import { mapState, mapMutations } from "vuex";
 import { logout } from "@/api";
-import { getMemberActivity,getUserInfo } from "@/api/memberProfileController";
+import { getUserInfo } from "@/api/memberProfileController";
 import { getContactList,maybeKnow } from "@/api/memberContactController";
 import { listMember,getGroupList } from '@/api/groupController'
 import { Encrypt } from "@/utils/AESUtils.js";
+import { showIcon } from "@/utils/icon";
 import ChatMsg from "./../Chat/ChatMsg.vue";
 import ChatGroupMsg from "./../Chat/Chat.vue";
 import ChatContact from "./../Chat/ChatContact.vue";
 import ChatSpread from "./../Chat/ChatSpread.vue";
 import MsgInfoPage from "./../ContactPage/MsgInfoPage.vue";
+import { initGlobalState } from "@/store/ws.js";
+import { UAParser } from 'ua-parser-js';
+import { updateDeviceInfo } from "@/api";
+
+let sent = false;
 
 export default {
   name: "Home",
   data() {
     return {
+      chatDataKey: {
+        chatType:"CLI_AUTH",
+        id:Math.random(),
+        deviceId: localStorage.getItem('UUID'),
+        token: localStorage.getItem('token'),
+        tokenType: 0,
+      },
       routerNav: [
         {
           icon: require("./../../../static/images/address.png"),
@@ -342,11 +354,12 @@ export default {
         text: "",
         logo: require("./../../../static/images/material_ic_logo.png"),
       },
+      userDefultIcon:require("./../../../static/images/image_user_defult.png"),
       num: 0,
       searchKey: "",
       groupList: [],
       searchData: [],
-      chatDataList: [],
+      recentChat: [],
       addressDataList: [],
       maybeKnowDataList:[],
       downloadFilename: "",
@@ -364,44 +377,47 @@ export default {
     };
   },
   created() {
+    if (!Socket.isStartConnect()) {
+      Socket.resetIsManualClose();
+      Socket.connect();
+    }
+    if (!sent) {
+      // send device info request
+      this.sendDeviceInfo(this.device);
+      sent = true;
+    }
     this.num =
       this.$route.fullPath === "/Address"
         ? 0
         : ["/HiChat","/Spread"].includes(this.$route.fullPath)
         ? 1
         : 2;
-    Socket.$on("message", this.handleGetMessage);
-    this.getContactDataList();
-    this.getGropDataList()
-    this.getMaybeKnow();
-    this.getUserData();
-    if (localStorage.getItem("soundNofiy") === null) {
-      this.setSoundNofiy(this.soundNofiy);
-    }
-    this.promoteCodeConfig.text = `${
-      location.origin
-    }/pub/#/signUp?${encodeURIComponent(
-      Encrypt(
-        `agentId=${localStorage.getItem("id")}`,
-        this.promoteKey,
-        this.promoteIv
-      )
-    )}`;
+    Socket.$on("message", this.handleGetMessage); 
+    this.init()
+  },
+  beforeDestroy() {
+    Socket.$off("message", this.handleGetMessage);
   },
   watch: {
     hichatNav(val) {
       this.num = val.num;
     },
     searchKey(val) {
-      let searchKeyData = val.split(" ");
+      const searchKeyData = val.split(" ");
+      this.searchCase = []
+      switch (this.activeName) {
+        case "address":
+          this.searchCase = this.addressDataList 
+          break;
+        case "group":
+          this.searchCase = this.newGroupList 
+          break;
+        default:
+          this.searchCase = this.maybeKnowDataList;
+          break;
+      }
       searchKeyData.forEach((el) => {
-        let searchCase =
-          this.activeName === "address" 
-          ? this.addressDataList 
-          : this.activeName === "group" 
-          ? this.newGroupList
-          : this.maybeKnowDataList;
-        this.searchData = searchCase.filter((item) => {
+        this.searchData = this.searchCase.filter((item) => {
           if (this.activeName === "address") {
             return item.name.indexOf(el.replace("@", "")) !== -1;
           } else if(this.activeName === "group") {
@@ -411,11 +427,17 @@ export default {
           }
         });
       });
-      this.activeName === "address"
-        ? this.setMyContactDataList(this.searchData)
-        : this.activeName === "group" 
-        ? this.setGroupList(this.searchData)
-        : this.setMaybeKnowList(this.searchData)
+      switch (this.activeName) {
+        case "address":
+          this.setMyContactDataList(this.searchData)
+          break;
+        case "group":
+        this.setGroupList(this.searchData)
+          break;
+        default:
+          this.setMaybeKnowList(this.searchData)
+          break;
+      }
     },
   },
   computed: {
@@ -430,14 +452,15 @@ export default {
       activeName: (state) => state.ws.activeName,
       contactUser: (state) => state.ws.contactUser,
       nofity: (state) => state.ws.nofity,
-      soundNofiy: (state) => state.ws.soundNofiy,
+      soundNotify: (state) => state.ws.soundNotify,
       myContactDataList: (state) => state.ws.myContactDataList,
       groupMemberDataList: (state) => state.ws.groupMemberDataList,
     }),
   },
   methods: {
     ...mapMutations({
-      setSoundNofiy: "ws/setSoundNofiy",
+      setSoundNotify: "ws/setSoundNotify",
+      setRecentChat:"ws/setRecentChat",
       setInfoMsg: "ws/setInfoMsg",
       setBadgeNum: "ws/setBadgeNum",
       setChatUser: "ws/setChatUser",
@@ -451,7 +474,14 @@ export default {
       setContactListData: "ws/setContactListData",
       setMyContactDataList: "ws/setMyContactDataList",
     }),
-
+    spreadAddressShow(){
+      const nav = [
+        'address',
+        'maybeKnow'
+      ]
+      const navFilter = nav.some((el) => el === (this.hichatNav.type || this.activeName))
+      return navFilter
+    },
     goChatRoom(data, type) {
       this.setInfoMsg({
         infoMsgShow: false,
@@ -469,6 +499,31 @@ export default {
       this.setHichatNav({ type: type, num: 1 });
       this.$router.push({ name: "HiChat", params: data });
     },
+    
+    setNotify(){
+      if (!localStorage.getItem("soundNotify")) {
+        this.setSoundNotify(this.soundNotify);
+      }
+    },
+    promoteCode(){
+      this.promoteCodeConfig.text = `${
+        location.origin
+      }/pub/#/signUp?${encodeURIComponent(
+        Encrypt(
+          `agentId=${localStorage.getItem("id")}`,
+          this.promoteKey,
+          this.promoteIv
+        )
+      )}`;
+    },
+    init(){
+      this.setNotify()
+      this.promoteCode()
+      this.getContactDataList();
+      this.getGroupDataList()
+      this.getMaybeKnow();
+      this.getUserData();
+    },
     //判斷是否base64
     isBase64(data) {
       return AESBase64(data, this.aesKey ,this.aesIv)
@@ -482,64 +537,42 @@ export default {
             el.name = "嗨聊记事本";
             el.icon = require("./../../../static/images/image_savemessage.png");
             el.toChatId = "u" + el.memberId;
-          } else if (el.icon === undefined) {
-            el.icon = require("./../../../static/images/image_user_defult.png");
+          } else if (!el.icon) {
+            el.icon = this.userDefultIcon
           }    
          memberActivityData.push(el.contactId)   
+         this.setMyContactDataList(this.addressDataList) 
         });
-      });
+      })
     },
-    getGropDataList(){
+    getGroupDataList(){
       getGroupList().then((res) => {
         this.groupList = res.data.list;
-        this.groupList.forEach((el) => {
-          if (el.icon === "") {
-            el.icon = require("./../../../static/images/image_group_defult.png");
-          }
-        });
-        this.newGroupList = this.groupList.filter((el)=>{
-          return el.groupName !== undefined
-        })
-      });
+        this.newGroupList = this.groupList.filter((el)=> el.groupName)
+        this.setGroupList(this.groupList);
+      })
     },
     getMaybeKnow(){
       maybeKnow().then((res) => {
         this.maybeKnowDataList = res.data
       })
     },    
-    getUserMemberActivity(data){
-      let memberId = data
-      getMemberActivity({memberId}).then((res) => {
-        if(res.code === 200){
-          this.userTimeData = res.data
-          this.addressDataList.forEach((list)=>{
-            this.userTimeData.forEach((data) => {
-              if(list.contactId === JSON.stringify(data.memberId)){
-                list.currentTime = data.currentTime 
-                list.lastActivityTime = data.lastActivityTime
-              }
-            });
-          })
-          this.setMyContactDataList(this.addressDataList);
-        }
-      })
-    },
     getUserData() {
       getUserInfo().then((res) => {
-        if (res.data.icon === undefined) {
-          res.data.icon = require("./../../../static/images/image_user_defult.png");
+        if(!res.data.icon){
+          res.data.icon = this.userDefultIcon
         }
         this.qrCodeConfig.text = `${location.origin}/fe/#/AddUser?username=${res.data.username}&id=${res.data.id}`;
         this.setMyUserInfo(res.data);
-      });
+      })
     },
     getGroupListMember() {
       let groupId = this.groupUser.toChatId.replace("g", "");
       listMember({ groupId }).then((res) => {
         this.contactList = res.data.list;
         this.contactList.forEach((item) => {
-          if (item.icon === undefined) {
-            item.icon = require("./../../../static/images/image_user_defult.png");
+          if (!item.icon) {
+            item.icon = this.userDefultIcon
           }
         });
         this.setContactListData(this.contactList);
@@ -552,7 +585,7 @@ export default {
       this.getHistorySetTimeout();
     },
     getHistorySetTimeout() {
-      setTimeout(() => this.getHiChatDataList(), 2000);
+      setTimeout(() => this.$root.getHiChatDataList(), 2000);
     },
     copyUrl() {
       let url = this.num === 0? this.qrCodeConfig.text:this.promoteCodeConfig.text;
@@ -567,13 +600,13 @@ export default {
       a.dispatchEvent(event);
     },
     handleGetMessage(msg) {
+      let joinChatKey = this.chatDataKey
       let msgInfo = JSON.parse(msg);
       let numNumber = 0;
       switch (msgInfo.chatType) {
-        //成功收到
         case "SRV_RECENT_CHAT":
-          this.chatDataList = msgInfo.recentChat;
-          this.chatDataList.forEach((item) => {
+          this.recentChat = msgInfo.recentChat;
+          this.recentChat.forEach((item) => {
             numNumber += item.unreadCount;
             if (item.toChatId === this.chatUser.toChatId) {
               if (item.toChatId === item.forChatId) {
@@ -585,6 +618,7 @@ export default {
                 item.username = this.chatUser.username;
               }
             }
+            this.setRecentChat(this.recentChat)
             this.setBadgeNum(numNumber);
           });
           break;
@@ -595,51 +629,47 @@ export default {
         case "SRV_GROUP_AUDIO":
         case "SRV_GROUP_SEND":
           if (msgInfo.chat.fromChatId !== "u" + localStorage.getItem("id")) {
-            let userNotificationData = this.chatDataList.filter((list) =>{
+            let userNotificationData = this.recentChat.filter((list) =>{
               return list.toChatId === msgInfo.toChatId;
             })
-            if(userNotificationData[0].setting.prompt){
+            // 通知
+            if(userNotificationData[0].setting || userNotificationData[0].setting.prompt){
               setTimeout(() => this.openNotify(msgInfo, msgInfo.chatType), 500);
             }
           }
-          if (this.device === "moblie") {
-            this.getHiChatDataList();
+          if (this.device === "mobile") {
+            this.$root.getHiChatDataList();
           }
           break;
+        // 连线失敗
         case "SRV_ERROR_MSG":
-          if (msgInfo.text === "30006") {
+          if(msgInfo.text === "50002"){
+            joinChatKey.chatType = "CLI_AUTH";
+            joinChatKey.id = Math.random();
+            Socket.send(joinChatKey);
+          } else if (msgInfo.text === "30006") {
             this.$confirm("群組已解散, 是否继续?", "提示", {
               confirmButtonText: "确定",
               showCancelButton: false,
               type: "danger",
               center: true,
             }).then(() => {
-              this.getHiChatDataList();
+              this.$root.getHiChatDataList();
               this.setHichatNav({ type: "address", num: 1 });
               this.setChatGroup({});
             });
           }
           break;
         case "SRV_CHAT_DEL":
-          this.getHiChatDataList();
+          this.$root.getHiChatDataList();
           break;
         case "SRV_EDIT_CONTACT":  
           this.getMaybeKnow();
           break  
         case  "SRV_GROUP_SETTING":
-          this.getGropDataList()
+          this.getGroupDataList()
           break;  
       }
-    },
-    getHiChatDataList() {
-      let chatMsgKey = {
-        chatType: "CLI_RECENT_CHAT",
-        id: Math.random(),
-        tokenType: 0,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      };
-      Socket.send(chatMsgKey);
     },
     openNotify(msgInfo, chatType) {
       // 判断浏览器是否支持Notification
@@ -658,11 +688,7 @@ export default {
       }
     },
     noIconShow(iconData, key) {
-      if ([undefined, null, ""].includes(iconData.icon)) {
-        return require(`./../../../static/images/image_${key}_defult.png`);
-      } else {
-        return iconData.icon;
-      }
+      return showIcon(iconData, key)
     },
     notifyMe(msgInfo, chatType) {
       let notify = {
@@ -671,7 +697,7 @@ export default {
         title: "",
         type: "",
       };
-      this.chatDataList.forEach((el) => {
+      this.recentChat.forEach((el) => {
         if (el.toChatId === msgInfo.toChatId) {
           if (el.isContact) {
             notify.icon = this.noIconShow(el,"user");
@@ -735,7 +761,7 @@ export default {
           onclick: (even) => {
             this.$router.push({ path: "/HiChat" });
             this.setHichatNav({ type: notify.type, num: 1 });
-            this.notifyData = this.chatDataList.filter((el) => {
+            this.notifyData = this.recentChat.filter((el) => {
               return el.toChatId === even.target.data.toChatId;
             });
             if (notify.type === "address") {
@@ -770,13 +796,46 @@ export default {
         .then((res) => {
           if (res.code === 200 && res.message === "登出成功") {
             this.$router.push({ path: "/login" });
-            localStorage.clear()
-            window.location.reload();
+            const device = localStorage.getItem('device'); //remain device
+            localStorage.clear();
+            localStorage.setItem('device', device);
+            initGlobalState()
+            Socket.close(); // for [PC] Electron App
+            window.location.reload(); // 于 Electron 应用时,会被停用
           }
         })
         .catch((err) => {
           return false;
         });
+    },
+    sendDeviceInfo(device) {
+      const PWA_MODE = '(display-mode: standalone)';
+      const isPWA = window.matchMedia(PWA_MODE).matches;
+      const typeMaps = {
+        pc: 8,
+        mobile: 9,
+        pwa_pc: 12,
+        pwa_mobile: 14
+      };
+
+      let deviceType = 0;
+      if (isPWA) {
+        deviceType = device === 'pc' ? typeMaps.pwa_pc : typeMaps.pwa_mobile;
+      } else {
+        deviceType = device === 'pc' ? typeMaps.pc : typeMaps.mobile;
+      }
+
+      const parser = new UAParser();
+      const deviceInfo = parser.getResult();
+      const requestBody = {
+        appVersion: !deviceInfo.browser.name ? '' : deviceInfo.browser.name, // 軟件版本
+        deviceBrand: !deviceInfo.device.vendor ? '' : deviceInfo.device.vendor, // 裝置品牌
+        deviceModel: !deviceInfo.device.model ? '' : deviceInfo.device.model, // 裝置型號
+        deviceType: deviceType, // 登入类型: HAILIAO_WEB(8), HAILIAO_H5(9), HAILIAO_PC(10), HAILIAO_PWA(12), HAILIAO_PWA_H5(14);
+        systemVersion: !deviceInfo.os.name ? '' : `${deviceInfo.os.name}_${deviceInfo.os.version}` // 系統版本
+      };
+
+      updateDeviceInfo(requestBody);
     },
   },
   components: {
@@ -793,7 +852,7 @@ export default {
 <style lang="scss" scoped>
 .home-wrapper {
   .el-container {
-    /deep/.el-main {
+    ::v-deep.el-main {
       .el-header {
         .home-header {
           .QRcode-img {
@@ -808,17 +867,14 @@ export default {
             background-color: #fff;
             background-image: url("./../../../static/images/icon_promotion.png");
           }
-          .home-add-user {
-            background-color: #fff;
-          }
+      
           .address-img {
+            background-color: #fff;
             background-image: url("./../../../static/images/add_user.png");
           }
           .hichat-img {
+            background-color: #fff;
             background-image: url("./../../../static/images/add_chat.png");
-          }
-          .setting-img {
-            background-image: url("./../../../static/images/edit.png");
           }
         }
       }
@@ -836,8 +892,8 @@ export default {
       }
       span {
         margin-left: 0.3em;
-        font-size: 17px;
-        color: #333333;
+        font-size: 16px;
+        color: #EE5253;
         font-weight: 600;
         margin-top: 4px;
       }
@@ -845,7 +901,7 @@ export default {
   }
 }
 .el-dialog-loginOut {
-  /deep/.el-dialog__footer {
+  ::v-deep.el-dialog__footer {
     padding: 0 !important;
     .el-button {
       padding: 20px !important;
@@ -884,6 +940,17 @@ export default {
   .home-wrapper{
     .el-container{
       .home-search{
+        .home-logo{
+          width: 100%;
+          display: flex;
+          align-items: center;
+          color: #FF6900;
+          img{
+            left: 0;
+            height: 2.5em;
+            margin-right: 10px;
+          }
+        }
         .spread-style{
           img{
             left: 7px;

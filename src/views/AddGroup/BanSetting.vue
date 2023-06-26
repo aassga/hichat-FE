@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper" @touchmove="$root.handleTouch">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="125px">
           <div class="home-header">
@@ -27,9 +27,13 @@
               :key="index"
             >
               <div class="address-box">
-                <el-image :src="item.icon" />
-                <div class="msg-box">
-                  <span>{{ item.name }}</span>
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image :src="groupIconShow(item)" />
+                <div class="content-box">
+                  <div class="msg-box" style="align-items: center">
+                    <span>{{ groupName(item) }}</span>
+                  </div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </el-checkbox>
@@ -41,7 +45,7 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="320px">
         <el-header height="70px">
           <div
             class="home-header flex-start"
@@ -76,9 +80,13 @@
               :key="index"
             >
               <div class="address-box">
-                <el-image :src="item.icon" />
-                <div class="msg-box">
-                  <span>{{ item.name }}</span>
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image :src="groupIconShow(item)" />
+                <div class="content-box">
+                  <div class="msg-box" style="align-items: center">
+                    <span>{{ groupName(item) }}</span>
+                  </div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </el-checkbox>
@@ -94,7 +102,9 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { listMember,setBanPost } from '@/api/groupController'
+import { listMember, setBanPost } from "@/api/groupController";
+import { groupIcon } from "@/utils/icon";
+import { nameTidy } from "@/utils/name";
 
 export default {
   name: "SettingGroup",
@@ -109,7 +119,7 @@ export default {
   },
 
   created() {
-    if (this.device === "moblie") {
+    if (this.device === "mobile") {
       this.groupData = JSON.parse(localStorage.getItem("groupData"));
     } else {
       this.groupData = this.groupUser;
@@ -124,7 +134,7 @@ export default {
       searchKeyData.forEach((el) => {
         let searchCase = this.contactList;
         this.searchData = searchCase.filter((item) => {
-          return item.name.indexOf(el.replace("@", "")) !== -1;
+          return this.groupName(item).indexOf(el.replace("@", "")) !== -1;
         });
       });
       this.newContactList = this.searchData;
@@ -133,20 +143,41 @@ export default {
   computed: {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
+      authority: (state) => state.ws.authority,
       groupPermissionData: (state) => state.ws.groupPermissionData,
+      authorityGroupData: (state) => state.ws.authorityGroupData,
     }),
   },
   methods: {
     ...mapMutations({
       setMsgInfoPage: "ws/setMsgInfoPage",
     }),
+    groupIconShow(data) {
+      let groupUser = this.groupUser;
+      let authority = this.authority;
+      let authorityGroupData = this.authorityGroupData;
+      return groupIcon(data, { groupUser, authority, authorityGroupData });
+    },
+    groupName(el) {
+      let name = "";
+      if (!el.groupNickname) {
+        name = !el.groupNumber ? el.name : el.groupNumber;
+      } else if (el.groupNickname) {
+        name = el.groupNickname;
+      }
+      let showGroupNumber = this.authorityGroupData.showGroupNumber;
+      let editGroupNickname = this.authorityGroupData.editGroupNickname;
+      return nameTidy({name,el,showGroupNumber,editGroupNickname})
+
+    },
     getGroupListMember() {
       if (!this.groupPermissionData.addGroup) {
         let groupId = this.groupData.groupId;
         listMember({ groupId }).then((res) => {
           this.contactList = res.data.list;
           this.contactList.forEach((item) => {
-            if (item.icon === undefined) {
+            item.groupNumber = "成员" + item.groupNumber;
+            if (!item.icon) {
               item.icon = require("./../../../static/images/image_user_defult.png");
             }
             if (item.isBanPost) {
@@ -160,7 +191,7 @@ export default {
         });
       } else {
         this.contactList = this.groupPermissionData.peopleData.filter((el) => {
-          return el.isManager === undefined;
+          return !el.isManager;
         });
         this.contactList.forEach((res) => {
           this.groupPermissionData.banPostMemberList.forEach((el) => {
@@ -184,7 +215,7 @@ export default {
         };
         setBanPost(params).then((res) => {
           if (res.code === 200) {
-            if (this.device === "moblie") {
+            if (this.device === "mobile") {
               this.$router.push({ name: "SettingGroup" });
             } else {
               this.setMsgInfoPage({ pageShow: false, type: "SettingGroup" });
@@ -197,7 +228,7 @@ export default {
       }
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         if (this.groupPermissionData.addGroup) {
@@ -220,7 +251,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
   }
@@ -275,7 +306,7 @@ export default {
         }
       }
     }
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -291,22 +322,6 @@ export default {
         width: 100%;
         padding-left: 0;
         .address-box {
-          .msg-box {
-            span {
-              display: block;
-              padding-left: 1em;
-              font-size: 16px;
-              color: #666666;
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                margin-top: 0.65em;
-                width: 100%;
-                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
-              }
-            }
-          }
           .checkBox {
             position: absolute;
             right: 1.5em;
@@ -328,19 +343,8 @@ export default {
       .el-checkbox {
         width: 100%;
       }
-      .el-checkbox__label {
-        .address-box {
-          .msg-box {
-            span {
-              &::after {
-                content: "";
-                margin-top: 0.95em;
-              }
-            }
-          }
-        }
-      }
     }
   }
 }
+
 </style>

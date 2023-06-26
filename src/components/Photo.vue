@@ -133,13 +133,13 @@ export default {
         this.thisContext = this.thisCancas.getContext("2d");
         this.thisVideo = document.getElementById("videoCamera");
         // 旧版本浏览器可能根本不支持mediaDevices，我们首先设置一个空对象
-        if (navigator.mediaDevices === undefined) {
+        if (!navigator.mediaDevices) {
           navigator.mediaDevices = {};
         }
         // 一些浏览器实现了部分mediaDevices，我们不能只分配一个对象
-        // 使用getUserMedia，因为它会覆盖现有的属性。
+        // 使用getUserMedia，因为它会复盖现有的属性。
         // 这里，如果缺少getUserMedia属性，就添加它。
-        if (navigator.mediaDevices.getUserMedia === undefined) {
+        if (!navigator.mediaDevices.getUserMedia) {
           navigator.mediaDevices.getUserMedia = function (constraints) {
             // 首先获取现存的getUserMedia(如果存在)
             let getUserMedia =
@@ -229,7 +229,7 @@ export default {
     },
     //关闭摄像头
     stopNavigator() {
-      if (this.thisVideo && this.thisVideo !== null) {
+      if (this.thisVideo) {
         this.thisVideo.srcObject.getTracks()[0].stop();
         this.open = true; //切换成打开摄像头
       }

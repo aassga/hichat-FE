@@ -21,7 +21,11 @@
           >
             <router-link :to="item.path">
               <div class="setting-button-left">
-                <img :src="item.icon" alt="" />
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image
+                  :src="noIconShow(item, 'user')"
+                  :preview-src-list="[noIconShow(item, 'user')]"
+                />
                 <span>{{ item.name }}</span>
               </div>
               <div
@@ -48,6 +52,8 @@
 </template>
 
 <script>
+import { showIcon } from "@/utils/icon";
+
 export default {
   name: "PasswordMange",
   data() {
@@ -64,6 +70,11 @@ export default {
       ],
       notification: false,
     };
+  },
+  methods: {
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
+    },
   },
 };
 </script>

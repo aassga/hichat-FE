@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper" @touchmove="$root.handleTouch">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="60px">
           <div class="home-header">
@@ -12,6 +12,25 @@
         <div class="home-content">
           <template v-if="groupData.isAdmin">
             <div class="setting-title">群组成员</div>
+            <div
+              v-for="(item, index) in groupPeopleData"
+              :key="item.key + index"
+            >
+              <div class="setting-button" v-if="item.key !== 'editGroupNickname' || !showNickname">
+                <div class="setting-box">
+                  <div class="setting-button-left" :class="{'pl15':item.key === 'editGroupNickname'}" >
+                    <el-switch
+                      v-model="item.isCheck"
+                      :inactive-text="item.name"
+                      active-color="#fd5f3f"
+                      inactive-color="#666666"
+                    >
+                    </el-switch>
+                  </div>
+                </div>
+              </div>
+            </div>    
+            <div class="setting-title">信息传递</div>
             <div
               class="setting-button"
               v-for="(item, index) in messagePermissionData"
@@ -32,8 +51,6 @@
                 </div>
               </div>
             </div>
-          </template>
-          <div v-if="groupData.isAdmin">
             <div class="setting-title">管理員</div>
             <div class="setting-button mt10">
               <router-link to="/AdminSetting">
@@ -45,7 +62,7 @@
                 </div>
               </router-link>
             </div>
-          </div>
+          </template>
           <div
             v-for="(item, index) in settingPermission"
             :key="index"
@@ -73,7 +90,7 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="320px">
         <el-header height="70px">
           <div class="home-header flex-start" :style="!groupPermissionData.addGroup ? 'position: relative; left: -4px; top: -1px;':''">
             <div class="home-user-pc" @click="back()"></div>
@@ -86,9 +103,30 @@
           <template v-if="groupData.isAdmin">
             <div class="setting-title">群组成员</div>
             <div
+              v-for="(item, index) in groupPeopleData"
+              :key="item.key + index"
+            >
+              <div class="setting-button" v-if="item.key !== 'editGroupNickname' || !showNickname">
+                <div class="setting-box">
+                  <div class="setting-button-left no-center" :class="{'pl15':item.key === 'editGroupNickname'}" >
+                    <el-switch
+                      v-model="item.isCheck"
+                      :inactive-text="item.name"
+                      active-color="#fd5f3f"
+                      inactive-color="#666666"
+                    >
+                    </el-switch>
+                    <div class="tip-text">{{ item.tip }}</div>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>            
+            <div class="setting-title">信息传递</div>
+            <div
               class="setting-button"
               v-for="(item, index) in messagePermissionData"
-              :key="item + index"
+              :key="item.key + index"
             >
               <div class="setting-box">
                 <!-- <div class="setting-button-left">
@@ -105,9 +143,6 @@
                 </div>
               </div>
             </div>
-          </template>
-
-          <div v-if="groupData.isAdmin">
             <div class="setting-title">管理員</div>
             <div class="setting-button mt10">
               <a @click="changeSettingGroupShow">
@@ -119,7 +154,8 @@
                 </div>
               </a>
             </div>
-          </div>          
+          </template>
+
           <div
             v-for="(item, index) in settingPermission"
             :key="index"
@@ -152,12 +188,31 @@
 <script>
 import { mapState,mapMutations } from "vuex";
 import { addGroup,getGroupAuthoritySetting,setGroupAuthority } from '@/api/groupController'
-import { thru } from "lodash";
 
 export default {
   name: "SettingGroup",
   data() {
     return {
+      groupPeopleData:[
+        {
+          name:"显示为群组內昵称",
+          key:"showGroupNumber",
+          isCheck:false,
+          tip:"所有成员的暱稱以成员1、成员2....方式顯示。"
+        },
+        {
+          name:"允许修改群组內昵称",
+          key:"editGroupNickname",
+          isCheck:false,
+          tip:"允许成员编辑昵称，该昵称仅限此群组使用。"
+        },
+        {
+          name:"查看群组成员资讯",
+          key:"checkUserInfo",
+          isCheck:false,
+          tip:"",
+        },
+      ],
       messagePermissionData:[
         {
           name:"传送文字讯息",
@@ -174,17 +229,17 @@ export default {
           key:"sendLink",
           isCheck:true,
         },               
-        {
-          name:"查看群组成员资讯",
-          key:"checkUserInfo",
-          isCheck:false,
-        },
+
         {
           name:"置顶讯息",
           key:"pin",
           isCheck:false,
         },
-        
+        {
+          name:"发起群组通话",
+          key:"startGroupCall",
+          isCheck:false,
+        },
       ],
       settingPermission:[
         {
@@ -199,6 +254,7 @@ export default {
         }
       ],
       device: localStorage.getItem("device"),
+      showNickname:false,
     };
   },
   computed: {
@@ -212,14 +268,32 @@ export default {
     this.groupData = this.groupPermissionData.addGroup ? JSON.parse(localStorage.getItem("addGroupData")): this.groupUser
   },
   mounted() {
-    if(!this.groupPermissionData.addGroup) this.getGroupAuthority()
+    if(!this.groupPermissionData.addGroup) {
+      this.getGroupAuthority()
+    }else{
+      this.showNickname = !this.groupPeopleData[0].isCheck 
+    }
     this.mangerAuthority()
+  },
+  watch:{
+    groupPeopleData: {
+      handler(value) {
+        if(value[0].isCheck){
+          this.showNickname = false
+        }else{
+          value[1].isCheck = false
+          this.showNickname = true
+        }
+      },
+      deep: true,
+    },
   },
   methods: {
     ...mapMutations({
       setInfoMsg:"ws/setInfoMsg",
       setChatGroup: "ws/setChatGroup",
       setMsgInfoPage:"ws/setMsgInfoPage",
+      setAuthorityGroupData:"ws/setAuthorityGroupData",
     }),
     changeSettingGroupShow() {
       if(this.groupPermissionData.addGroup){
@@ -255,21 +329,29 @@ export default {
       getGroupAuthoritySetting({groupId}).then((res)=>{
         if(res.code === 200 ){
           this.authorityData = res.data
+          this.showNickname = !this.authorityData.showGroupNumber
           for (let item in this.authorityData) {
             this.messagePermissionData.forEach((res)=>{
               if(item === res.key){
                 return res.isCheck = this.authorityData[item]
               }
             })
+            this.groupPeopleData.forEach((res)=>{
+              if(item === res.key){
+                return res.isCheck = this.authorityData[item]
+              }
+            })
           }
+          this.setAuthorityGroupData(this.authorityData);
         }
       })
     },
     authoritySettingBtn(){
       this.newAuthorityData ={}
-      this.messagePermissionData.forEach((el)=>{
+      let groupNewArray = this.messagePermissionData.concat(this.groupPeopleData)
+      groupNewArray.forEach((el)=>{
         this.newAuthorityData[el.key] = true;
-        let newData = this.messagePermissionData.filter((res) => {
+        let newData = groupNewArray.filter((res) => {
           return (res.key === el.key);
         });
         this.newAuthorityData[el.key] = newData[0].isCheck
@@ -281,11 +363,12 @@ export default {
         }
         setGroupAuthority(params).then((res)=>{
           if(res.code === 200){
-            if(this.device === "moblie"){
+            if(this.device === "mobile"){
               this.$router.push({ path: "/GroupPage",});
             }else{
-              this.setInfoMsgTure()
+              this.setInfoMsgTrue()
             }  
+            this.setAuthorityGroupData(params.authority);
           }
         })
       }else{
@@ -308,7 +391,7 @@ export default {
             };
             this.setChatGroup(groupData);
             this.$router.push({
-              path: this.device === "moblie" ? "/ChatGroupMsg" : "Home",
+              path: this.device === "mobile" ? "/ChatGroupMsg" : "Home",
             });
           }
         })
@@ -318,14 +401,14 @@ export default {
       if(this.groupPermissionData.addGroup){
         this.$router.push({ path: "/AddGroupList",});
       }else{
-        if (this.device === "moblie"){
+        if (this.device === "mobile"){
           this.$router.push({ path: "/GroupPage",});
         }else{
-          this.setInfoMsgTure()
+          this.setInfoMsgTrue()
         }
       }
     },    
-    setInfoMsgTure(){
+    setInfoMsgTrue(){
       if (this.infoMsg.infoMsgMap === "address") {
         this.setInfoMsg({
           infoMsgShow: true,
@@ -352,7 +435,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
   }
@@ -388,8 +471,8 @@ export default {
       }
       .setting-button-left {
         display: flex;
-        align-items: center;
         width: 100vw;
+        flex-direction: column;
         span {
           font-size: 15px;
           color: #333333;
@@ -399,9 +482,17 @@ export default {
           display: flex;
           justify-content: space-between;
         }
-        /deep/.el-switch__label.is-active{
+        .tip-text{
+          font-size: 12px;
+          color: #c5c5c5;
+          margin-top: 10px;
+        }
+        ::v-deep.el-switch__label.is-active{
           color: #333333;
         }
+      }
+      .no-center{
+        align-items: flex-start;
       }
       .setting-button-right {
         display: flex;
@@ -416,5 +507,8 @@ export default {
       }
     }    
   }
+}
+.pl15{
+  padding-left: 15px;
 }
 </style>

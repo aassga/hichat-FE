@@ -6,9 +6,9 @@ export function fileBoxName(data) {
   return str 
 }
 export function formatFileSize(fileSize) {
-  var temp = fileSize / (1024*1024);
-  temp = temp.toFixed(2) === '0.00' ? '0.01' : temp.toFixed(2);
-  return temp + 'MB';
+  // var temp = fileSize / (1024*1024);
+  // temp = temp.toFixed(2) === '0.00' ? '0.01' : temp.toFixed(2);
+  return fileSize + 'MB';
   // if (fileSize < 1024) {
   //     return fileSize + 'B';
   // } else if (fileSize < (1024*1024)) {

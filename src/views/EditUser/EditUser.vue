@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="55px">
           <div class="home-header">
@@ -11,16 +11,17 @@
         </el-header>
         <div class="home-content">
           <div class="group-data">
-            <span
-              ><el-image
-                :src="noIconShow(userData)"
-                :preview-src-list="[noIconShow(userData)]"
-            /></span>
-            <!-- <div>
+            <span>
+              <el-image
+                :src="noIconShow(userData, 'user')"
+                :preview-src-list="[noIconShow(userData, 'user')]"
+              />
+            </span>
+            <div>
               <span class="photo-edit" @click="uploadImgShow = true"
                 >变更头像</span
               >
-            </div> -->
+            </div>
           </div>
           <div class="user-edit-form">
             <el-form ref="form" :model="userEditForm" label-width="100px">
@@ -36,29 +37,38 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="370px">
         <el-header height="70px">
           <div class="home-header flex-start">
             <div class="home-user-pc" @click="back"></div>
             <span class="home-header-title">编辑个人资料</span>
-            <div class="home-add-user home-edit-img" @click="editSubmit()"></div>
+            <div
+              class="home-add-user home-edit-img"
+              @click="editSubmit()"
+            ></div>
           </div>
         </el-header>
         <div class="home-content">
           <div class="group-data">
-            <span
-              ><el-image
-                :src="noIconShow(userData)"
-                :preview-src-list="[noIconShow(userData)]"
-            /></span>
-            <!-- <div>
+            <span>
+              <el-image
+                :src="noIconShow(userData, 'user')"
+                :preview-src-list="[noIconShow(userData, 'user')]"
+              />
+            </span>
+            <div>
               <span class="photo-edit" @click="uploadImgShow = true"
                 >变更头像</span
               >
-            </div> -->
+            </div>
           </div>
           <div class="user-edit-form">
-            <el-form ref="form" :model="userEditForm" label-width="100px" onsubmit="return false;">
+            <el-form
+              ref="form"
+              :model="userEditForm"
+              label-width="100px"
+              onsubmit="return false;"
+            >
               <el-form-item label="用户昵称">
                 <el-input v-model="userEditForm.nickname"></el-input>
               </el-form-item>
@@ -73,7 +83,7 @@
       width="100%"
       :class="{ 'el-dialog-loginOut': device === 'pc' }"
       center
-      :close-on-click-modal="false"      
+      :close-on-click-modal="false"
     >
       <el-upload
         class="upload-demo"
@@ -84,20 +94,19 @@
         list-type="picture"
       >
         <el-button type="primary">点击上传</el-button>
-        <!-- <div slot="tip" class="el-upload__tip">
-          只能上传 jpg / png 圖片，且不超过500kb
-        </div> -->
       </el-upload>
       <span slot="footer" class="dialog-footer">
-        <template v-if="device === 'moblie'">
-          <el-button type="success" @click="submitAvatarUpload">确认</el-button>
+        <template v-if="device === 'mobile'">
+          <el-button type="success" @click="submitAvatarUpload()"
+            >确认</el-button
+          >
           <el-button @click="uploadImgShow = false">取 消</el-button>
         </template>
         <template v-else>
           <el-button class="background-gray" @click="uploadImgShow = false"
             >取消</el-button
           >
-          <el-button class="background-orange" @click="submitAvatarUpload"
+          <el-button class="background-orange" @click="submitAvatarUpload()"
             >确认</el-button
           >
         </template>
@@ -107,8 +116,8 @@
 </template>
 
 <script>
-import { updateNickname  } from "@/api/memberProfileController";
-import { uploadIcon } from '@/api/uploadController'
+import { updateNickname } from "@/api/memberProfileController";
+import { uploadIcon } from "@/api/uploadController";
 import { mapMutations } from "vuex";
 
 export default {
@@ -132,9 +141,12 @@ export default {
     ...mapMutations({
       setMyUserInfo: "ws/setMyUserInfo",
     }),
-    noIconShow(iconData) {
-      if ([undefined,null,""].includes(iconData.icon)) {
-        return require("./../../../static/images/image_user_defult.png");
+    // noIconShow(iconData, key) {
+    //   return showIcon(iconData, key)
+    // },
+    noIconShow(iconData, key) {
+      if (!iconData.icon) {
+        return require(`./../../../static/images/image_${key}_defult.png`);
       } else {
         return iconData.icon;
       }
@@ -153,7 +165,7 @@ export default {
         if (res.code === 200) {
           this.fileList = [];
           this.userData.icon = res.data;
-          this.setMyUserInfo(this.userData)
+          this.setMyUserInfo(this.userData);
         }
       });
     },
@@ -166,8 +178,7 @@ export default {
         if (res.code === 200) {
           this.back();
         }
-      })
-
+      });
     },
   },
 };
@@ -192,7 +203,7 @@ export default {
       .el-image {
         width: 4em;
         height: 4em;
-        top:0;
+        top: 0;
       }
       span {
         height: 4.5em !important;
@@ -212,9 +223,9 @@ export default {
     margin: 1em;
     background-color: #fff;
     border-radius: 10px;
-    /deep/.el-form {
+    ::v-deep.el-form {
       .el-form-item__label {
-        font-size: 17px;
+        font-size: 16px;
       }
       .el-input {
         font-size: 19px;
@@ -228,7 +239,7 @@ export default {
 .hichat-pc {
   .home-user-pc {
     background-color: #fff;
-    background-image: url("./../../../static/images/pc/arrow-left.svg");
+    background-image: url("./../../../static/images/pc/arrow-left.png");
     cursor: pointer;
   }
   .home-content {
@@ -236,7 +247,7 @@ export default {
       .el-image {
         width: auto;
         height: 6em;
-        top:0;
+        top: 0;
       }
       span {
         height: 6.5em !important;
@@ -244,16 +255,16 @@ export default {
     }
   }
   .user-edit-form {
-    /deep/.el-form {
+    ::v-deep.el-form {
       border-radius: 8px;
       background-color: rgba(0, 0, 0, 0.05);
       .el-form-item {
         .el-form-item__label {
-          font-size: 17px;
+          font-size: 16px;
         }
         .el-input {
           .el-input__inner {
-            background:none;
+            background: none;
           }
         }
       }
@@ -263,7 +274,7 @@ export default {
     cursor: pointer;
   }
   .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding: 0;
       .el-button {
         &:nth-child(2) {

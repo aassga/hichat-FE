@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="125px">
           <div class="home-header">
@@ -14,7 +14,7 @@
           </div>
           <div class="home-search">
             <el-input
-              placeholder="输入欲搜寻的手机号码或帐号ID"
+              placeholder="输入欲搜寻的帐号ID"
               prefix-icon="el-icon-search"
               v-model="searchKey"
               @keyup.native.enter="searchUserData(searchKey)"
@@ -22,32 +22,31 @@
             </el-input>
           </div>
         </el-header>
-        <div class="no-data" v-show="noData">
-          <span>此用户不存在</span>
-          <span>无法找到此用户，请确认您填写的 ID 是否正确。</span>
-        </div>
-        <template v-if="addUser.username !== undefined">
+        <add-user-no-data v-show="noData"/>
+        <template v-if="addUser.username">
           <div class="home-content">
             <div class="group-data">
               <span>
                 <el-image
-                  :src="addUser.icon === undefined ? avatarImg : addUser.icon"
-                  :preview-src-list="[addUser.icon === undefined ? avatarImg : addUser.icon]"
+                  :src="noIcon(addUser)"
+                  :preview-src-list="[noIcon(addUser)]"
                 />
-              </span>            
+              </span>
               <span>{{ addUser.name }}</span>
             </div>
           </div>
           <div class="home-footer-btn">
-            <el-button  class="orange-btn" @click="joinUserButtom(addUser)">加入联络人</el-button>
+            <el-button class="orange-btn" @click="joinUserButton(addUser)"
+              >加入联络人</el-button
+            >
           </div>
         </template>
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="370px">
         <el-header height="70px">
-          <div class="home-header flex-start" >
+          <div class="home-header flex-start">
             <router-link :to="'/Home'">
               <div class="home-user-pc"></div>
             </router-link>
@@ -56,37 +55,39 @@
         </el-header>
         <div class="home-search">
           <el-input
-            placeholder="输入欲搜寻的手机号码或帐号ID"
+            placeholder="输入欲搜寻的帐号ID"
             prefix-icon="el-icon-search"
             v-model="searchKey"
             @keyup.native.enter="searchUserData(searchKey)"
           >
           </el-input>
         </div>
-        <div class="no-data" v-show="noData">
-          <span>此用户不存在</span>
-          <span>无法找到此用户，请确认您填写的 ID 是否正确。</span>
-        </div>
-        <template v-if="addUser.username !== undefined">
+        <add-user-no-data v-show="noData"/>
+        <template v-if="addUser.username">
           <div class="home-content">
             <div class="group-data">
               <span>
                 <el-image
-                  :src="addUser.icon === undefined ? avatarImg : addUser.icon"
-                  :preview-src-list="[addUser.icon === undefined ? avatarImg : addUser.icon]"
+                  :src="noIcon(addUser)"
+                  :preview-src-list="[noIcon(addUser)]"
                 />
-              </span>            
+              </span>
               <span>{{ addUser.name }}</span>
             </div>
           </div>
           <div class="home-footer-btn">
-            <el-button  class="orange-btn" :disabled="disabled" @click="joinUserButtom(addUser)">加入联络人</el-button>
+            <el-button
+              class="orange-btn"
+              :disabled="disabled"
+              @click="joinUserButton(addUser)"
+              >加入联络人</el-button
+            >
           </div>
         </template>
       </el-aside>
-    </el-container>    
+    </el-container>
     <el-dialog
-      :title="device === 'pc'?'加入联络人':''"
+      :title="device === 'pc' ? '加入联络人' : ''"
       :visible.sync="successDialogShow"
       class="el-dialog-loginOut"
       width="70%"
@@ -95,7 +96,9 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'"><img src="./../../../static/images/success.png" alt="" /></div>
+        <div v-if="device === 'mobile'">
+          <img src="./../../../static/images/success.png" alt="" />
+        </div>
         <span>操作成功</span>
       </div>
       <span slot="footer" class="dialog-footer">
@@ -106,9 +109,10 @@
 </template>
 
 <script>
-import {mapMutations } from "vuex";
-import { searchByEmailUsername  } from "@/api/memberProfileController";
+import { mapMutations } from "vuex";
+import { searchByEmailUsername } from "@/api/memberProfileController";
 import { addContactUser } from "@/api/memberContactController";
+import AddUserNoData from "./AddUserNoData.vue";
 
 export default {
   name: "AddUser",
@@ -118,19 +122,22 @@ export default {
       searchKey: "",
       avatarImg: require("./../../../static/images/image_user_defult.png"),
       noData: false,
-      disabled:false,
-      successDialogShow:false,
+      disabled: false,
+      successDialogShow: false,
       device: localStorage.getItem("device"),
     };
   },
   created() {
-  if (this.getUrlParam("username") !== "")
+    if (this.getUrlParam("username"))
       this.searchUserData(this.getUrlParam("username"));
   },
   methods: {
-      ...mapMutations({
+    ...mapMutations({
       setChatUser: "ws/setChatUser",
     }),
+    noIcon(el) {
+      return !el.icon ? this.avatarImg : this.addUser.icon;
+    },
     // 獲取URL key
     getUrlParam(paraName) {
       let url = document.location.toString();
@@ -150,39 +157,45 @@ export default {
     searchUserData(token) {
       this.noData = false;
       this.addUser = {};
-      if (token === "") {
+      if (!token) {
         this.addUser = {};
         this.noData = true;
         return;
-      } else if (token === localStorage.getItem("username") || token === document.cookie.replace("phone=","")) {
+      } else if (
+        token === localStorage.getItem("username") ||
+        token === this.$cookie.get("phone")
+      ) {
         this.$message({ message: "无法增加自己到联络人", type: "error" });
         return;
       }
       searchByEmailUsername({ token }).then((res) => {
-        if (res.data === undefined) {
+        if (!res.data) {
           this.noData = true;
         } else if (res.data !== {}) {
           this.addUser = res.data;
         }
       });
     },
-    joinUserButtom(data) {
-      let parmas = {
+    joinUserButton(data) {
+      let params = {
         contactId: data.id,
       };
-      this.disabled = true
-      addContactUser(parmas).then((res) => {
+      this.disabled = true;
+      addContactUser(params).then((res) => {
         if (res.code === 200) {
-          this.successDialogShow = true
-        }else if(res.code === 20002){
-          this.disabled = false
+          this.successDialogShow = true;
+        } else if (res.code === 20002) {
+          this.disabled = false;
         }
       });
     },
-    back(){
+    back() {
       this.$router.push({ path: "/Address" });
-    }
+    },
   },
+  components:{
+    AddUserNoData
+  }
 };
 </script>
 
@@ -199,11 +212,11 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
     }
   }
   .home-search {
-    /deep/.el-input {
+    ::v-deep.el-input {
       .el-input__prefix {
         color: #666666;
       }
@@ -213,19 +226,7 @@ export default {
       }
     }
   }
-  .no-data {
-    margin: 2em 0;
-    span {
-      display: block;
-      text-align: center;
-      height: 2em;
-      &:nth-child(2) {
-        color: #b3b3b3;
-        font-size: 14px;
-      }
-    }
-  }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -276,42 +277,30 @@ export default {
     }
   }
 }
-.hichat-pc{
-  .home-wrapper{
-    .home-search{
-      .el-input{
+.hichat-pc {
+  .home-wrapper {
+    .home-search {
+      .el-input {
         width: 95%;
       }
     }
-    .el-dialog-loginOut{
-     /deep/ .el-dialog{
-        .el-dialog__footer{
+    .el-dialog-loginOut {
+      ::v-deep .el-dialog {
+        .el-dialog__footer {
           padding: 0 !important;
         }
-      } 
+      }
     }
   }
-  .home-content{
-    .group-data{
-      .el-image{
+  .home-content {
+    .group-data {
+      .el-image {
         width: 5em;
         height: 5em;
         border-radius: 10px;
       }
-      span{
+      span {
         height: 5.5em;
-      }
-    }
-  }
-  .no-data {
-    margin: 7em 0 0 0;
-    span {
-      display: block;
-      text-align: center;
-      height: 2.5em;
-      &:nth-child(2) {
-        color: #b3b3b3;
-        font-size: 13px;
       }
     }
   }

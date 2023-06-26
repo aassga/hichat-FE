@@ -49,7 +49,7 @@ export const updateGroup = data => {
   return axios.request(postData)
 }
 
-// 移除成員
+// 移除成员
 export const removeMember = data => {
   let postData = {
     url: '/api/group/removeMember',
@@ -88,7 +88,7 @@ export const leaveGroup = data => {
   }
   return axios.request(postData)
 }
-// 添加成員
+// 添加成员
 export const addMember = data => {
   let postData = {
     url: '/api/group/addMember',
@@ -97,16 +97,6 @@ export const addMember = data => {
   }
   return axios.request(postData)
 }
-
-// 設定管理這权限
-// export const setAdminAuthority = data => {
-//   let postData = {
-//     url: '/api/group/setAdminAuthority',
-//     method: 'post',
-//     data
-//   }
-//   return axios.request(postData)
-// }
 
 // 新增管理員
 export const addManager = data => {
@@ -217,3 +207,14 @@ export const getManagerAuthority = (params) => {
   }
   return axios.request(postData)
 }
+
+// 设定群组昵称
+export const setGroupNickname = data => {
+  let postData = {
+    url: '/api/group/setGroupNickname',
+    method: 'post',
+    data
+  }
+  return axios.request(postData)
+}
+

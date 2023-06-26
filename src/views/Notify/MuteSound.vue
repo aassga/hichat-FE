@@ -1,7 +1,7 @@
 <template>
   <div class="home-wrapper">
     <el-container>
-      <el-aside width="300px">
+      <el-aside width="370px">
         <el-header height="70px">
           <div class="home-header flex-start">
             <div class="home-user-pc" @click="back"></div>
@@ -19,45 +19,45 @@
           </div>
         </div>
         <div class="home-content" @touchmove="$root.handleTouch">
-          <el-tabs v-model="activeName" >
+          <el-tabs v-model="activeName">
             <el-tab-pane label="联络人" name="address">
               <div
                 class="address-box"
                 v-for="(item, index) in newContactList"
                 :key="index"
               >
-                <el-image :src="noIconShow(item,'user')" />
-                <div class="contont-box">
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image :src="noIconShow(item, 'user')" />
+                <div class="content-box">
                   <div class="msg-box">
                     <div>
                       <span>{{ item.name }}</span>
                     </div>
-                    <div class="time" @click="muteActional(item,'user')">
-                      <img :src="item.setting.prompt ? noMuteImg:muteImg " />
+                    <div class="time" @click="muteAction(item, 'user')">
+                      <img :src="item.setting.prompt ? noMuteImg : muteImg" />
                     </div>
                   </div>
-                  <div class="contont-border-bottom"></div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </el-tab-pane>
             <el-tab-pane label="群组" name="group">
               <div
                 class="address-box"
-                v-for="(item, index) in newGroupList
-                "
+                v-for="(item, index) in newGroupList"
                 :key="index"
               >
-                <el-image :src="noIconShow(item,'group')" />
-                <div class="contont-box">
+                <el-image :src="noIconShow(item, 'group')" />
+                <div class="content-box">
                   <div class="msg-box">
                     <div>
                       <span>{{ item.groupName }}</span>
                     </div>
-                    <div class="time" @click="muteActional(item,'group')">
+                    <div class="time" @click="muteAction(item, 'group')">
                       <img :src="item.setting.prompt ? muteImg : noMuteImg" />
                     </div>
                   </div>
-                  <div class="contont-border-bottom"></div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </el-tab-pane>
@@ -70,8 +70,12 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { getContactList,updateContactNickName } from "@/api/memberContactController";
-import { getGroupList,updateGroup } from '@/api/groupController'
+import {
+  getContactList,
+  updateContactNickName,
+} from "@/api/memberContactController";
+import { getGroupList, updateGroup } from "@/api/groupController";
+import { showIcon } from "@/utils/icon";
 
 export default {
   name: "Notify",
@@ -80,16 +84,16 @@ export default {
       searchKey: "",
       activeName: "address",
       disabled: true,
-      groupList: [],      
+      groupList: [],
       contactList: [],
-      newGroupList:[],
-      newContactList:[],
-      muteImg:require("./../../../static/images/icon_notification.svg"),
-      noMuteImg:require("./../../../static/images/volume.svg"),
+      newGroupList: [],
+      newContactList: [],
+      muteImg: require("./../../../static/images/icon_notification.svg"),
+      noMuteImg: require("./../../../static/images/volume.svg"),
       device: localStorage.getItem("device"),
     };
   },
-  watch:{
+  watch: {
     searchKey(val) {
       let searchKeyData = val.split(" ");
       searchKeyData.forEach((el) => {
@@ -103,9 +107,9 @@ export default {
           }
         });
       });
-      if(this.activeName === "address"){
-        this.newContactList = this.searchData
-      }else{
+      if (this.activeName === "address") {
+        this.newContactList = this.searchData;
+      } else {
         this.newGroupList = this.searchData;
       }
     },
@@ -119,7 +123,7 @@ export default {
     this.getDataList();
   },
   mounted() {
-    this.homeScrollHeight()
+    this.homeScrollHeight();
   },
   methods: {
     ...mapMutations({
@@ -127,74 +131,78 @@ export default {
     }),
     getDataList() {
       getContactList().then((res) => {
-        this.newContactList = []
+        this.newContactList = [];
         this.contactList = res.data.list;
-        this.newContactList = this.contactList.filter((name)=>{
-          return name.contactId !== localStorage.getItem("id")
-        })
+        this.newContactList = this.contactList.filter((name) => {
+          return name.contactId !== localStorage.getItem("id");
+        });
       });
       getGroupList().then((res) => {
-        this.newGroupList=[]
+        this.newGroupList = [];
         this.groupList = res.data.list;
-        this.groupList = this.groupList.filter((el)=>{
-          return el.groupName !== undefined
-        })
-        this.newGroupList = this.groupList
+        this.groupList = this.groupList.filter((el) => {
+          return el.groupName;
+        });
+        this.newGroupList = this.groupList;
       });
     },
     noIconShow(iconData, key) {
-      if ([undefined, null, ""].includes(iconData.icon)) {
-        return require(`./../../../static/images/image_${key}_defult.png`);
-      } else {
-        return iconData.icon;
-      }
-    },    
-    muteActional(item,type){
-      if(type === "user"){
-        item.setting.prompt = !item.setting.prompt
-        let contactId = item.contactId
-        let parmas = {
+      return showIcon(iconData, key);
+    },
+    muteAction(item, type) {
+      if (type === "user") {
+        item.setting.prompt = !item.setting.prompt;
+        let contactId = item.contactId;
+        let params = {
           name: item.name,
           setting: {
-            prompt: item.setting.prompt
-          }
-        }
-        updateContactNickName(parmas,contactId).then(res =>{
-          if(res.code === 200){
-            this.$message({ message: !item.setting.prompt ? "开启通知":"关闭通知", type: !item.setting.prompt ? "success" : "warning" });
-            this.myContactDataList.forEach(el=>{
-              if(el.contactId === item.contactId) {
-                return el.setting = item.setting
+            prompt: item.setting.prompt,
+          },
+        };
+        updateContactNickName(params, contactId).then((res) => {
+          if (res.code === 200) {
+            this.$message({
+              message: !item.setting.prompt ? "开启通知" : "关闭通知",
+              type: !item.setting.prompt ? "success" : "warning",
+            });
+            this.myContactDataList.forEach((el) => {
+              if (el.contactId === item.contactId) {
+                return (el.setting = item.setting);
               }
-             })
-            this.setMyContactDataList(this.myContactDataList)
-            this.getDataList()
+            });
+            this.setMyContactDataList(this.myContactDataList);
+            this.getDataList();
           }
-        })
-      }else{
-        item.setting.prompt = !item.setting.prompt
-        let parmas = {
+        });
+      } else {
+        item.setting.prompt = !item.setting.prompt;
+        let params = {
           groupId: item.groupId,
           groupName: item.groupName,
           icon: item.icon,
           setting: {
-            prompt: item.setting.prompt
+            prompt: item.setting.prompt,
+          },
+        };
+        updateGroup(params).then((res) => {
+          if (res.code === 200) {
+            this.$message({
+              message: !item.setting.prompt ? "开启通知" : "关闭通知",
+              type: !item.setting.prompt ? "success" : "warning",
+            });
+            this.getDataList();
           }
-        }
-        updateGroup(parmas).then(res =>{
-          if(res.code === 200){
-            this.$message({ message: !item.setting.prompt ? "开启通知":"关闭通知", type: !item.setting.prompt ? "success" : "warning" });
-            this.getDataList()
-          }
-        })
+        });
       }
     },
-    homeScrollHeight(){
+    homeScrollHeight() {
       let scrollTop = document.querySelector(".home-content");
       let headerScrollTop = document.querySelector(".is-top");
-      let tabsContentHeight = scrollTop.scrollHeight - headerScrollTop.scrollHeight
-      document.querySelector(".el-tabs__content").style.height = tabsContentHeight + 'px';      
-    },    
+      let tabsContentHeight =
+        scrollTop.clientHeight - headerScrollTop.scrollHeight;
+      document.querySelector(".el-tabs__content").style.height =
+        tabsContentHeight + "px";
+    },
     back() {
       this.$router.back(-1);
     },
@@ -210,15 +218,15 @@ export default {
       background-image: url("./../../../static/images/back.png");
     }
   }
-  .home-content{
+  .home-content {
     overflow: hidden !important;
-    .address-box{
-      .contont-box {
+    .address-box {
+      .content-box {
         .msg-box {
           .time {
             position: absolute;
             right: 2.5em;
-            img{
+            img {
               height: 1.5em;
               cursor: pointer;
             }
@@ -236,10 +244,10 @@ export default {
         .home-header {
           .home-user-pc {
             background-color: #fff;
-            background-image: url("./../../../static/images/pc/arrow-left.svg");
+            background-image: url("./../../../static/images/pc/arrow-left.png");
             cursor: pointer;
           }
-        }        
+        }
         .home-search-pc {
           display: flex;
           align-items: center;
@@ -247,25 +255,25 @@ export default {
           margin: 1em;
           .el-input {
             width: 95%;
-            /deep/.el-input__inner {
+            ::v-deep.el-input__inner {
               background-color: #e9e8e8;
               color: #666666;
             }
           }
         }
-        .address-box{
-          .contont-box {
+        .address-box {
+          .content-box {
             .msg-box {
               .time {
                 position: absolute;
                 right: 2.5em;
-                color:#F60;
-                img{
+                color: #f60;
+                img {
                   height: 1.5em;
                   cursor: pointer;
                 }
-                svg{
-                  fill:currentColor
+                svg {
+                  fill: currentColor;
                 }
               }
             }
@@ -274,8 +282,6 @@ export default {
       }
     }
   }
-
-  
 }
 .mb10 {
   margin-bottom: 1em;

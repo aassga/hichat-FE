@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <div class="home-header">
           <div class="home-user" @click="back"></div>
@@ -11,7 +11,7 @@
           <div class="setting-title">應用內提醒</div>
           <div
             class="setting-button"
-            v-for="(item, index) in soundNofiyData"
+            v-for="(item, index) in soundNotifyData"
             :key="item + index"
             :class="{
               mb10: item.key === 'sound'
@@ -27,7 +27,7 @@
                   :inactive-text="item.name"
                   active-color="#fd5f3f"
                   inactive-color="#666666"
-                  @change="chengeSoundNofiy(item)"
+                  @change="changeSoundNotify(item)"
                 >
                 </el-switch>
               </div>
@@ -37,7 +37,7 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="370px">
         <el-header height="70px">
           <div class="home-header flex-start">
             <div class="home-user-pc" @click="back"></div>
@@ -63,7 +63,7 @@
           <div class="setting-title">應用內提醒</div>
           <div
             class="setting-button"
-            v-for="(item, index) in soundNofiyData"
+            v-for="(item, index) in soundNotifyData"
             :key="item + index"
           >
             <div class="setting-box">
@@ -76,7 +76,7 @@
                   :inactive-text="item.name"
                   active-color="#fd5f3f"
                   inactive-color="#666666"
-                  @change="chengeSoundNofiy(item)"
+                  @change="changeSoundNotify(item)"
                 >
                 </el-switch>
               </div>
@@ -97,29 +97,29 @@ export default {
     return {
       device: localStorage.getItem("device"),
       // nofityData: JSON.parse(localStorage.getItem("nofity")),
-      soundNofiyData: JSON.parse(localStorage.getItem("soundNofiy")),
+      soundNotifyData: JSON.parse(localStorage.getItem("soundNotify")),
     };
   },
   // computed: {
   //   ...mapState({
   //     nofity: (state) => state.ws.nofity,
-  //     soundNofiy: (state) => state.ws.soundNofiy,
+  //     soundNotify: (state) => state.ws.soundNotify,
   //   }),
   // },
   created() {
-    // if(localStorage.getItem("nofity") === null){
-    //   this.setNofiy(this.nofity)
+    // if(!localStorage.getItem("nofity")){
+    //   this.setNotify(this.nofity)
     // }
-    // if(localStorage.getItem("soundNofiy") === null){
-    //   this.setSoundNofiy(this.soundNofiy)
+    // if(!localStorage.getItem("soundNotify")){
+    //   this.setSoundNotify(this.soundNotify)
     // }
   },
   methods: {
     ...mapMutations({
-      setNofiy:"ws/setNofiy",
-      setSoundNofiy: "ws/setSoundNofiy",
+      setNotify:"ws/setNotify",
+      setSoundNotify: "ws/setSoundNotify",
     }),
-    // chengeNofiy(item){
+    // changeNotify(item){
     //   this.nofityData.forEach((data) => {
     //     if (item.key === "nofity") {
     //       if (!item.isNofity) {
@@ -135,19 +135,19 @@ export default {
     //       }
     //     }
     //   })
-    //   let newNofiy = this.nofityData.filter(el => el.key !== "nofity")
-    //   let doubleCloseNofiy = newNofiy.every(item => !item.isNofity);
-    //   let doubleOpenNofiy = newNofiy.every(item => item.isNofity);
-    //   if(doubleCloseNofiy){
+    //   let newNotify = this.nofityData.filter(el => el.key !== "nofity")
+    //   let doubleCloseNotify = newNotify.every(item => !item.isNofity);
+    //   let doubleOpenNotify = newNotify.every(item => item.isNofity);
+    //   if(doubleCloseNotify){
     //     this.nofityData.forEach((el)=> el.isNofity = false)
     //   } 
-    //   if(doubleOpenNofiy){
+    //   if(doubleOpenNotify){
     //     this.nofityData.forEach((el)=> el.isNofity = true)
     //   }
-    //   this.setNofiy(this.nofityData);
+    //   this.setNotify(this.nofityData);
     // },
-    chengeSoundNofiy(item) {
-      this.soundNofiyData.forEach((data) => {
+    changeSoundNotify(item) {
+      this.soundNotifyData.forEach((data) => {
         if (item.key === "sound") {
           if (!item.isNofity) {
             return (data.isNofity = false);
@@ -162,16 +162,16 @@ export default {
           }
         }
       });
-      // let newSoundNofiy = this.soundNofiyData.filter(el => el.key !== "sound")
-      // let doubleCloseSoundNofiy = newSoundNofiy.every(item => !item.isNofity);
-      // let doubleOpenSoundNofiy = newSoundNofiy.every(item => item.isNofity);
-      // if(doubleCloseSoundNofiy){
-      //   this.soundNofiyData.forEach((el)=> el.isNofity = false)
+      // let newSoundNotify = this.soundNotifyData.filter(el => el.key !== "sound")
+      // let doubleCloseSoundNotify = newSoundNotify.every(item => !item.isNofity);
+      // let doubleOpenSoundNotify = newSoundNotify.every(item => item.isNofity);
+      // if(doubleCloseSoundNotify){
+      //   this.soundNotifyData.forEach((el)=> el.isNofity = false)
       // } 
-      // if(doubleOpenSoundNofiy){
-      //   this.soundNofiyData.forEach((el)=> el.isNofity = true)
+      // if(doubleOpenSoundNotify){
+      //   this.soundNotifyData.forEach((el)=> el.isNofity = true)
       // }
-      this.setSoundNofiy(this.soundNofiyData);
+      this.setSoundNotify(this.soundNotifyData);
     },
     back() {
       this.$router.back(-1);
@@ -184,12 +184,12 @@ export default {
 .hichat-pc {
   .home-user-pc {
     background-color: #fff;
-    background-image: url("./../../../static/images/pc/arrow-left.svg");
+    background-image: url("./../../../static/images/pc/arrow-left.png");
     cursor: pointer;
   }
 }
 
-.hichat-moblie {
+.hichat-mobile {
   .home-wrapper {
     .el-container {
       .el-main {
@@ -211,7 +211,7 @@ export default {
                 font-size: 15px;
                 cursor: pointer;
               }
-              /deep/.el-switch__label.is-active{
+              ::v-deep.el-switch__label.is-active{
                 color: #333333;
               }
             }
@@ -279,7 +279,7 @@ export default {
           font-size: 15px;
           cursor: pointer;
         }
-        /deep/.el-switch__label.is-active{
+        ::v-deep.el-switch__label.is-active{
           color: #333333;
         }
       }

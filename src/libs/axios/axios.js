@@ -5,10 +5,27 @@ import { getToken } from '../utils/utils.js'
 import { Message } from "element-ui";
 import resStatus from '@/constants/resStatus'
 
+const CancelToken = axios.CancelToken;
+
+
 axios.defaults.headers.post['Content-Type'] = "'Content-Type': 'multipart/form-data'";
 //axios.defaults.headers.post['Content-Type'] = 'application/json'
 axios.defaults.timeout = 48000
 
+let errorCodeData =[
+  401,
+  10001,
+  10002,
+  10003,
+  10009,
+  10013,
+  10014,
+  10015,
+  20004,
+  30005,
+  40002,
+  10019
+]
 // 前端axios添加withCredentials属性
 axios.defaults.withCredentials = true
 class HttpRequest {
@@ -34,7 +51,11 @@ class HttpRequest {
         config.headers.post['Content-Type'] = "'Content-Type': 'multipart/form-data'";
       }
       if (config.method === 'put') {
-        config.headers['Content-Type'] = 'application/json';
+        if(config.url === "/api/member/profile/updateNickname/my"){
+          config.headers['Content-Type'] = 'text/plain';
+        }else{
+          config.headers['Content-Type'] = 'application/json';
+        }
       }
       if (getToken) {
         config.headers.Authorization = `${localStorage.token}`
@@ -52,10 +73,14 @@ class HttpRequest {
       res = res.data
       if (res.code === 200) {
         return Promise.resolve(res)
-      } else if ([401,10001,10002,10003,10009,10013,10014,10015,20004,30005,40002,10019].includes(res.code)) {
+      } else if(res.code === 401){
+        localStorage.setItem('token',"")
+        // Message({ message: 'message', type: "error", });
+        router.push('/login')
+      } else if (errorCodeData.includes(res.code)) {
         let message = resStatus[res.code]
         Message({ message: message, type: "error", });
-        if(res.code === 10019) router.push('/login')
+        if([401,10019].includes(res.code)) router.push('/login')
         return Promise.resolve(res)
       } else {
         let message = resStatus[res.code]

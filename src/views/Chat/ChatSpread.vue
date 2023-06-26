@@ -7,7 +7,7 @@
           class="PC-header"
         >
           <div class="home-header-pc">
-            <div class="home-search">
+            <!-- <div class="home-search">
               <el-input
                 placeholder="搜索聯絡人"
                 prefix-icon="el-icon-search"
@@ -15,7 +15,7 @@
                 v-model="searchKey"
               >
               </el-input>
-            </div>
+            </div> -->
             <div class="home-header-title">私讯广播</div>
             <el-button type="danger" @click="back()">取消</el-button>
           </div>
@@ -31,8 +31,8 @@
 
 <script>
 import { mapMutations } from "vuex";
-import MessagePabel from "@/components/message-spread-moblie";
-import MessageInput from "@/components/message-spread-input-moblie";
+import MessagePabel from "@/components/message-spread";
+import MessageInput from "@/components/message-spread-input";
 export default {
   name: "ChatMsg",
   data() {
@@ -66,18 +66,12 @@ export default {
   background-color: #eef7fb;
   overflow: hidden;
   .el-container {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-
     .el-aside,
     .el-main {
       display: flex;
       flex-direction: column;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-      /deep/.el-row {
+      ::v-deep.el-row {
         float: right;
         .el-button {
           background-image: linear-gradient(#579fff, #3481e8);
@@ -139,12 +133,10 @@ export default {
           color: #10686e;
           font-weight: 600;
         }
-        .home-user-photo,
         .home-user-search {
           width: 2em;
           height: 2em;
           border-radius: 10px;
-          // background-color: #fff;
           background-size: 50%;
           background-position: center;
           background-repeat: no-repeat;
@@ -158,15 +150,6 @@ export default {
         .home-photo-link {
           position: absolute;
           right: 14px;
-          .home-user-photo {
-            text-align: center;
-            overflow: hidden;
-            img {
-              top: 0;
-              height: 2em;
-              border-radius: 6px;
-            }
-          }
         }
       }
       img {
@@ -202,7 +185,7 @@ export default {
         width: 100%;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        flex-direction: row-reverse;
         .home-search{
           display: block;
           margin:0;
@@ -227,7 +210,6 @@ export default {
           position: absolute;
           left: 45em;          
         }
-        .home-user-photo,
         .home-user-search,
         .home-user-more {
           width: 2em;
@@ -244,7 +226,7 @@ export default {
           cursor: pointer;
         }
         .home-user-more {
-          background-image: url("./../../../static/images/pc/more.svg");
+          background-image: url("./../../../static/images/pc/more.png");
           cursor: pointer;
         }
         .home-photo-link {
@@ -253,16 +235,6 @@ export default {
           display: flex;
           align-items: center;
           cursor: pointer;
-          .home-user-photo {
-            text-align: center;
-            overflow: hidden;
-            img {
-              top: 0;
-              height: 2em;
-              border-radius: 6px;
-              width: inherit;
-            }
-          }
           span {
             font-size: 15px;
             padding-left: 10px;
@@ -385,7 +357,7 @@ export default {
 ::-webkit-scrollbar {
   width: 10px;
 }
-/deep/.el-dialog-loginOut {
+::v-deep.el-dialog-loginOut {
   overflow: auto;
   .el-dialog {
     position: relative;

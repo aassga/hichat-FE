@@ -18,9 +18,16 @@
                 v-for="(item, index) in spreadDataList"
                 :key="index"
               >
-                <el-image :src="item.icon" />
-                <div class="msg-box">
-                  <span>{{ item.name }}</span>
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image
+                  :src="noIconShow(item, 'user')"
+                  :preview-src-list="[noIconShow(item, 'user')]"
+                />
+                <div class="content-box">
+                  <div class="msg-box" style="align-items: center">
+                    <span>{{ item.name }}</span>
+                  </div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </span>
@@ -29,6 +36,17 @@
         <div class="message-input-box">
           <div class="input-tools-right">
             <div>
+              <img
+                class="plus-btn"
+                :src="showMenuIcon()"
+                alt=""
+                style="margin-right: 10px"
+                @click="
+                  !['replyMsg', 'editMsg'].includes(replyMsg.clickType)
+                    ? (menuBoxShow = !menuBoxShow)
+                    : false
+                "
+              />
               <img
                 src="./../../../static/images/image.png"
                 alt=""
@@ -40,21 +58,37 @@
             <el-input
               type="textarea"
               resize="none"
-              :autosize="{ minRows: 1, maxRows: 1 }"
-              placeholder="Aa"
+              :autosize="{ minRows: 1, maxRows: 5 }"
+              placeholder="Message..."
               maxlength="500"
               :disabled="disabled"
               v-model="textArea"
             >
             </el-input>
             <div class="footer-tools" @touchmove="$root.handleTouch">
-              <div class="face-other-btn" @click.stop="showDialog = !showDialog">
-                <img v-if="!showDialog" src="./../../../static/images/emoji.png" alt="" />
-                <img v-else src="./../../../static/images/keyboard.svg" alt="" />
-              </div> 
+              <div
+                class="face-other-btn"
+                @click.stop="showDialog = !showDialog"
+              >
+                <img
+                  v-if="!showDialog"
+                  src="./../../../static/images/emoji.png"
+                  alt=""
+                />
+                <img
+                  v-else
+                  src="./../../../static/images/keyboard.svg"
+                  alt=""
+                />
+              </div>
               <div class="face-icon" v-show="showDialog">
-                <VEmojiPicker :showSearch="false" :showCategories="false" :emojisByRow="10" @select="selectEmoji"/>
-              </div>              
+                <VEmojiPicker
+                  :showSearch="false"
+                  :showCategories="false"
+                  :emojisByRow="10"
+                  @select="selectEmoji"
+                />
+              </div>
             </div>
           </div>
 
@@ -86,21 +120,19 @@
               :auto-upload="false"
               :file-list="fileList"
               list-type="picture"
-              :limit="1"              
+              :limit="1"
             >
               <el-button type="primary">点击上传</el-button>
             </el-upload>
             <span slot="footer" class="dialog-footer">
-              <template v-if="device === 'moblie'">
+              <template v-if="device === 'mobile'">
                 <el-button type="success" @click="submitAvatar()"
                   >确认</el-button
                 >
                 <el-button @click="closeModel()">取消</el-button>
               </template>
               <template v-else>
-                <el-button
-                  class="background-gray"
-                  @click="closeModel()"
+                <el-button class="background-gray" @click="closeModel()"
                   >取消</el-button
                 >
                 <el-button class="background-orange" @click="submitAvatar()"
@@ -110,6 +142,22 @@
             </span>
           </el-dialog>
         </div>
+        <div
+          class="chat-menu-box"
+          v-show="menuBoxShow"
+          :style="device === 'pc' ? 'position: absolute;' : ''"
+        >
+          <div class="chat-menu">
+            <ul>
+              <li class="menu-li" @click="goCard()">
+                <div>
+                  <img :src="deviceIcon()" alt="" />
+                </div>
+                联络人名片
+              </li>
+            </ul>
+          </div>
+        </div>
       </el-main>
     </el-container>
   </div>
@@ -117,10 +165,13 @@
 
 <script>
 import Socket from "@/utils/socket";
-import { VEmojiPicker } from 'v-emoji-picker'
+import { VEmojiPicker } from "v-emoji-picker";
 import { getToken } from "_util/utils.js";
 import { Encrypt } from "@/utils/AESUtils.js";
-import { uploadMessageImage } from '@/api/uploadController'
+import { mapState } from "vuex";
+
+import { uploadMessageImage } from "@/api/uploadController";
+import { showIcon } from "@/utils/icon";
 
 export default {
   name: "spreadMessage",
@@ -128,8 +179,9 @@ export default {
     return {
       search: "",
       textArea: "",
-      disabled:false,
+      disabled: false,
       showDialog: false,
+      menuBoxShow: false,
       uploadImgShow: false,
       fullscreenLoading: false,
       fileList: [],
@@ -145,40 +197,70 @@ export default {
     this.getSpreadDataList();
   },
   mounted() {
-    document.addEventListener("click", (e)=>{
-      if(e.target.className !== "emoji border"){
-        this.showDialog = false
-      }
-    })
+    document.addEventListener("click", this.onClickEvent);
+  },
+  beforeDestroy() {
+    document.removeEventListener("click", this.onClickEvent);
+  },
+  computed: {
+    ...mapState({
+      replyMsg: (state) => state.ws.replyMsg,
+    }),
   },
   methods: {
-    selectEmoji(emoji) {// 选择emoji后调用的函数
-      this.textArea += emoji.data
-    },        
+    goCard() {
+      this.$router.push({
+        name: "MobileCard",
+        params: { spreadData: this.spreadDataList },
+      });
+    },
+    onClickEvent(event){
+      if (event.target.className !== "emoji border") {
+        this.showDialog = false;
+      }
+      if (!["chat-menu-box", "plus-btn"].includes(event.target.className)) {
+        this.menuBoxShow = false;
+      }
+    },  
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
+    },
+    deviceIcon() {
+      return require("./../../../static/images/card.png");
+    },
+    selectEmoji(emoji) {
+      // 选择emoji后调用的函数
+      this.textArea += emoji.data;
+    },
     getSpreadDataList() {
       this.spreadDataList = this.$route.params.spreadData;
     },
     back() {
-      this.$router.back(-1);
+      this.$router.push({ path: "/SpreadChange" });
     },
     // 取得圖片
     uploadImg(file, fileList) {
       this.fileList = fileList;
     },
-    closeModel(){
+    closeModel() {
       this.fileList = [];
-      this.copyPicture = false   
+      this.copyPicture = false;
       this.uploadImgShow = false;
       this.fullscreenLoading = false;
-    },    
+    },
     handleRemove(file, fileList) {
       this.fileList = fileList;
-    },    
+    },
     submitAvatar() {
-      this.fileList.forEach((data)=>{
-        this.submitAvatarUpload(data.raw)
-      })
-    },        
+      this.fileList.forEach((data) => {
+        this.submitAvatarUpload(data.raw);
+      });
+    },
+    showMenuIcon() {
+      return !this.menuBoxShow
+        ? require("./../../../static/images/plus.png")
+        : require("./../../../static/images/close.png");
+    },
     submitAvatarUpload(data) {
       let formData = new FormData();
       formData.append("file", data);
@@ -202,7 +284,7 @@ export default {
           this.uploadImgShow = false;
           this.fullscreenLoading = false;
           this.$message({ message: "发送讯息成功", type: "success" });
-          this.disabled = true
+          this.disabled = true;
           setTimeout(() => {
             this.$router.push({ path: "/HiChat" });
           }, 1500);
@@ -210,6 +292,7 @@ export default {
           this.fileList = [];
           this.fullscreenLoading = false;
         }
+        
       });
     },
     sendMessage() {
@@ -217,7 +300,7 @@ export default {
         this.$message({ message: "不能发送空白消息", type: "error" });
         this.textArea = "";
         return false;
-      }      
+      }
       this.spreadDataList.forEach((res) => {
         let message = {
           chatType: "CLI_USER_SEND",
@@ -237,7 +320,7 @@ export default {
         Socket.send(message);
       });
       this.$message({ message: "发送讯息成功", type: "success" });
-      this.disabled = true
+      this.disabled = true;
       setTimeout(() => {
         this.$router.push({ path: "/HiChat" });
       }, 1500);
@@ -246,7 +329,7 @@ export default {
     },
   },
   components: {
-    VEmojiPicker
+    VEmojiPicker,
   },
 };
 </script>
@@ -260,7 +343,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
   }
@@ -270,7 +353,7 @@ export default {
       color: rgba(0, 0, 0, 0.4);
       font-size: 15px;
     }
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -288,18 +371,7 @@ export default {
         .address-box {
           .msg-box {
             span {
-              display: block;
-              padding-left: 1em;
-              font-size: 16px;
               color: #666666;
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                margin-top: 0.65em;
-                width: 100%;
-                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
-              }
             }
           }
           .checkBox {
@@ -313,128 +385,15 @@ export default {
   }
 }
 .el-dialog__wrapper {
-  overflow: hidden;
   .el-dialog {
-    margin: 0 auto;
-    border-radius: 20px 20px 0 0;
-    position: absolute;
-    bottom: 0;
-    .el-dialog__header {
-      .el-dialog__title {
-        color: #10686e;
-        font-weight: 600;
-      }
-      .el-dialog__headerbtn {
-        position: inherit;
-        float: left;
-        .el-dialog__close {
-          color: #f60;
-        }
-      }
-    }
     .el-dialog__body {
-      text-align: center;
-      .qrcode-box {
-        width: 15em;
-        height: 15em;
-        border: 2px solid #333;
-        margin: 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        img {
-          height: 14em;
-        }
-      }
-      .qrcode-box-text {
-        color: #0c0d0d;
-        font-weight: 600;
-        margin-top: 2em;
-        display: block;
-      }
       .upload-demo {
-        line-height: 1.5em;
         .el-upload-list {
           .el-upload-list__item {
             margin-top: -72px;
           }
         }
-        .hidden {
-          visibility: hidden;
-        }
       }
-      .record-play {
-        .record-play-box {
-          margin-top: 1em;
-          width: 100%;
-        }
-        .record-time {
-          width: 100%;
-          text-align: center;
-          font-size: 2em;
-          font-family: monospace;
-        }
-      }
-    }
-    .el-dialog__footer {
-      padding: 20px 30px 20px 30px;
-      .dialog-footer {
-        display: flex;
-        justify-content: space-between;
-        .el-button {
-          width: 90%;
-        }
-        img {
-          height: 1em;
-        }
-      }
-    }
-  }
-}
-/deep/.message-input-box {
-  height: 55px;
-  background-color: rgba(255, 255, 255, 0.85);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 15px;
-  .input-tools-left,
-  .input-tools-right {
-    padding: 15px 0;
-    img {
-      height: 1.1em;
-    }
-  }
-  .text-send-box {
-    width: 260px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    // margin: 0 auto;
-    background-color: #f4f4f4;
-    border-radius: 20px;
-    .el-textarea {
-      .el-textarea__inner {
-        padding: 10px !important;
-        border-radius: 0;
-        border: 0;
-        background-color: transparent;
-      }
-    }
-    .footer-tools {
-      .send-button {
-        width: 90px;
-        padding: 7px 10px;
-        margin-right: 20px;
-        color: #ffffff;
-        background-image: linear-gradient(
-          180deg,
-          rgba(67, 141, 255, 0.8),
-          rgba(19, 99, 255, 0.8)
-        );
-      }
-
     }
   }
 }
@@ -443,6 +402,43 @@ export default {
     display: inline-block;
     width: 20px;
     height: 20px;
+  }
+}
+.chat-menu-box {
+  background-color: rgba(225, 225, 225, 0.95);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  left: 0;
+  bottom: 55px;
+  width: 100%;
+  .chat-menu {
+    padding: 20px;
+    ul {
+      display: inline-flex;
+    }
+    .menu-li {
+      font-size: 14px;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0px 10px;
+      cursor: pointer;
+      div {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #fff;
+        border-radius: 10px;
+        margin-bottom: 5px;
+        i {
+          font-size: 18px;
+        }
+      }
+      img {
+        height: 20px;
+      }
+    }
   }
 }
 </style>

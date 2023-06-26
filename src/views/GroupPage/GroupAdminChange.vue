@@ -2,7 +2,7 @@
   <div class="home-wrapper" @touchmove="$root.handleTouch">
     <el-container>
       <el-main>
-        <template v-if="device === 'moblie'">
+        <template v-if="device === 'mobile'">
           <el-header height="125px">
             <div class="home-header">
               <div class="home-user" @click="back"></div>
@@ -49,9 +49,13 @@
               :key="index"
             >
               <div class="address-box">
-                <el-image :src="item.icon" />
-                <div class="msg-box">
-                  <span>{{ item.name }}</span>
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image :src="noIconShow(item, 'group')" />
+                <div class="content-box">
+                  <div class="msg-box" style="align-items: center">
+                    <span> {{ item.name }} ( {{ groupName(item) }} )</span>
+                  </div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </el-radio>
@@ -77,14 +81,14 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
-          <img src="./../../../static/images/warn.svg" alt="" />
+        <div v-if="device === 'mobile'">
+          <img src="./../../../static/images/warn.png" alt="" />
         </div>
         <span>确认是否將管理者权限轉移給 {{ checkMember.name }} ？</span>
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button
-          :class="device === 'moblie' ? 'border-red' : 'background-gray'"
+          :class="device === 'mobile' ? 'border-red' : 'background-gray'"
           @click="groupAdminChange = false"
           >取消</el-button
         >
@@ -103,7 +107,7 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
+        <div v-if="device === 'mobile'">
           <img src="./../../../static/images/success.png" alt="" />
         </div>
         <span>操作成功</span>
@@ -118,8 +122,10 @@
 </template>
 
 <script>
-import { mapState,mapMutations } from "vuex";
+import { mapState, mapMutations } from "vuex";
 import { listMember, changeAdmin } from "@/api/groupController";
+import { showIcon } from "@/utils/icon";
+import { nameTidy } from "@/utils/name";
 
 export default {
   name: "GroupAdminChange",
@@ -129,7 +135,7 @@ export default {
       checkList: "",
       checkMember: "",
       contactList: [],
-      newContactList:[],
+      newContactList: [],
       searchKey: "",
       disabled: true,
       successDialogShow: false,
@@ -141,8 +147,9 @@ export default {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
       infoMsg: (state) => state.ws.infoMsg,
+      authorityGroupData: (state) => state.ws.authorityGroupData,
     }),
-  },  
+  },
   created() {
     this.groupData = this.groupUser;
   },
@@ -161,11 +168,11 @@ export default {
       searchKeyData.forEach((el) => {
         let searchCase = this.contactList;
         this.searchData = searchCase.filter((item) => {
-          return item.name.indexOf(el.replace("@", "")) !== -1;
+          return this.groupName(item).indexOf(el.replace("@", "")) !== -1;
         });
       });
-      this.newContactList = this.searchData
-    },    
+      this.newContactList = this.searchData;
+    },
   },
   methods: {
     ...mapMutations({
@@ -173,24 +180,25 @@ export default {
       setChatGroup: "ws/setChatGroup",
       setMsgInfoPage: "ws/setMsgInfoPage",
     }),
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
+    },
+    groupName(el) {
+      let name = !el.groupNickname ? el.groupNumber : el.groupNickname;
+      let showGroupNumber = this.authorityGroupData.showGroupNumber;
+      let editGroupNickname = this.authorityGroupData.editGroupNickname;
+      return nameTidy({name,el,showGroupNumber,editGroupNickname})
+    },
     getGroupListMember() {
       let groupId = this.groupData.groupId;
       listMember({ groupId })
         .then((res) => {
-          this.contactList = res.data.list;
+          this.contactList = res.data.list.filter((el) => !el.isAdmin);
           this.contactList.forEach((item) => {
-            if (item.icon === undefined) {
-              item.icon = require("./../../../static/images/image_user_defult.png");
-            }
-            if (item.memberId === this.groupData.memberId) {
-              this.checkList = item.memberId;
-            }
+            item.groupNumber = "成员" + item.groupNumber;
           });
-          this.newContactList = this.contactList
+          this.newContactList = this.contactList;
         })
-        .catch((err) => {
-          return false;
-        });
     },
     changeGroupAdmin() {
       let param = {
@@ -201,7 +209,6 @@ export default {
         .then((res) => {
           if (res.code === 200) {
             this.groupData.isAdmin = false;
-            // localStorage.setItem("groupData",JSON.stringify(this.groupData))
             this.setChatGroup(this.groupData);
             this.back();
           }
@@ -211,7 +218,7 @@ export default {
         });
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         if (this.infoMsg.infoMsgMap === "address") {
@@ -223,7 +230,11 @@ export default {
           });
           this.setMsgInfoPage({ pageShow: true, type: "" });
         } else {
-          this.setInfoMsg({ infoMsgShow: true, infoMsgChat: true, infoMsgNav: "GroupPage", });
+          this.setInfoMsg({
+            infoMsgShow: true,
+            infoMsgChat: true,
+            infoMsgNav: "GroupPage",
+          });
           this.setMsgInfoPage({ pageShow: true });
         }
       }
@@ -246,7 +257,7 @@ export default {
     top: 3em;
     background-color: #eaf5fa;
     z-index: 9;
-    /deep/.el-input {
+    ::v-deep.el-input {
       .el-input__inner {
         background-color: #e9e8e8;
         color: #666666;
@@ -263,7 +274,7 @@ export default {
   .home-content {
     overflow-x: hidden;
     overflow-y: auto;
-    /deep/.el-radio {
+    ::v-deep.el-radio {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -280,20 +291,8 @@ export default {
         padding-left: 0;
         .address-box {
           .msg-box {
-            span {
-              display: block;
-              padding-left: 1em;
-              font-size: 16px;
-              color: #666666;
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                margin-top: 0.5em;
-                width: 100%;
-                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
-              }
-            }
+            width: auto;
+            color: #666666;
           }
           .checkBox {
             position: absolute;
@@ -304,7 +303,7 @@ export default {
       }
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -363,7 +362,7 @@ export default {
         .home-header {
           .home-user-pc {
             background-color: #fff;
-            background-image: url("./../../../static/images/pc/arrow-left.svg");
+            background-image: url("./../../../static/images/pc/arrow-left.png");
             cursor: pointer;
           }
         }
@@ -374,7 +373,7 @@ export default {
           margin: 1em;
           .el-input {
             width: 95%;
-            /deep/.el-input__inner {
+            ::v-deep.el-input__inner {
               background-color: #e9e8e8;
               color: #666666;
             }
@@ -396,7 +395,7 @@ export default {
       }
     }
     .el-dialog-loginOut {
-      /deep/.el-dialog {
+      ::v-deep.el-dialog {
         .el-dialog__footer {
           padding: 0;
           .el-button {

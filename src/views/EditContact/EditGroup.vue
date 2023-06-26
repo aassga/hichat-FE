@@ -2,7 +2,7 @@
   <div class="home-wrapper">
     <el-container>
       <el-main>
-        <template v-if="device === 'moblie'">
+        <template v-if="device === 'mobile'">
           <el-header height="55px">
             <div class="home-header">
               <div class="home-user" @click="back"></div>
@@ -21,7 +21,7 @@
                 >
                   <span style="padding-right: 10px"
                     ><img
-                      src="./../../../static/images/pc/arrow-left.svg"
+                      src="./../../../static/images/pc/arrow-left.png"
                       alt=""
                   /></span>
                   <span>编辑群组</span>
@@ -38,12 +38,12 @@
           <div class="group-data">
             <span
               ><el-image
-                :src="noIconShow(groupData)"
-                :preview-src-list="[noIconShow(groupData)]"
+                :src="noIconShow(groupData,'group')"
+                :preview-src-list="[noIconShow(groupData,'group')]"
             /></span>
             <div>
               <span class="photo-edit" @click="uploadImgShow = true">{{
-                device === "moblie" ? "变更群组照片" : "變更頭像"
+                device === "mobile" ? "变更群组照片" : "變更頭像"
               }}</span>
             </div>
           </div>
@@ -59,7 +59,7 @@
           </div>
         </div>
 
-        <div class="home-footer-btn" v-if="device === 'moblie'">
+        <div class="home-footer-btn" v-if="device === 'mobile'">
           <el-button
             :class="disabled ? 'gray-btn' : 'orange-btn'"
             :disabled="disabled"
@@ -86,20 +86,17 @@
         list-type="picture"
       >
         <el-button type="primary">点击上传</el-button>
-        <!-- <div slot="tip" class="el-upload__tip">
-          只能上传 jpg / png 圖片，且不超过500kb
-        </div> -->
       </el-upload>
       <span slot="footer" class="dialog-footer">
-        <template v-if="device === 'moblie'">
-          <el-button type="success" @click="submitAvatarUpload">确认</el-button>
+        <template v-if="device === 'mobile'">
+          <el-button type="success" @click="submitAvatarUpload()">确认</el-button>
           <el-button @click="uploadImgShow = false">取 消</el-button>
         </template>
         <template v-else>
           <el-button class="background-gray" @click="uploadImgShow = false"
             >取消</el-button
           >
-          <el-button class="background-orange" @click="submitAvatarUpload"
+          <el-button class="background-orange" @click="submitAvatarUpload()"
             >确认</el-button
           >
         </template>
@@ -112,9 +109,9 @@
 import Socket from "@/utils/socket";
 import { mapState, mapMutations } from "vuex";
 import { getToken } from "_util/utils.js";
+import { showIcon } from "@/utils/icon";
 import { uploadGroupIcon } from '@/api/uploadController'
 import { updateGroup } from '@/api/groupController'
-
 export default {
   name: "EditContact",
   data() {
@@ -154,12 +151,8 @@ export default {
       setGroupList: "ws/setGroupList",
       setMsgInfoPage: "ws/setMsgInfoPage",
     }),
-    noIconShow(iconData) {
-      if ([undefined,null,""].includes(iconData.icon)) {
-        return require("./../../../static/images/image_group_defult.png");
-      } else {
-        return iconData.icon;
-      }
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key)
     },
     uploadImg(file, fileList) {
       this.fileList = fileList;
@@ -193,7 +186,7 @@ export default {
             });
             this.setChatGroup(this.groupData);
             this.setGroupList(this.groupList);
-            if (this.device === "pc") this.getHiChatDataList();
+            if (this.device === "pc") this.$root.getHiChatDataList();
             this.back();
           }
         })
@@ -202,18 +195,8 @@ export default {
           return false;
         });
     },
-    getHiChatDataList() {
-      let chatMsgKey = {
-        chatType: "CLI_RECENT_CHAT",
-        id: Math.random(),
-        tokenType: 0,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      };
-      Socket.send(chatMsgKey);
-    },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         this.setMsgInfoPage({ pageShow: true, type: "" });
@@ -258,11 +241,11 @@ export default {
   margin: 1em;
   background-color: #fff;
   border-radius: 10px;
-  /deep/.el-form {
+  ::v-deep.el-form {
     .el-form-item {
       margin-bottom: 0;
       .el-form-item__label {
-        font-size: 17px;
+        font-size: 16px;
       }
       .el-input {
         font-size: 19px;
@@ -286,12 +269,12 @@ export default {
     }
   }
   .user-edit-form {
-    /deep/.el-form {
+    ::v-deep.el-form {
       border-radius: 8px;
       background-color: rgba(0, 0, 0, 0.05);
       .el-form-item {
         .el-form-item__label {
-          font-size: 17px;
+          font-size: 16px;
         }
         .el-input {
           .el-input__inner {
@@ -305,7 +288,7 @@ export default {
     cursor: pointer;
   }
   .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding: 0 !important;
       .el-button {
         &:nth-child(2) {

@@ -2,7 +2,7 @@
   <div class="home-wrapper" @touchmove="$root.handleTouch">
     <el-container>
       <el-main>
-        <template v-if="device === 'moblie'">
+        <template v-if="device === 'mobile'">
           <el-header height="125px">
             <div class="home-header">
               <div class="home-user" @click="back"></div>
@@ -22,11 +22,15 @@
         <template v-else>
           <el-header height="70px">
             <div class="home-header flex-start">
-              <div class="home-user-pc" @click="back" style="position: relative; left: 1px; top: -1px;"></div>
-              <span class="home-header-title" >邀请联络人</span>
+              <div
+                class="home-user-pc"
+                @click="back"
+                style="position: relative; left: 1px; top: -1px"
+              ></div>
+              <span class="home-header-title">邀请联络人</span>
             </div>
           </el-header>
-          <div style="border-bottom: 1px solid rgba(0, 0, 0, 0.05);">
+          <div style="border-bottom: 1px solid rgba(0, 0, 0, 0.05)">
             <div class="home-search-pc">
               <el-input
                 placeholder="搜寻"
@@ -47,14 +51,16 @@
               :class="{ hidden: item.disabled }"
             >
               <div class="address-box">
-                <el-image :src="item.icon" />
-                <div class="msg-box">
-                  <span>
-                    <div style="display: flex;">{{ item.name }}
-                      <div v-if="item.isManager" style="color:#FE5F3F; padding-left: 0.5em;">★ 管理员</div>
-                      <div v-if="item.isAdmin" style="color:#FE5F3F; padding-left: 0.5em;">♔ 群主</div>
-                    </div>
-                  </span>
+                <div :class="{ 'service-icon': item.isCustomerService }"></div>
+                <el-image
+                  :src="noIconShow(item, 'user')"
+                  :preview-src-list="[noIconShow(item, 'user')]"
+                />
+                <div class="content-box">
+                  <div class="msg-box" style="align-items: center">
+                    <span>{{ item.name }}</span>
+                  </div>
+                  <div class="content-border-bottom"></div>
                 </div>
               </div>
             </el-checkbox>
@@ -76,11 +82,11 @@
       class="el-dialog-loginOut"
       width="70%"
       :show-close="false"
-      :close-on-click-modal="false"      
+      :close-on-click-modal="false"
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
+        <div v-if="device === 'mobile'">
           <img src="./../../../static/images/success.png" alt="" />
         </div>
         <span>{{ device === "pc" ? "邀请成功" : "操作成功" }}</span>
@@ -93,8 +99,9 @@
 </template>
 
 <script>
-import { mapState,mapMutations } from "vuex";
-import { listMember,addMember } from '@/api/groupController'
+import { mapState, mapMutations } from "vuex";
+import { listMember, addMember } from "@/api/groupController";
+import { showIcon } from "@/utils/icon";
 
 export default {
   name: "GroupPeople",
@@ -104,7 +111,7 @@ export default {
       checkList: [],
       contactList: [],
       newContactDataList: [],
-      newContactList:[],
+      newContactList: [],
       searchKey: "",
       disabled: true,
       addUserDialogShow: false,
@@ -115,10 +122,9 @@ export default {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
     }),
-  },    
+  },
   created() {
     this.groupData = this.groupUser;
-    this.myContactDataList = JSON.parse(localStorage.getItem("myContactDataList"));
   },
   mounted() {
     this.getGroupListMember();
@@ -135,35 +141,39 @@ export default {
           return item.name.indexOf(el.replace("@", "")) !== -1;
         });
       });
-      this.newContactList = this.searchData
-    },     
+      this.newContactList = this.searchData;
+    },
   },
   methods: {
     ...mapMutations({
       setMsgInfoPage: "ws/setMsgInfoPage",
     }),
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
+    },
     getGroupListMember() {
       let groupId = this.groupData.groupId;
       listMember({ groupId }).then((res) => {
         this.contactList = res.data.list;
-        this.newContactDataList = this.myContactDataList;
+        this.newContactDataList = JSON.parse(
+          localStorage.getItem("myContactDataList")
+        );
         this.newContactDataList.forEach((el) => {
           this.contactList.forEach((item) => {
             if (el.username === item.username) {
               el.disabled = true;
-              el.isAdmin = item.isAdmin
-              el.isBanPost = item.isBanPost
-              el.isManager = item.isManager
+              el.isAdmin = item.isAdmin;
+              el.isBanPost = item.isBanPost;
+              el.isManager = item.isManager;
             }
-            if (item.icon === undefined){
+            if (!item.icon) {
               item.icon = require("./../../../static/images/image_user_defult.png");
             }
           });
         });
-        this.newContactDataList = this.newContactDataList.filter((el)=>{
-          return (el.contactId !== el.memberId) && !el.isAdmin && !el.isManager
-        })
-        this.newContactList = this.newContactDataList
+        this.newContactList = this.newContactDataList.filter((el) => {
+          return el.contactId !== el.memberId && !el.isAdmin && !el.isManager;
+        });
       });
     },
     addMemberSubmitBtn() {
@@ -179,7 +189,7 @@ export default {
       });
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         this.setMsgInfoPage({ pageShow: false, type: "GroupPeople" });
@@ -204,7 +214,7 @@ export default {
     top: 3em;
     background-color: #eaf5fa;
     z-index: 9;
-    /deep/.el-input {
+    ::v-deep.el-input {
       .el-input__inner {
         background-color: #e9e8e8;
         color: #666666;
@@ -223,7 +233,7 @@ export default {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -244,18 +254,7 @@ export default {
         .address-box {
           .msg-box {
             span {
-              display: block;
-              padding-left: 1em;
-              font-size: 16px;
               color: #666666;
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                margin-top: 0.65em;
-                width: 100%;
-                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
-              }
             }
           }
           .checkBox {
@@ -267,7 +266,7 @@ export default {
       }
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -323,7 +322,7 @@ export default {
           margin: 1.3em 1em 1em 0.7em;
           .home-user-pc {
             background-color: #fff;
-            background-image: url("./../../../static/images/pc/arrow-left.svg");
+            background-image: url("./../../../static/images/pc/arrow-left.png");
             cursor: pointer;
           }
         }
@@ -334,7 +333,7 @@ export default {
           margin: 1em;
           .el-input {
             width: 95%;
-            /deep/.el-input__inner {
+            ::v-deep.el-input__inner {
               background-color: #e9e8e8;
               color: #666666;
             }
@@ -344,18 +343,8 @@ export default {
           .el-checkbox-group {
             .el-checkbox {
               width: 100%;
-              /deep/.el-checkbox__label {
-                font-size: 17px;
-                .address-box {
-                  .msg-box {
-                    span {
-                      &::after {
-                        content: "";
-                        margin-top: 0.95em;
-                      }
-                    }
-                  }
-                }
+              ::v-deep.el-checkbox__label {
+                font-size: 16px;
               }
             }
           }
@@ -373,7 +362,7 @@ export default {
       }
     }
     .el-dialog-loginOut {
-      /deep/.el-dialog {
+      ::v-deep.el-dialog {
         .el-dialog__footer {
           padding: 0;
           .el-button {

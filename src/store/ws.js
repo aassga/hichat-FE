@@ -1,6 +1,7 @@
-export const state = {
+const defaultState = {
   badgeNum:0,
   maybeKnowNum:0,
+  recentChat:[],
   wsRes: {},
   chatUser:{},
   groupUserCheck:{},
@@ -17,6 +18,7 @@ export const state = {
     infoMsgChat:false,
     infoMsgNav:"ContactPage",
   },
+  serviceIcon:require('./../../static/images/service.png'),
   hichatNav:{
     type:"address",
     num:1,
@@ -64,7 +66,7 @@ export const state = {
       key: "shockkNofity",
     },
   ],
-  soundNofiy:[
+  soundNotify:[
     {
       name:"應用內音效",
       isNofity: true,
@@ -103,10 +105,27 @@ export const state = {
   goAnchorMessage:{},
   authorityGroupData:{},
   spreadDataList:[],
+  tapDataList:{
+    tapData:[],
+    textArea:"",
+  },
 };
+export const state = JSON.parse(JSON.stringify(defaultState))
+export function initGlobalState() {
+  const defaultStateObj = JSON.parse(JSON.stringify(defaultState))
+  Object.keys(state).forEach((key) => {
+    state[key] = defaultStateObj[key]
+  })
+}
 export const actions = {};
 
-export const mutations = {
+export const mutations = { 
+  setRecentChat(state, recentChat) {
+    state.recentChat = recentChat;
+  },    
+  setTapDataList(state, tapDataList) {
+    state.tapDataList = tapDataList;
+  },    
   setGroupMemberDataList(state, groupMemberDataList) {
     state.groupMemberDataList = groupMemberDataList;
   },    
@@ -139,13 +158,13 @@ export const mutations = {
   setTopMsgShow(state, topMsgShow) {
     state.topMsgShow = topMsgShow;
   },
-  setNofiy(state, nofity) {
+  setNotify(state, nofity) {
     state.nofity = nofity;
     localStorage.setItem("nofity", JSON.stringify(nofity));
   },
-  setSoundNofiy(state, soundNofiy) {
-    state.soundNofiy = soundNofiy;
-    localStorage.setItem("soundNofiy", JSON.stringify(soundNofiy));
+  setSoundNotify(state, soundNotify) {
+    state.soundNotify = soundNotify;
+    localStorage.setItem("soundNotify", JSON.stringify(soundNotify));
   },
   setActiveName(state, activeName) {
     state.activeName = activeName;
@@ -184,6 +203,9 @@ export const mutations = {
   },
   //對話中對象
   setChatUser(state, chatUser) {
+    // for window.location.reload disabled
+    if (!chatUser) return
+
     state.chatUser = chatUser;
     if(chatUser.type !== "address"){
       localStorage.setItem("userData", JSON.stringify(chatUser));
@@ -212,7 +234,7 @@ export const mutations = {
   //群組 List
   setContactListData(state, contactListData) {
     state.contactListData = contactListData;
-    localStorage.setItem("groupListMember", JSON.stringify(contactListData));
+    // localStorage.setItem("groupListMember", JSON.stringify(contactListData));
   },
 };
 export const getters = {};

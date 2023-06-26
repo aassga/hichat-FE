@@ -1,0 +1,116 @@
+// 自訂義 icon 
+// 回复
+.el-icon-reply {
+  background: url('./../static/images/reply.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+.el-icon-reply:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}
+
+// 复制
+.el-icon-copy {
+  background: url('./../static/images/copy.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+
+.el-icon-copy:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}
+
+// 编辑
+.el-icon-edit {
+  background: url('./../static/images/edit.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+
+.el-icon-edit:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}
+
+// 下载
+.el-icon-download {
+  background: url('./../static/images/download.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+
+.el-icon-download:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}
+
+// 置顶
+.el-icon-pin {
+  background: url('./../static/images/pin.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+
+.el-icon-pin:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}
+
+// 取消置顶
+.el-icon-unpin {
+  background: url('./../static/images/unpin.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+
+.el-icon-unpin:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}
+
+// 对所有人删除
+.el-icon-trash-all {
+  background: url('./../static/images/trash2.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+
+.el-icon-trash-all:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}
+
+// 只对我删除
+.el-icon-trash {
+  background: url('./../static/images/trash1.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+
+.el-icon-trash:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}
+
+// 选择
+.el-icon-choose {
+  background: url('./../static/images/check_circle.svg') no-repeat;
+  font-size: 16px;
+  background-size: cover;
+}
+
+.el-icon-choose:before{
+  content: "替";
+  font-size: 16px;
+  visibility: hidden;
+}

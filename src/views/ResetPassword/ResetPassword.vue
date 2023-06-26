@@ -1,126 +1,41 @@
 <template>
-  <div
-    :class="[
-      { 'register-container-pc': device === 'pc' },
-      { 'register-container-moblie': device === 'moblie' },
-    ]"
-  >
-    <template v-if="device === 'moblie'">
-      <div class="register-header">
-        <router-link :to="'/Login'"
-          ><div class="register-back"></div
-        ></router-link>
+  <div :class="`register-container-${device}`">
+    <div class="register-header">
+      <template v-if="device === 'mobile'">
+        <router-link :to="'/Login'">
+          <div class="register-back"></div>
+        </router-link>
+        <span class="register-header-title">帐号解除锁定</span>
+      </template>
+      <div class="title-container" v-else>
+        <img src="./../../../static/images/material_ic_logo.png" alt="" />
         <span class="register-header-title">帐号解除锁定</span>
       </div>
-      <div class="register-content">
-        <el-form
-          ref="loginForm"
-          :model="loginForm"
-          class="login-form"
-          label-position="top"
-        >
-          <el-form-item prop="authCode">
-            <span class="svg-container">
-              <img src="./../../../static/images/code.png" alt="" />
-            </span>
-            <el-input
-              ref="authCode"
-              placeholder="驗證碼"
-              v-model="loginForm.authCode"
-              name="authCode"
-              type="authCode"
-              tabindex="2"
-              maxLength="6"
-              @input="(v) => (loginForm.authCode = v.replace(/[^\d]/g, ''))"
-              @blur="recover"
-            >
-            </el-input>
-            <el-button
-              class="verification-style"
-              :style="
-                disabledTime ? 'border: 1px solid #b3b3b3; color: #b3b3b3;' : ''
-              "
-              plain
-              :disabled="disabledTime"
-              @click="getAuthCodeData(loginForm.phoneNo, false)"
-              >获取驗證碼 <span v-if="timer">({{ count }})</span>
-            </el-button>
-          </el-form-item>
-          <span class="tip-text">请至注册手机号码确认验证码</span>
-          <div class="register-footer">
-            <el-button
-              style="width: 100%; margin-bottom: 30px"
-              :class="disabled ? 'gray-btn' : 'orange-btn'"
-              :disabled="disabled"
-              @click="submitForm('loginForm')"
-              >提交</el-button
-            >
-          </div>
-        </el-form>
-      </div>
-    </template>
-    <template v-else>
-      <div class="register-header">
-        <div class="title-container">
-          <img src="./../../../static/images/material_ic_logo.png" alt="" />
-          <span class="register-header-title">帐号解除锁定</span>
+    </div>
+    <div class="register-content">
+      <el-form ref="loginForm" :model="loginForm" class="login-form" label-position="top">
+        <el-form-item prop="authCode">
+          <span class="svg-container">驗證碼</span>
+          <el-input ref="authCode" v-model="loginForm.authCode" placeholder="驗證碼" name="authCode" type="authCode"
+            tabindex="2" maxLength="6" @input="(v) => (loginForm.authCode = v.replace(/[^\d]/g, ''))" @blur="recover">
+          </el-input>
+          <el-button class="verification-style" :style="disabledTime ? 'border: 1px solid #b3b3b3; color: #b3b3b3;' : ''
+            " plain :disabled="disabledTime" @click="getAuthCodeData(loginForm.phoneNo, false)">获取驗證碼 <span
+              v-if="timer">({{ count }})</span>
+          </el-button>
+        </el-form-item>
+        <span class="tip-text">请至注册手机号码确认验证码</span>
+        <div class="register-footer">
+          <el-button style="width: 100%; margin-bottom: 30px" :class="disabled ? 'gray-btn' : 'orange-btn'"
+            :disabled="disabled" @click="submitForm('loginForm')">提交</el-button>
         </div>
-      </div>
-      <div class="register-content">
-        <el-form
-          ref="loginForm"
-          :model="loginForm"
-          class="login-form"
-          label-position="top"
-        >
-          <el-form-item prop="authCode">
-            <span class="svg-container">驗證碼</span>
-            <el-input
-              ref="authCode"
-              v-model="loginForm.authCode"
-              name="authCode"
-              type="authCode"
-              tabindex="2"
-              maxLength="6"
-              @input="(v) => (loginForm.authCode = v.replace(/[^\d]/g, ''))"
-              @blur="recover"
-            >
-            </el-input>
-            <el-button
-              class="verification-style"
-              :style="
-                disabledTime ? 'border: 1px solid #b3b3b3; color: #b3b3b3;' : ''
-              "
-              plain
-              :disabled="disabledTime"
-              @click="getAuthCodeData(loginForm.phoneNo, false)"
-              >获取驗證碼 <span v-if="timer">({{ count }})</span>
-            </el-button>
-          </el-form-item>
-          <span class="tip-text">请至注册手机号码确认验证码</span>
-          <div class="register-footer">
-            <el-button
-              style="width: 100%; margin-bottom: 30px"
-              :class="disabled ? 'gray-btn' : 'orange-btn'"
-              :disabled="disabled"
-              @click="submitForm('loginForm')"
-              >提交</el-button
-            >
-          </div>
-        </el-form>
-      </div>
-    </template>
-    <el-dialog
-      :title="device === 'pc' ? '解除帳號鎖定' : ''"
-      :visible.sync="dialogShow"
-      class="el-dialog-loginOut"
-      width="70%"
-      :show-close="false"
-      :close-on-click-modal="false"      
-      center
-    >
+      </el-form>
+    </div>
+
+    <el-dialog :title="device === 'pc' ? '解除帳號鎖定' : ''" :visible.sync="dialogShow" class="el-dialog-loginOut" width="70%"
+      :show-close="false" :close-on-click-modal="false" center>
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
+        <div v-if="device === 'mobile'">
           <img src="./../../../static/images/success.png" alt="" />
         </div>
         <div style="margin-bottom: 10px">
@@ -130,13 +45,8 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <router-link to="/Login">
-          <el-button
-            :class="
-              device === 'moblie' ? 'background-orange' : 'background-red'
-            "
-            @click="dialogShow = false"
-            >确认</el-button
-          >
+          <el-button :class="device === 'mobile' ? 'background-orange' : 'background-red'
+            " @click="dialogShow = false">确认</el-button>
         </router-link>
       </span>
     </el-dialog>
@@ -145,14 +55,15 @@
 
 <script>
 import { unlockUser, genAuthCode } from "@/api";
-import * as phoneValidator from '@/utils/phoneValidator';
+import * as phoneValidator from "@/utils/phoneValidator";
 
 export default {
   data() {
     return {
       loginForm: {
-        phoneNo: document.cookie.replace("phone=",""),
+        phoneNo: this.$cookie.get("phone"),
         authCode: "",
+        country: "CN",
       },
       count: 60,
       timer: false,
@@ -166,11 +77,11 @@ export default {
     loginForm: {
       handler(val) {
         let newNum = []
-        Array.from(val.phoneNo).forEach((num)=>{
-          if(!/^[\u4E00-\u9FA5_a-zA-Z/@~!#$%.^&*=<>:?"{}()]+$/.test(num)) newNum.push(num)
+        Array.from(val.phoneNo).forEach((num) => {
+          if (!/^[\u4E00-\u9FA5_a-zA-Z/@~!#$%.^&*=<>:?"{}()]+$/.test(num)) newNum.push(num)
         })
         this.loginForm.phoneNo = newNum.toString().replace(/,/g, "")
-        if (Object.values(val).every((el) => el !== "")) {
+        if (Object.values(val).every((el) => el)) {
           this.disabled = false;
         } else {
           this.disabled = true;
@@ -180,19 +91,22 @@ export default {
     },
   },
   methods: {
-    recover(){
-		  let agentValue = navigator.userAgent;
+    recover() {
+      let agentValue = navigator.userAgent;
       // userAgent属性是一个只读的字符串，声明了浏览器用于 HTTP 请求的用户代理头的值，用于判断是Android设备还是IOS设备
-      let isIOS = !!agentValue.match( /\(i[^;]+;( U;)? CPU.+Mac OS X/ ); // 判断是否是ios终端
-      if( isIOS ) {
-          window.scrollTo( 0, 0 ); // 如果是ios终端，则在失焦的时候使页面返回顶部
+      let isIOS = !!agentValue.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); // 判断是否是ios终端
+      if (isIOS) {
+        window.scrollTo(0, 0); // 如果是ios终端，则在失焦的时候使页面返回顶部
       }
     },
     getAuthCodeData(phone, key) {
-      if (phone === "") {
+      const countryCode = JSON.parse(localStorage.getItem("countryCode"));
+      const validatePhone = countryCode.regionCode === "CN" && !phoneValidator.isPhoneNumberValid(phone, "CN")
+
+      if (!phone) {
         this.$message({ message: "手机号码尚未输入", type: "error" });
         return;
-      } else if(!phoneValidator.isPhoneNumberValid(phone, "CN")){
+      } else if (validatePhone) {
         this.$message({
           message: "請輸入正確手机号码格式!",
           type: "error",
@@ -200,7 +114,7 @@ export default {
         return;
       }
       this.disabledTime = true;
-      let params = { phoneNo: phone, forRegister: key };
+      let params = { phoneNo: phone, forRegister: key, country: countryCode.regionCode, };
       genAuthCode(params).then((res) => {
         if (res.code === 200) {
           this.$message({ message: "请至注册手机号码确认验证码", type: "success" });
@@ -233,6 +147,8 @@ export default {
           });
           return;
         }
+        const countryCode = JSON.parse(localStorage.getItem("countryCode"));
+        this.loginForm.country = countryCode.regionCode
         unlockUser(this.loginForm)
           .then((res) => {
             if (res.code === 200) {
@@ -253,15 +169,17 @@ export default {
 </script>
 <style lang="scss" scoped>
 .register-container-pc,
-.register-container-moblie {
+.register-container-mobile {
   min-height: 100%;
   width: 100%;
   background-color: #eaf5fa;
   overflow: hidden;
+
   .register-header {
     margin: 1em;
     display: flex;
     align-items: center;
+
     .register-back {
       width: 2em;
       height: 2em;
@@ -272,6 +190,7 @@ export default {
       background-position: center;
       background-repeat: no-repeat;
     }
+
     .register-header-title {
       margin: 0 auto;
       position: relative;
@@ -279,6 +198,7 @@ export default {
       color: #10686e;
     }
   }
+
   .register-content {
     .tip-text {
       font-size: 12px;
@@ -286,6 +206,7 @@ export default {
       position: relative;
       top: -10px;
     }
+
     .login-form {
       position: relative;
       height: 80vh;
@@ -293,20 +214,24 @@ export default {
       padding: 0.5em 0;
       margin: 1em;
       overflow: hidden;
+
       .el-form-item {
         background: #ffffff;
         border-radius: 10px;
         color: #454545;
         margin-bottom: 20px;
+
         .el-input {
           display: inline-block;
           height: 47px;
           width: 85%;
-          /deep/.el-input__inner {
+
+          ::v-deep.el-input__inner {
             border: 0 !important;
           }
         }
       }
+
       .verification-style {
         border-radius: 5px !important;
         padding: 8px 10px;
@@ -319,43 +244,52 @@ export default {
         color: #fd5f3f;
         border-radius: 5px;
       }
+
       .gray-btn {
         background-color: #b3b3b3;
         color: #fff;
       }
+
       .orange-btn {
         background-color: #fe5f3f;
         color: #fff;
       }
     }
+
     .show-pwd {
       height: 2.1em;
       line-height: 2.1em;
       position: absolute;
       top: 1em;
       right: 1em;
+
       img {
         height: 1.2em;
       }
     }
+
     .svg-container {
       padding: 6px 0 6px 15px;
       vertical-align: middle;
       width: 20px;
       font-size: 22px;
       display: inline-block;
+
       img {
         height: 17px;
       }
     }
+
     .register-footer {
       position: absolute;
       bottom: 0;
       width: 100%;
     }
   }
-  /deep/.el-dialog-loginOut {
+
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
+
     .el-dialog {
       position: relative;
       margin: 0 auto 50px;
@@ -363,12 +297,15 @@ export default {
       border-radius: 10px;
       box-sizing: border-box;
       width: 50%;
+
       .el-dialog__header {
         padding: 10px;
       }
+
       .el-dialog__body {
         text-align: center;
         padding: 25px 25px 15px;
+
         .loginOut-box {
           img {
             height: 5em;
@@ -376,29 +313,36 @@ export default {
           }
         }
       }
+
       .el-dialog__footer {
         padding: 20px;
         padding-top: 10px;
         text-align: right;
         box-sizing: border-box;
+
         .dialog-footer {
           display: flex;
           justify-content: space-between;
+
           a {
             width: 100vw;
           }
+
           .el-button {
             width: 100%;
             border-radius: 8px;
           }
+
           .background-red {
             background-color: #ee5253;
             color: #fff;
           }
+
           .background-orange {
             background-color: #fe5f3f;
             color: #fff;
           }
+
           .border-red {
             border: 1px solid #fe5f3f;
             color: #fe5f3f;
@@ -408,48 +352,59 @@ export default {
     }
   }
 }
+
 .register-container-pc {
   width: 370px;
   margin: 0 auto;
   overflow: hidden;
+
   .register-header {
     justify-content: center;
     margin-top: 105px;
+
     .register-header-title {
       left: 0;
       color: #474747;
       margin: 19px 0 16px 0;
       font-size: 20px;
     }
+
     .title-container {
       display: flex;
       align-items: center;
       flex-direction: column;
+
       img {
         height: 5em;
       }
     }
   }
+
   .register-content {
     .svg-container {
       font-size: 14px;
       width: 60px;
     }
+
     .login-form {
       height: 15em;
       padding: 0.45em 0;
+
       .el-form-item {
         .el-input {
-           width:60%;
-          /deep/.el-input__inner {
+          width: 60%;
+
+          ::v-deep.el-input__inner {
             vertical-align: middle;
           }
         }
       }
     }
+
     .show-pwd {
       cursor: pointer;
     }
+
     .eye-off {
       img {
         height: 1.5em;
@@ -462,7 +417,8 @@ export default {
     border: 0 !important;
     right: 0.5em;
   }
-  /deep/.el-dialog-loginOut {
+
+  ::v-deep.el-dialog-loginOut {
     .el-dialog {
       .el-dialog__footer {
         padding: 0 !important;
@@ -470,6 +426,29 @@ export default {
     }
   }
 }
-</style>
+
+.register-container-mobile {
+  .register-content {
+    .svg-container {
+      font-size: 14px;
+      width: 60px;
+    }
+
+    .login-form {
+      height: 15em;
+      padding: 0.45em 0;
+
+      .el-form-item {
+        .el-input {
+          width: 60%;
+
+          ::v-deep.el-input__inner {
+            vertical-align: middle;
+          }
+        }
+      }
+    }
+  }
+}</style>
 
 

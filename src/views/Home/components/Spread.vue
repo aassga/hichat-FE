@@ -1,5 +1,17 @@
 <template>
-  <div class="home-content" style="border-top: 1px solid rgba(0, 0, 0, 0.05);">
+  <div class="home-content" >
+    <div class="home-search">
+      <el-input
+        placeholder="搜索聯絡人"
+        prefix-icon="el-icon-search"
+        clearable
+        v-model="searchKey"
+      >
+      </el-input>
+    </div>
+    <div class="home-header" v-if="$route.name === 'Spread'">
+      <span class="home-header-title" style="color: #b3b3b3; font-weight:normal;">请选择发送对象</span>
+    </div>
     <el-checkbox-group v-model="checkList" @touchmove="$root.handleTouch">
       <el-checkbox
         v-for="(item, index) in newContactList"
@@ -7,9 +19,15 @@
         :key="index"
       >
         <div class="address-box">
-          <el-image :src="item.icon" />
-          <div class="msg-box">
-            <span>{{ item.name }}</span>
+          <div :class="{'service-icon':item.isCustomerService}">
+            
+          </div>
+          <el-image :src="noIconShow(item,'user')" :preview-src-list="[noIconShow(item,'user')]"  />
+          <div class="content-box" >
+            <div class="msg-box" style="align-items: center;">
+              <span>{{ item.name }}</span>
+            </div>
+            <div class="content-border-bottom"></div>
           </div>
         </div>
       </el-checkbox>
@@ -18,12 +36,9 @@
 </template>
 
 <script>
-import Socket from "@/utils/socket";
 import { getContactList } from "@/api/memberContactController";
-
 import { mapMutations } from "vuex";
-import { getToken } from "_util/utils.js";
-
+import { showIcon } from "@/utils/icon";
 
 export default {
   name: "Spread",
@@ -39,10 +54,6 @@ export default {
   created() {
     this.getAddressList();
     this.setSpreadDataList([])
-    Socket.$on("message", this.handleGetMessage);
-  },
-  beforeDestroy() {
-    Socket.$off("message", this.handleGetMessage);
   },
   watch: {
     searchKey(val) {
@@ -63,43 +74,22 @@ export default {
     ...mapMutations({
       setSpreadDataList:"ws/setSpreadDataList",
     }),    
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key)
+    },
     getAddressList() {
       getContactList().then((res) => {
         this.contactList = res.data.list.filter(
           (el) => el.contactId !== localStorage.getItem("id")
         );
         this.contactList.forEach((res) => {
-          if (res.icon === undefined) {
+          if (!res.icon) {
             res.icon = require("./../../../../static/images/image_user_defult.png");
           }
         });
-        this.newContactList = this.contactList
+        this.newContactList = this.contactList;
       });
-    },
-    // 收取 socket 回来讯息 (全局讯息)
-    handleGetMessage(msg) {
-      let userInfo = JSON.parse(msg);
-      switch (userInfo.chatType) {
-        case "SRV_USER_IMAGE":
-        case "SRV_USER_AUDIO":
-        case "SRV_USER_SEND":
-        case "SRV_GROUP_IMAGE":
-        case "SRV_GROUP_AUDIO":
-        case "SRV_GROUP_SEND":
-          this.getHiChatDataList();
-          break;
-      }
-    },
-    getHiChatDataList() {
-      let chatMsgKey = {
-        chatType: "CLI_RECENT_CHAT",
-        id: Math.random(),
-        tokenType: 0,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      };
-      Socket.send(chatMsgKey);
-    },    
+    }, 
   },
 };
 </script>
@@ -107,18 +97,23 @@ export default {
 <style lang="scss" scoped>
 .home-wrapper {
   .home-header {
+    justify-content: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    margin: 0;
+    padding: 15px;
     .home-user {
       background-color: #fff;
       background-image: url("./../../../../static/images/back.png");
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
   }
   .home-content {
-    /deep/.el-checkbox {
+    ::v-deep.el-checkbox {
       display: flex;
       align-items: center;
       flex-flow: row-reverse;
@@ -136,18 +131,7 @@ export default {
         .address-box {
           .msg-box {
             span {
-              display: block;
-              padding-left: 1em;
-              font-size: 16px;
               color: #666666;
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                margin-top: 0.65em;
-                width: 100%;
-                border-bottom: 0.02em solid rgba(0, 0, 0, 0.05);
-              }
             }
           }
           .checkBox {
@@ -155,112 +139,6 @@ export default {
             right: 1.5em;
             font-size: 14px;
           }
-        }
-      }
-    }
-  }
-  .user-edit-form {
-    margin: 1em;
-    background-color: #fff;
-    border-radius: 10px;
-    /deep/.el-form {
-      .el-form-item {
-        margin-bottom: 0px;
-        .el-form-item__label {
-          font-size: 17px;
-        }
-        .el-input {
-          font-size: 19px;
-          .el-input__inner {
-            border: none;
-          }
-        }
-      }
-    }
-  }
-  .add-content {
-    .user-data {
-      margin: 1.5em auto 0 auto;
-      span {
-        display: block;
-        text-align: center;
-        height: 3.5em;
-      }
-      .photo-edit {
-        height: 1.5em !important;
-        color: #fe5f3f;
-      }
-    }
-  }
-}
-
-.hichat-pc {
-  .home-wrapper {
-    .home-search {
-      .el-input {
-        width: 95%;
-      }
-    }
-    .home-content {
-      .el-checkbox {
-        width: 100%;
-      }
-      .el-checkbox__label {
-        .address-box {
-          .msg-box {
-            span {
-              &::after {
-                content: "";
-                margin-top: 0.95em;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    .el-container {
-      .el-aside {
-        .add-content {
-          .user-data {
-            .el-image {
-              width: 5em;
-              height: 5em;
-            }
-            span {
-              height: 5.5em;
-            }
-          }
-        }
-        
-      }
-    }
-    .user-edit-form {
-      /deep/.el-form {
-        border-radius: 8px;
-        background-color: rgba(0, 0, 0, 0.05);
-        .el-form-item {
-          .el-form-item__label {
-            font-size: 17px;
-          }
-          .el-input {
-            .el-input__inner {
-              background: none;
-            }
-          }
-        }
-      }
-    }
-    .photo-edit {
-      cursor: pointer;
-    }
-  }
-  .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
-      padding: 0 !important;
-      .el-button {
-        &:nth-child(2) {
-          border-left: 1px solid #efefef;
         }
       }
     }

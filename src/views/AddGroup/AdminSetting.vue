@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper" @touchmove="$root.handleTouch">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="125px">
           <div class="home-header">
@@ -26,16 +26,23 @@
                 <div class="setting-button-left" @click="addAdmin(item)">
                   <div style="display: flex; align-items: center">
                     <div class="el-image">
-                      <img :src="item.icon" alt="" class="el-image__inner" />
+                      <div
+                        :class="{ 'service-icon': item.isCustomerService }"
+                      ></div>
+                      <img
+                        :src="noIconShow(item, 'user')"
+                        alt=""
+                        class="el-image__inner"
+                      />
                     </div>
-                    <span>{{ item.name }}</span>
+                    <span>{{ groupName(item) }}</span>
                   </div>
                   <a>
                     <img src="./../../../static/images/next.png" alt="" />
                   </a>
                 </div>
                 <div class="setting-button-right">
-                  <span @click="unAdmin(item)">－</span>
+                  <img src="./../../../static/images/trash.png" alt=""  @click="unAdmin(item)"/>
                 </div>
               </div>
             </div>
@@ -44,7 +51,7 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="320px">
         <el-header height="70px">
           <div class="home-header">
             <span class="home-header-title">
@@ -57,7 +64,7 @@
                       : ''
                   "
                   @click="back()"
-                  ><img src="./../../../static/images/pc/arrow-left.svg" alt=""
+                  ><img src="./../../../static/images/pc/arrow-left.png" alt=""
                 /></span>
                 <span>管理员设定</span>
               </div>
@@ -87,16 +94,23 @@
                 >
                   <div style="display: flex; align-items: center">
                     <div class="el-image">
-                      <img :src="item.icon" alt="" class="el-image__inner" />
+                      <div
+                        :class="{ 'service-icon': item.isCustomerService }"
+                      ></div>
+                      <img
+                        :src="noIconShow(item, 'user')"
+                        alt=""
+                        class="el-image__inner"
+                      />
                     </div>
-                    <span>{{ item.name }}</span>
+                    <span>{{ groupName(item) }}</span>
                   </div>
                   <a>
                     <img src="./../../../static/images/next.png" alt="" />
                   </a>
                 </div>
                 <div class="setting-button-right">
-                  <span @click="unAdmin(item)">－</span>
+                  <img src="./../../../static/images/trash.png" alt=""  @click="unAdmin(item)"/>
                 </div>
               </div>
             </div>
@@ -114,14 +128,14 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
-          <img src="./../../../static/images/warn.svg" alt="" />
+        <div v-if="device === 'mobile'">
+          <img src="./../../../static/images/warn.png" alt="" />
         </div>
         <span>是否確定要移除 {{ unAdminData.name }} 管理員</span>
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button
-          :class="device === 'moblie' ? 'border-red' : 'background-gray'"
+          :class="device === 'mobile' ? 'border-red' : 'background-gray'"
           @click="unAdminShow = false"
           >取消</el-button
         >
@@ -135,7 +149,9 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { listMember,delManager } from '@/api/groupController'
+import { listMember, delManager } from "@/api/groupController";
+import { showIcon } from "@/utils/icon";
+import { nameTidy } from "@/utils/name";
 
 export default {
   name: "AdminSetting",
@@ -150,7 +166,7 @@ export default {
     };
   },
   created() {
-    if (this.device === "moblie") {
+    if (this.device === "mobile") {
       this.groupData = JSON.parse(localStorage.getItem("groupData"));
     } else {
       this.groupData = this.groupUser;
@@ -162,7 +178,7 @@ export default {
       searchKeyData.forEach((el) => {
         let searchCase = this.isManagerList;
         this.searchData = searchCase.filter((item) => {
-          return item.name.indexOf(el.replace("@", "")) !== -1;
+          return this.groupName(item).indexOf(el.replace("@", "")) !== -1;
         });
       });
       this.newManagerList = this.searchData;
@@ -175,13 +191,20 @@ export default {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
       groupPermissionData: (state) => state.ws.groupPermissionData,
+      authorityGroupData: (state) => state.ws.authorityGroupData,
     }),
   },
   methods: {
     ...mapMutations({
       setMsgInfoPage: "ws/setMsgInfoPage",
-      setGroupPermissionData:"ws/setGroupPermissionData",
+      setGroupPermissionData: "ws/setGroupPermissionData",
     }),
+    groupName(el) {
+      let name = !el.groupNickname ? el.groupNumber : el.groupNickname;
+      let showGroupNumber = this.authorityGroupData.showGroupNumber;
+      let editGroupNickname = this.authorityGroupData.editGroupNickname;
+      return nameTidy({name,el,showGroupNumber,editGroupNickname})
+    },
     goAdminSetting(data, key) {
       if (this.groupPermissionData.addGroup) {
         this.$router.push({ name: key, params: data });
@@ -189,13 +212,17 @@ export default {
         this.setMsgInfoPage({ pageShow: false, type: key, data });
       }
     },
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
+    },
     getGroupListMember() {
       if (!this.groupPermissionData.addGroup) {
         let groupId = this.groupData.groupId;
         listMember({ groupId }).then((res) => {
           this.contactList = res.data.list;
           this.contactList.forEach((item) => {
-            if (item.icon === undefined) {
+            item.groupNumber = "成员" + item.groupNumber;
+            if (!item.icon) {
               item.icon = require("./../../../static/images/image_user_defult.png");
             }
           });
@@ -218,12 +245,7 @@ export default {
           groupId: this.unAdminData.groupId,
           memberId: this.unAdminData.memberId,
         };
-        delManager(params).then((res) => {
-          if (res.code === 200) {
-            this.unAdminShow = false;
-            this.getGroupListMember();
-          }
-        });
+        delManager(params)
       } else {
         this.groupPermissionData.peopleData.forEach((res) => {
           if (res.contactId === this.unAdminData.contactId) {
@@ -237,16 +259,18 @@ export default {
           });
         this.groupPermissionData.groupManagerAuthority =
           this.newAuthorityVOData;
-        this.setGroupPermissionData(this.groupPermissionData)
-        this.unAdminShow = false;
-        this.getGroupListMember();
+        this.setGroupPermissionData(this.groupPermissionData);
       }
+      this.unAdminShow = false;
+      setTimeout(() => {
+        this.getGroupListMember();
+      }, 500);
     },
     addAdmin(data) {
       this.$router.push({ name: "AdminSettingDetail", params: data });
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.push({ name: "SettingGroup" });
       } else {
         if (this.groupPermissionData.addGroup) {
@@ -269,7 +293,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
     .home-add-user {
@@ -278,7 +302,7 @@ export default {
     }
     .home-add-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/edit_info.svg");
+      background-image: url("./../../../static/images/pc/edit_info.png");
     }
   }
   .home-content {
@@ -336,21 +360,13 @@ export default {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        // width: 10em;
-        span {
-          margin-right: 1em;
-          font-size: 15px;
-          color: #fe5f3f;
-          border: 1px solid #fe5f3f;
-          cursor: pointer;
-        }
         a {
           cursor: pointer;
         }
       }
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       margin: 0 auto 50px;
@@ -403,7 +419,7 @@ export default {
     .home-header {
       .home-add-user {
         background-color: #fff;
-        background-image: url("./../../../static/images/pc/add.svg");
+        background-image: url("./../../../static/images/pc/add.png");
       }
     }
     .home-search {
@@ -412,7 +428,7 @@ export default {
       }
     }
     .el-dialog-loginOut {
-      /deep/.el-dialog {
+      ::v-deep.el-dialog {
         .el-dialog__footer {
           padding: 0;
           .el-button {

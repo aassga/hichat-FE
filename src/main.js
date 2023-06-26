@@ -7,6 +7,7 @@ import moment from 'moment'
 import md5 from 'js-md5';
 import 'element-ui/lib/theme-chalk/index.css'
 
+
 // 样式重置
 import "reset-css";
 
@@ -43,7 +44,6 @@ import Contextmenu from "vue-contextmenujs"
 Vue.use(Contextmenu);
 
 import VueAudio from 'vue-audio-better'
-
 Vue.use(VueAudio)
 
 //i18n
@@ -64,12 +64,34 @@ Vue.directive('debounce', {
 })
 
 
+import jsCookie from 'js-cookie'
+import './registerServiceWorker'
+Vue.prototype.$cookie = jsCookie;
+
+
 Vue.prototype.$md5 = md5;
 moment.suppressDeprecationWarnings = true; // 关闭日期警告
 Vue.prototype.$moment = moment;
 Vue.config.productionTip = false
 
+if ('matchMedia' in window) {
+  const PWA_MODE = '(display-mode: standalone)';
 
+  if (window.matchMedia(PWA_MODE).matches) {
+    document.title = '';
+  } else {
+    document.title = '嗨聊';
+  }
+
+  // for dynamic switch
+  window.matchMedia(PWA_MODE).addEventListener('change', (event) => {
+    if (event.matches) {
+      document.title = '';
+    } else {
+      document.title = '嗨聊';
+    }
+  });
+}
 
 new Vue({
   mixins: [mixins],

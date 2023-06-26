@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="55px">
           <div class="home-header">
@@ -123,7 +123,7 @@
       </el-main>
     </el-container>
     <el-container  v-else>
-      <el-aside width="300px">
+      <el-aside width="370px">
         <el-header height="70px">
           <div class="home-header">
             <span class="home-header-title">
@@ -133,7 +133,7 @@
               >
                 <span style="padding-right: 10px"
                   ><img
-                    src="./../../../static/images/pc/arrow-left.svg"
+                    src="./../../../static/images/pc/arrow-left.png"
                     alt=""
                 /></span>
                 <span>修改登录密码</span>
@@ -271,7 +271,7 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
+        <div v-if="device === 'mobile'">
           <img src="./../../../static/images/success.png" alt="" />
         </div>
         <span>登录密码已修改。</span>
@@ -295,6 +295,7 @@ export default {
         newPassword: "",
         oldPassword: "",
         version:1,
+        country:"CN",
       },
       email: localStorage.getItem("email"),
       oldPasswordType: "password",
@@ -316,7 +317,7 @@ export default {
       handler(val) {
         if (val.newPassword === val.newPasswordAganin) {
           if (
-            Object.values(val).every((el) => el !== "") &&
+            Object.values(val).every((el) => el ) &&
             val.oldPassword.toString().length >= 4 &&
             val.newPassword.toString().length >= 4 &&
             val.newPasswordAganin.toString().length >= 4
@@ -421,7 +422,7 @@ export default {
           display: inline-block;
           height: 47px;
           width: 85%;
-          /deep/.el-input__inner {
+          ::v-deep.el-input__inner {
             border: 0 !important;
           }
         }
@@ -473,7 +474,7 @@ export default {
       top: 2em;
     }
   }
-  /deep/.el-dialog-loginOut {
+  ::v-deep.el-dialog-loginOut {
     overflow: auto;
     .el-dialog {
       position: relative;
@@ -530,12 +531,12 @@ export default {
     background-image: url("./../../../static/images/pc/check.png");
   }
   .register-content {
-    /deep/.el-form {
+    ::v-deep.el-form {
       .el-form-item {
         border-radius: 8px;
         background-color: rgba(0, 0, 0, 0.05);
         .el-form-item__label {
-          font-size: 17px;
+          font-size: 16px;
         }
         .el-input {
           .el-input__inner {
@@ -546,7 +547,7 @@ export default {
     }
   }
   .el-dialog-loginOut {
-    /deep/.el-dialog__footer {
+    ::v-deep.el-dialog__footer {
       padding: 0 !important;
     }
   }

@@ -1,6 +1,6 @@
 <template>
   <div class="home-wrapper" @touchmove="$root.handleTouch">
-    <el-container v-if="device === 'moblie'">
+    <el-container v-if="device === 'mobile'">
       <el-main>
         <el-header height="125px">
           <div class="home-header">
@@ -23,9 +23,16 @@
               <div class="setting-box" @click="addAdmin(item)">
                 <div class="setting-button-left">
                   <div class="el-image">
-                    <img :src="item.icon" alt="" class="el-image__inner" />
+                    <div
+                      :class="{ 'service-icon': item.isCustomerService }"
+                    ></div>
+                    <img
+                      :src="noIconShow(item, 'user')"
+                      alt=""
+                      class="el-image__inner"
+                    />
                   </div>
-                  <span>{{ item.name }}</span>
+                  <span>{{ groupName(item) }}</span>
                 </div>
                 <div class="setting-button-right">
                   <span>＋</span>
@@ -37,7 +44,7 @@
       </el-main>
     </el-container>
     <el-container v-else>
-      <el-aside width="300px">
+      <el-aside width="320px">
         <el-header height="70px">
           <div
             class="home-header flex-start"
@@ -76,9 +83,16 @@
               <div class="setting-box" @click="addAdmin(item)">
                 <div class="setting-button-left">
                   <div class="el-image">
-                    <img :src="item.icon" alt="" class="el-image__inner" />
+                    <div
+                      :class="{ 'service-icon': item.isCustomerService }"
+                    ></div>
+                    <img
+                      :src="noIconShow(item, 'user')"
+                      alt=""
+                      class="el-image__inner"
+                    />
                   </div>
-                  <span>{{ item.name }}</span>
+                  <span>{{ groupName(item) }}</span>
                 </div>
                 <div class="setting-button-right">
                   <span>＋</span>
@@ -95,6 +109,8 @@
 <script>
 import { mapState, mapMutations } from "vuex";
 import { listMember } from "@/api/groupController";
+import { showIcon } from "@/utils/icon";
+import { nameTidy } from "@/utils/name";
 
 export default {
   name: "SettingGroup",
@@ -108,7 +124,7 @@ export default {
     };
   },
   created() {
-    if (this.device === "moblie") {
+    if (this.device === "mobile") {
       this.groupData = JSON.parse(localStorage.getItem("groupData"));
     } else {
       this.groupData = this.groupUser;
@@ -120,7 +136,7 @@ export default {
       searchKeyData.forEach((el) => {
         let searchCase = this.contactList;
         this.searchData = searchCase.filter((item) => {
-          return item.name.indexOf(el.replace("@", "")) !== -1;
+          return this.groupName(item).indexOf(el.replace("@", "")) !== -1;
         });
       });
       this.newContactList = this.searchData;
@@ -133,19 +149,35 @@ export default {
     ...mapState({
       groupUser: (state) => state.ws.groupUser,
       groupPermissionData: (state) => state.ws.groupPermissionData,
+      authorityGroupData: (state) => state.ws.authorityGroupData,
     }),
   },
   methods: {
     ...mapMutations({
       setMsgInfoPage: "ws/setMsgInfoPage",
     }),
+    groupName(el) {
+      let name = "";
+      if (!el.groupNickname) {
+        name = !el.groupNumber ? el.name : el.groupNumber;
+      } else if (el.groupNickname) {
+        name = el.groupNickname;
+      }
+      let showGroupNumber = this.authorityGroupData.showGroupNumber;
+      let editGroupNickname = this.authorityGroupData.editGroupNickname;
+      return nameTidy({name,el,showGroupNumber,editGroupNickname})
+    },
+    noIconShow(iconData, key) {
+      return showIcon(iconData, key);
+    },
     getGroupListMember() {
       if (!this.groupPermissionData.addGroup) {
         let groupId = this.groupData.groupId;
         listMember({ groupId }).then((res) => {
           this.contactList = res.data.list;
           this.contactList.forEach((item) => {
-            if (item.icon === undefined) {
+            item.groupNumber = "成员" + item.groupNumber;
+            if (!item.icon) {
               item.icon = require("./../../../static/images/image_user_defult.png");
             }
           });
@@ -153,35 +185,34 @@ export default {
             (el) => el.memberId !== this.groupData.memberId
           );
           this.contactList = this.contactList.filter(
-            (el) => el.isManager === undefined || (!el.isAdmin && !el.isManager)
+            (el) => (!el.isAdmin && !el.isManager)
           );
           this.newContactList = this.contactList;
         });
       } else {
         this.contactList = this.groupPermissionData.peopleData.filter((el) => {
-          return el.isManager === undefined;
+          return !el.isManager;
         });
         this.newContactList = this.contactList;
       }
     },
     addAdmin(data) {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.push({ name: "AdminSettingDetail", params: data });
       } else {
         if (this.groupPermissionData.addGroup) {
-          this.$router.push({ name: "AdminSettingDetail", params: data });
-        } else {
-          this.setMsgInfoPage({
-            pageShow: false,
-            type: "AdminSettingDetail",
-            pageAdd: true,
-            data,
-          });
+          this.$router.push({ name: "AdminSettingDetail" });
         }
+        this.setMsgInfoPage({
+          pageShow: false,
+          type: "AdminSettingDetail",
+          pageAdd: true,
+          data,
+        });
       }
     },
     back() {
-      if (this.device === "moblie") {
+      if (this.device === "mobile") {
         this.$router.back(-1);
       } else {
         if (this.groupPermissionData.addGroup) {
@@ -204,7 +235,7 @@ export default {
     }
     .home-user-pc {
       background-color: #fff;
-      background-image: url("./../../../static/images/pc/arrow-left.svg");
+      background-image: url("./../../../static/images/pc/arrow-left.png");
       cursor: pointer;
     }
   }
@@ -215,7 +246,7 @@ export default {
       font-size: 15px;
     }
     .setting-button {
-      padding: 0.5em 0 0.5em 0.5em;
+      padding: 0.5em 0 0 0.5em;
       background-color: #fff;
       &::after {
         content: "";
@@ -265,9 +296,8 @@ export default {
         width: 10em;
         span {
           margin-right: 1em;
-          font-size: 15px;
+          font-size: 20px;
           color: #fe5f3f;
-          border: 1px solid #fe5f3f;
           cursor: pointer;
         }
       }
@@ -284,18 +314,6 @@ export default {
     .home-content {
       .el-checkbox {
         width: 100%;
-      }
-      .el-checkbox__label {
-        .address-box {
-          .msg-box {
-            span {
-              &::after {
-                content: "";
-                margin-top: 0.95em;
-              }
-            }
-          }
-        }
       }
     }
   }

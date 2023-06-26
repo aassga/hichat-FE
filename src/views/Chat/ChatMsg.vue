@@ -3,11 +3,15 @@
     <el-container v-if="topMsgShow">
       <el-main style="overflow-y: auto; overflow-x: hidden">
         <el-header
-          :height="device === 'moblie' ? '55px' : '70px'"
+          :height="device === 'mobile' ? '55px' : '70px'"
           :class="{ 'PC-header': device === 'pc' }"
         >
-          <template v-if="device === 'moblie'">
-            <div class="home-header" :style="onlineTime === ''?'margin:1.5em 1em 1em 1em':''" v-if="showCheckBoxBtn">
+          <template v-if="device === 'mobile'">
+            <div
+              class="home-header"
+              :style="!onlineTime ? 'margin:1.4em 1em 1em 1em' : ''"
+              v-if="showCheckBoxBtn"
+            >
               <span
                 class="home-user-link"
                 :style="!chatUser.isContact ? 'position:none;' : ''"
@@ -18,28 +22,45 @@
               </span>
               <span class="home-header-title">
                 <div>{{ chatUser.name }}</div>
-                <div class="online-text" :class="onlineTime === '在线'?'green-text':'gray-text'">{{ onlineTime }}</div>
+                <div
+                  class="online-text"
+                  :class="onlineTime === '在线' ? 'green-text' : 'gray-text'"
+                >
+                  {{ onlineTime }}
+                </div>
               </span>
-              <div v-if="chatUser.isContact" class="home-user-search"></div>
+              <template v-if="chatUser.isContact">
+                <!-- <div  class="home-user-search"></div> -->
+                <!-- <div class="home-user-phone" @click="phoneShow = !phoneShow"></div> -->
+              </template>
+
               <span class="home-photo-link">
                 <router-link :to="'/ContactPage'" v-if="chatUser.isContact">
                   <div class="home-user-photo">
-                    <img :src="noIconShow(chatUser)" />
+                    <div :class="{ 'service-icon': serviceIcon(chatUser) }"></div>
+                    <img :src="noIconShow(chatUser, 'user')" />
                   </div>
                 </router-link>
                 <div class="home-user-photo" v-else>
-                  <img :src="noIconShow(chatUser)" />
+                  <div :class="{ 'service-icon': serviceIcon(chatUser) }"></div>
+                  <img :src="noIconShow(chatUser, 'user')" />
                 </div>
               </span>
             </div>
-            <div class="home-header" style="margin:1.6em 1em 1em 1em"  v-else>
+            <div class="home-header" style="margin: 1.6em 1em 1em 1em" v-else>
               <span class="home-user-link">
                 <router-link :to="'/HiChat'">
                   <div class="home-user"></div>
                 </router-link>
               </span>
-              <span class="home-header-title">{{ checkDataList.length === 0 ?'选择讯息':`已选择${checkDataList.length}则讯息`}}</span>
-              <span class="home-photo-link" @click="closeChooseAction">取消</span>
+              <span class="home-header-title">{{
+                checkDataList.length === 0
+                  ? "选择讯息"
+                  : `已选择${checkDataList.length}则讯息`
+              }}</span>
+              <span class="home-photo-link" @click="closeChooseAction"
+                >取消</span
+              >
             </div>
           </template>
 
@@ -50,19 +71,18 @@
                 @click="chatUser.isContact ? infoMsgShow() : false"
               >
                 <div class="home-user-photo">
-                  <img
-                    :src="
-                      noIconShow(
-                        JSON.stringify(chatUser) === '{}' ? userData : chatUser
-                      )
-                    "
-                  />
+                  <div :class="{ 'service-icon': serviceIcon(chatUser) }"></div>
+                  <img :src="noIconShow(chatUser, 'user')" />
                 </div>
                 <span>
-                  <div>{{ chatUser.name }}</div> 
-                  <div class="online-text" :class="onlineTime === '在线'?'green-text':'gray-text'">{{ onlineTime }}</div>
+                  <div>{{ userName(chatUser) }}</div>
+                  <div
+                    class="online-text"
+                    :class="onlineTime === '在线' ? 'green-text' : 'gray-text'"
+                  >
+                    {{ onlineTime }}
+                  </div>
                 </span>
-                
               </span>
               <template v-if="showCheckBoxBtn">
                 <template v-if="chatUser.isContact">
@@ -75,17 +95,28 @@
                     </div>
                     <el-dropdown-menu slot="dropdown" class="chat-more">
                       <el-dropdown-item>
-                        <div class="logout-btn" @click="isMuteDialogShow = true">
-                          <img v-if="device ==='pc'" :src="!chatUser.setting.prompt ? muteImg : noMuteImg" />
+                        <div
+                          class="logout-btn"
+                          @click="isMuteDialogShow = true"
+                          v-if="chatUser.setting"
+                        >
+                          <img
+                            :src="
+                              !chatUser.setting.prompt ? muteImg : noMuteImg
+                            "
+                          />
                           <span>{{
                             !chatUser.setting.prompt ? "开启通知" : "关闭通知"
                           }}</span>
                         </div>
                       </el-dropdown-item>
                       <el-dropdown-item>
-                        <div class="logout-btn" @click="isBlockDialogShow = true">
+                        <div
+                          class="logout-btn"
+                          @click="isBlockDialogShow = true"
+                        >
                           <img
-                            src="./../../../static/images/pc/slash.svg"
+                            src="./../../../static/images/pc/slash.png"
                             alt=""
                           />
                           <span>{{
@@ -99,7 +130,7 @@
                           @click="deleteGroupDialogShow = true"
                         >
                           <img
-                            src="./../../../static/images/pc/trash.svg"
+                            src="./../../../static/images/pc/trash.png"
                             alt=""
                           />
                           <span style="color: #ee5253">删除聊天室</span>
@@ -111,7 +142,7 @@
                           @click="isDeleteContactDialogShow = true"
                         >
                           <img
-                            src="./../../../static/images/pc/trash.svg"
+                            src="./../../../static/images/pc/trash.png"
                             alt=""
                           />
                           <span style="color: #ee5253">删除联络人</span>
@@ -125,13 +156,13 @@
                     <ul>
                       <li @click="deleteDialogShow = true">
                         <img
-                          src="./.../../../../../static/images/pc/trash.svg"
+                          src="./.../../../../../static/images/pc/trash.png"
                           alt=""
                         />删除
                       </li>
                       <li @click="isBlockDialogShow = true">
                         <img
-                          src="./.../../../../../static/images/pc/slash-red.svg"
+                          src="./.../../../../../static/images/pc/slash-red.png"
                           alt=""
                         />
                         {{ chatUser.isBlock ? "解除封锁" : "封锁" }}
@@ -146,13 +177,28 @@
                   </div>
                 </template>
               </template>
-              <span class="el-dropdown close-choose" v-else @click="closeChooseAction">取消</span>
+              <span
+                class="el-dropdown close-choose"
+                v-else
+                @click="closeChooseAction"
+                >取消</span
+              >
             </div>
           </template>
         </el-header>
+        <div class="phone-box" v-show="phoneShow">
+          <div class="phone-box-left">
+            <img src="./../../../static/images/call.png" alt="" />
+            <span class="phone-box-text">语音通话</span>
+          </div>
+          <div class="phone-box-right">
+            <img src="./../../../static/images/video.png" alt="" />
+            <span class="phone-box-text">视讯通话</span>
+          </div>
+        </div>
         <div
           class="contact-box"
-          v-if="!chatUser.isContact && device === 'moblie'"
+          v-if="!chatUser.isContact && device === 'mobile'"
         >
           <ul>
             <li @click="isBlockDialogShow = true">
@@ -168,11 +214,15 @@
           element-loading-background="rgba(255, 255, 255, 0.5)"
         >
           <!-- 置頂訊息 -->
-          <div class="top-msg" v-if="pinMsg !== '' && showCheckBoxBtn && pinDataList.length !==0" @click="setTopMsgShow(false)">
+          <div
+            class="top-msg"
+            v-if="pinMsg !== '' && showCheckBoxBtn && pinDataList.length !== 0"
+            @click="setTopMsgShow(false)"
+          >
             <div class="top-msg-left">
               <img src="./../../../static/images/pin.png" alt="" />
               <span v-if="pinDataList[0].chatType === 'SRV_USER_IMAGE'">
-                <img :src="isBase64(pinMsg)" alt="">
+                <img :src="isBase64(pinMsg)" alt="" />
               </span>
               <span v-else>{{ isBase64(pinMsg) }}</span>
             </div>
@@ -183,6 +233,7 @@
             />
           </div>
           <message-pabel
+            :userData="chatUser"
             :messageData="messageData"
             :userInfoData="userInfoData"
             :checkDataList="checkDataList"
@@ -191,27 +242,36 @@
             @deleteMsgHistoryData="deleteMsgData"
             @checkBoxDisabled="checkBoxDisabled"
             @isCheckDataList="isCheckDataList"
-            @resetPinMsg="getPinList"        
+            @resetPinMsg="getPinList"
             @scrollBar="scrollBar"
-            @scrollHistory="scrollHistory"          
+            @scrollHistory="scrollHistory"
           />
           <div
             class="reply-message"
-            v-if="
-              replyMsg.clickType === 'replyMsg' ||
-              replyMsg.clickType === 'editMsg'
-            "
+            v-show="replyMsg.clickType === 'replyMsg' || replyMsg.clickType === 'editMsg'"
           >
+            <template v-if="replyMsg.clickType === 'replyMsg'">
+              <div :class="{ 'service-icon': replyMsg.isCustomerService }"></div>
+              <img
+                :src="noIconShow(replyMsg, 'user')"
+                class="reply-message__style"
+              />
+            </template>
+
             <img
-              :src="noIconShow(replyMsg)"
+              v-if="replyMsg.clickType === 'editMsg'"
+              src="./../../../static/images/group_edit.png"
               alt=""
-              style="height: 2.5em; width: 2.5em; border-radius: 5px"
+              class="reply-message__style"
             />
             <div class="reply-message-box">
               <span>{{ replyMsg.name }}</span>
               <span v-if="replyMsg.chatType === 'SRV_USER_SEND'">{{
-                replyMsg.innerText.length > (device==="moblie" ? 30 :110)
-                  ? replyMsg.innerText.substr(0, device==="moblie" ? 30 :110) + " ..."
+                replyMsg.innerText.length > (device === "mobile" ? 30 : 110)
+                  ? replyMsg.innerText.substr(
+                      0,
+                      device === "mobile" ? 30 : 110
+                    ) + " ..."
                   : replyMsg.innerText
               }}</span>
               <span
@@ -227,21 +287,34 @@
                 v-else-if="replyMsg.chatType === 'SRV_USER_FILE'"
                 class="replyMsg-file"
               >
-                <span>{{fileData(replyMsg.innerText,'content')}}</span>
-                <span>档案大小　: {{ fileData(replyMsg.fileSize,'size') }}
-                </span>        
+                <span>{{ fileData(replyMsg.innerText, "content") }}</span>
+                <span
+                  >档案大小　: {{ fileData(replyMsg.fileSize, "size") }}
+                </span>
               </div>
+              <span v-else-if="replyMsg.chatType === 'SRV_CONTACT_CARD'"
+                >联络人名片</span
+              >
             </div>
-            <div class="reply-close-btn" @click="$root.closeReplyMessage">
+            <div class="reply-close-btn" @click="closeReplyEdit()">
               <i class="el-icon-close"></i>
             </div>
           </div>
+          
           <div class="disabled-user" v-if="chatUser.isBlock">
             <span>該用戶已被封鎖</span>
           </div>
-          <div class="checkbox-btn" v-else-if="!showCheckBoxBtn" @click="chooseDeleteAction">
-            <img src="./../../../static/images/icon_defalt.svg" alt="">
-            <span v-if="device === 'pc'">{{ checkDataList.length === 0 ?'选择讯息':`已选择${checkDataList.length}则讯息`}}</span>
+          <div
+            class="checkbox-btn"
+            v-else-if="!showCheckBoxBtn"
+            @click="chooseDeleteAction"
+          >
+            <img src="./../../../static/images/icon_defalt.svg" alt="" />
+            <span v-if="device === 'pc'">{{
+              checkDataList.length === 0
+                ? "选择讯息"
+                : `已选择${checkDataList.length}则讯息`
+            }}</span>
           </div>
           <message-input
             :userInfoData="userInfoData"
@@ -254,11 +327,11 @@
     <el-container v-else>
       <el-main style="overflow-y: auto; overflow-x: hidden">
         <el-header
-          :height="device === 'moblie' ? '55px' : '70px'"
+          :height="device === 'mobile' ? '55px' : '70px'"
           :class="{ 'PC-header': device === 'pc' }"
         >
-          <template v-if="device === 'moblie'">
-            <div class="home-header" style="margin-top:1.5em">
+          <template v-if="device === 'mobile'">
+            <div class="home-header" style="margin-top: 1.5em">
               <span
                 class="home-user-link"
                 :style="!chatUser.isContact ? 'position:none;' : ''"
@@ -271,8 +344,8 @@
           <template v-else>
             <div class="home-header-pc">
               <span class="home-photo-link" @click="setTopMsgShow(true)">
-                <span style="padding-right: 10px"
-                  ><img src="./../../../static/images/pc/arrow-left.svg" alt=""
+                <span
+                  ><img src="./../../../static/images/pc/arrow-left.png" alt=""
                 /></span>
                 <span>置顶訊息</span>
               </span>
@@ -296,16 +369,14 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
-          <img src="./../../../static/images/warn.svg" alt="" />
+        <div v-if="device === 'mobile'">
+          <img src="./../../../static/images/warn.png" alt="" />
         </div>
-        <span
-          >确认是否取消置頂？</span
-        >
+        <span>确认是否取消置頂？</span>
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button
-          :class="device === 'moblie' ? 'border-red' : 'background-gray'"
+          :class="device === 'mobile' ? 'border-red' : 'background-gray'"
           @click="isTopMsgShow = false"
           >取消</el-button
         >
@@ -314,10 +385,12 @@
         >
       </span>
     </el-dialog>
-
     <el-dialog
+      v-if="device === 'pc' && !!chatUser.setting"
       :title="
-        device === 'pc' ? `${!chatUser.setting.prompt ? '开启' : '关闭'}通知` : ''
+        device === 'pc'
+          ? `${!chatUser.setting.prompt ? '开启' : '关闭'}通知`
+          : ''
       "
       :visible.sync="isMuteDialogShow"
       class="el-dialog-loginOut"
@@ -328,21 +401,20 @@
     >
       <div class="loginOut-box">
         <span
-          >确认是否{{ !chatUser.setting.prompt ? "开启通知" : "关闭通知" }}</span
+          >确认是否{{
+            !chatUser.setting.prompt ? "开启通知" : "关闭通知"
+          }}</span
         >
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button
-          class="background-gray"
-          @click="isMuteDialogShow = false"
+        <el-button class="background-gray" @click="isMuteDialogShow = false"
           >取消</el-button
         >
-        <el-button class="background-red" @click="muteActional(chatUser)"
+        <el-button class="background-red" @click="muteAction(chatUser)"
           >确认</el-button
         >
       </span>
     </el-dialog>
-
     <el-dialog
       :title="
         device === 'pc' ? `${chatUser.isBlock ? '解除封锁' : '封锁'}联络人` : ''
@@ -355,8 +427,8 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
-          <img src="./../../../static/images/warn.svg" alt="" />
+        <div v-if="device === 'mobile'">
+          <img src="./../../../static/images/warn.png" alt="" />
         </div>
         <span
           >确认是否{{
@@ -369,7 +441,7 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button
-          :class="device === 'moblie' ? 'border-red' : 'background-gray'"
+          :class="device === 'mobile' ? 'border-red' : 'background-gray'"
           @click="isBlockDialogShow = false"
           >取消</el-button
         >
@@ -388,7 +460,7 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
+        <div v-if="device === 'mobile'">
           <img src="./../../../static/images/success.png" alt="" />
         </div>
         <span>加入成功</span>
@@ -409,13 +481,15 @@
       center
     >
       <div class="loginOut-box">
-        <div v-if="device === 'moblie'">
+        <div v-if="device === 'mobile'">
           <img src="./../../../static/images/success.png" alt="" />
         </div>
         <span>刪除成功</span>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button class="background-orange" @click="deleteRecent(chatUser,'stranger')"
+        <el-button
+          class="background-orange"
+          @click="deleteRecent(chatUser, 'stranger')"
           >確認</el-button
         >
       </span>
@@ -456,10 +530,16 @@
         <span>确认是否刪除對話？</span>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button class="background-gray" @click="deleteGroupDialogShow = false"
+        <el-button
+          class="background-gray"
+          @click="deleteGroupDialogShow = false"
           >取消</el-button
         >
-        <el-button class="background-red" @click="deleteRecent(chatUser,'message')">确认</el-button>
+        <el-button
+          class="background-red"
+          @click="deleteRecent(chatUser, 'message')"
+          >确认</el-button
+        >
       </span>
     </el-dialog>
     <el-dialog
@@ -469,23 +549,40 @@
       :show-close="false"
       :close-on-click-modal="false"
       :append-to-body="false"
-      :modal="device === 'moblie'"
+      :modal="device === 'mobile'"
       center
     >
       <div class="loginOut-box">
         <template v-if="device === 'pc'">
-          <img src="./../../../static/images/warn.svg" alt="" />
+          <img src="./../../../static/images/warn.png" alt="" />
           <span class="choose-delete-title">删除所择的讯息？</span>
         </template>
 
-        <el-button :type="device === 'pc'? 'danger':''" v-show="!allHistoruShow" @click="deleteMessage('all')">在所有人对话纪录中删除</el-button>
-        <el-button :type="device === 'pc'? 'danger':''" @click="deleteMessage('only')">{{chatUser.name === '嗨聊记事本' ? '删除选择讯息':'只在我的对话纪录中删除'}}</el-button>
+        <el-button
+          :type="device === 'pc' ? 'danger' : ''"
+          v-show="!allHistoruShow"
+          @click="deleteMessage('all')"
+          >在所有人对话纪录中删除</el-button
+        >
+        <el-button
+          :type="device === 'pc' ? 'danger' : ''"
+          @click="deleteMessage('only')"
+          >{{
+            chatUser.name === "嗨聊记事本"
+              ? "删除选择讯息"
+              : "只在我的对话纪录中删除"
+          }}</el-button
+        >
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button :class="device === 'pc' ? 'footer-button' : ''" @click="isChooseDeleteShow = false">取消</el-button>
+        <el-button
+          :class="device === 'pc' ? 'footer-button' : ''"
+          @click="isChooseDeleteShow = false"
+          >取消</el-button
+        >
       </span>
     </el-dialog>
-    
+
     <!-- 音效 -->
     <audio
       id="notify-receive-audio"
@@ -496,23 +593,43 @@
 </template>
 
 <script>
+import resStatus from '@/constants/resStatus'
 import Socket from "@/utils/socket";
-import { getMemberActivity,getSearchById } from "@/api/memberProfileController";
-import { addContactUser,deleteContactUser,updateContactNickName } from "@/api/memberContactController";
-import { addBlockContactUser,unBlockContactUser } from '@/api/memberBlockController'
-import { pinList,getChatHistory,deleteRecentChatMul,unpinHistory,deleteRecentChat } from '@/api/chatController'
+import {
+  getMemberActivity,
+  getSearchById,
+} from "@/api/memberProfileController";
+import {
+  addContactUser,
+  deleteContactUser,
+  updateContactNickName,
+} from "@/api/memberContactController";
+import {
+  addBlockContactUser,
+  unBlockContactUser,
+} from "@/api/memberBlockController";
+import {
+  pinList,
+  getChatHistory,
+  deleteRecentChatMul,
+  unpinHistory,
+  deleteRecentChat,
+} from "@/api/chatController";
 import { fileBoxName, formatFileSize } from "@/utils/FileSizeName.js";
 import { mapState, mapMutations } from "vuex";
 import { getToken } from "_util/utils.js";
 import AESBase64 from "@/utils/AESBase64.js";
-import MessagePabel from "@/components/message-pabel-moblie";
-import MessageInput from "@/components/message-input-moblie";
+import MessagePabel from "@/components/message-pabel";
+import MessageInput from "@/components/message-input";
 import MessagePin from "@/components/message-pin";
+import { showIcon,showServiceIcon } from "@/utils/icon";
+import { setStorage,removeStorage,getStorage} from "@/utils/storage";
+
+
 export default {
   name: "ChatMsg",
   data() {
     return {
-      concats: [],
       messageData: [],
       userInfoData: {
         token: getToken("token"),
@@ -520,18 +637,20 @@ export default {
         tokenType: 0,
       },
       userData: {},
+      chatRoomMsg:{},
       readMsgData: [],
       pinDataList: [],
-      checkDataList:[],
-      historyMsgLength:0,
-      onlineTime:"",
+      checkDataList: [],
+      historyMsgLength: 0,
+      onlineTime: "",
       pinMsg: "",
       loading: false,
-      isScrollbar:false,
-      isTopMsgShow:false,
-      showCheckBoxBtn:true,
-      isChooseDeleteShow:false,
-      allHistoruShow:false,
+      phoneShow: false,
+      isScrollbar: false,
+      isTopMsgShow: false,
+      showCheckBoxBtn: true,
+      isChooseDeleteShow: false,
+      allHistoruShow: false,
       deleteDialogShow: false,
       successDialogShow: false,
       isMuteDialogShow: false,
@@ -539,62 +658,59 @@ export default {
       deleteGroupDialogShow: false,
       isDeleteContactDialogShow: false,
       device: localStorage.getItem("device"),
-      muteImg:require("./../../../static/images/pc/bell.svg"),
-      noMuteImg:require("./../../../static/images/pc/bell-off.svg"),
+      muteImg: require("./../../../static/images/pc/bell.png"),
+      noMuteImg: require("./../../../static/images/pc/bell-off.png"),
       //加解密 key iv
       aesKey: "hichatisachatapp",
       aesIv: "hichatisachatapp",
     };
   },
-  watch:{
-    topMsgShow(val){
-      val ? this.getChatHistoryMessage() : false
+  watch: {
+    topMsgShow(val) {
+      val ? this.getChatHistoryMessage() : false;
     },
-    messageData(val){
+    messageData(val) {
       val.forEach((data) => {
-        this.pinDataList.forEach((list) => {  
-          if(data.chatType !== "SRV_CHAT_PIN"){
+        this.pinDataList.forEach((list) => {
+          if (data.chatType !== "SRV_CHAT_PIN") {
             if (data.historyId === list.historyId) {
               data.isPing = true;
-            } 
+            }
           }
         });
       });
     },
-    chatUser(val){
-      this.messageData = []
+    chatUser(val) {
+      this.messageData = [];
       this.pinMsg = "";
-      this.getPinList();         
-      this.getUserMemberActivity(val)
-      this.getChatHistoryMessage()
+      this.getPinList();
+      this.getUserMemberActivity(val);
+      this.historyStorage(val)
     },
-    checkBoxBtn(val){
-      this.showCheckBoxBtn = val
-    },   
-    showCheckBoxBtn(val){
-      if(val) this.isChooseDeleteShow = false
-    }
+    checkBoxBtn(val) {
+      this.showCheckBoxBtn = val;
+    },
+    showCheckBoxBtn(val) {
+      if (val) this.isChooseDeleteShow = false;
+    },
   },
   created() {
-    this.userData = JSON.parse(localStorage.getItem("userData"));
-    this.setChatUser(this.userData);
-    this.getUserMemberActivity(this.userData)
+    this.getUserMemberActivity(this.chatUser);
     Socket.$on("message", this.handleGetMessage);
   },
   mounted() {
-    if(JSON.stringify(this.chatUser) !== '{}'){
+    if (Object.keys(this.chatUser).length !== 0) {
       this.memberTime = setInterval(() => {
-        this.getUserMemberActivity(this.chatUser)
-      }, 30000);  
+        this.getUserMemberActivity(this.chatUser);
+      }, 30000);
     }
-    if (this.device === "moblie") {
-      this.getUserId(this.userData);
-      this.getChatHistoryMessage();
-    }
+    this.getPinList()
+    this.historyStorage(this.chatUser)
+
   },
   beforeDestroy() {
     Socket.$off("message", this.handleGetMessage);
-    clearInterval(this.memberTime)
+    clearInterval(this.memberTime);
   },
   computed: {
     ...mapState({
@@ -612,7 +728,6 @@ export default {
     ...mapMutations({
       setWsRes: "ws/setWsRes",
       setInfoMsg: "ws/setInfoMsg",
-      setEditMsg: "ws/setEditMsg",
       setReplyMsg: "ws/setReplyMsg",
       setChatUser: "ws/setChatUser",
       setHichatNav: "ws/setHichatNav",
@@ -622,76 +737,121 @@ export default {
       setCheckBoxBtn: "ws/setCheckBoxBtn",
       setMyContactDataList: "ws/setMyContactDataList",
     }),
-    muteActional(item){
-      let contactId = item.contactId
-      let parmas = {
+    closeReplyEdit(){
+      const roomData = this.chatUser;
+      removeStorage(roomData,'editReplay');
+      this.$root.closeReplyMessage()
+    },
+    historyStorage(userData){
+      if(!userData.lastChatHistory){
+        this.getChatHistoryMessage();
+        return 
+      }
+      const storage = localStorage.getItem("storageData")
+      const storageData = JSON.parse(storage)["history"]
+      const filterStorage = storageData.find((res)=> (res.chatRoomId === userData.toChatId) && (res.timeStamp === this.$root.formatTimeS(userData.lastChatHistory.sendTime)))
+      if(filterStorage && Object.keys(filterStorage).length !==0){
+        this.messageData = filterStorage.data
+      }else{
+        this.getChatHistoryMessage();
+      }
+    },
+    getHistoryStorage(data){
+      const roomData = this.chatUser
+      const typingUser = this.myUserInfo.id
+      const historyList = {
+        chatRoomId: roomData.toChatId,
+        data: data.slice(0,199),
+        timeStamp:data[data.length-1].message.time,
+        uid:typingUser,
+      }
+      setStorage(historyList,"history")
+    },
+    serviceIcon(icon){
+      return showServiceIcon(icon)
+    },
+    muteAction(item) {
+      let contactId = item.contactId;
+      let params = {
         name: item.name,
         setting: {
-          prompt: !item.setting.prompt
-        }
-      }
-      updateContactNickName(parmas,contactId).then(res =>{
-        if(res.code === 200){
-          this.isMuteDialogShow = false
-          this.$message({ message: !item.setting.prompt ? "开启通知":"关闭通知", type: !item.setting.prompt ? "success" : "warning" });
-          if(this.chatUser.toChatId === item.toChatId){
-            this.chatUser.setting.prompt = !item.setting.prompt
-            this.setChatUser(this.chatUser)
+          prompt: !item.setting.prompt,
+        },
+      };
+      updateContactNickName(params, contactId).then((res) => {
+        if (res.code === 200) {
+          this.isMuteDialogShow = false;
+          this.$message({
+            message: !item.setting.prompt ? "开启通知" : "关闭通知",
+            type: !item.setting.prompt ? "success" : "warning",
+          });
+          if (this.chatUser.toChatId === item.toChatId) {
+            this.chatUser.setting.prompt = !item.setting.prompt;
+            this.setChatUser(this.chatUser);
           }
-          this.getHiChatDataList();
+          this.$root.getHiChatDataList();
         }
-      })
+      });
     },
-    fileData(data,type){
-      if(type === "content"){
-        return fileBoxName(data)
-      }else{
-        return formatFileSize(data)
+    fileData(data, type) {
+      if (type === "content") {
+        return fileBoxName(data);
+      } else {
+        return formatFileSize(data);
       }
-    },    
-    closeChooseAction(){
+    },
+    closeChooseAction() {
       this.showCheckBoxBtn = true;
       this.$root.gotoBottom();
     },
-    //勾選訊息   
-    chooseDeleteAction(){
-      if(this.checkDataList.length === 0){
+    //勾選訊息
+    chooseDeleteAction() {
+      if (this.checkDataList.length === 0) {
         this.$message({ message: "請勾選訊息", type: "error" });
-        return false
-      }else{
+        return false;
+      } else {
         this.isChooseDeleteShow = true;
       }
-    },  
-    checkBoxDisabled(data){
-      this.showCheckBoxBtn = data
-      this.setCheckBoxBtn(data)      
     },
-    isCheckDataList(data){
-      this.checkDataList = data
-      if(this.chatUser.name === "嗨聊记事本"){
-        this.allHistoruShow = true
-      }else{
-        this.allHistoruShow = this.checkDataList.some(el=> el.userChatId !== "u"+ this.myUserInfo.id)
+    checkBoxDisabled(data) {
+      this.showCheckBoxBtn = data;
+      this.setCheckBoxBtn(data);
+    },
+    isCheckDataList(data) {
+      this.checkDataList = data;
+      if (this.chatUser.name === "嗨聊记事本") {
+        this.allHistoruShow = true;
+      } else {
+        this.allHistoruShow = this.checkDataList.some(
+          (el) => el.userChatId !== "u" + this.myUserInfo.id
+        );
       }
     },
     getUserMemberActivity(chatUser) {
+      // for window.location.reload disabled
+      if (!chatUser) return
       let memberId = [chatUser.toChatId.replace("u", "")];
       getMemberActivity({ memberId }).then((res) => {
         if (res.code === 200) {
-          this.onlineTime = ""
-          if(res.data[0].lastActivityTime === 0 || this.chatUser.name === "嗨聊记事本" ) {
-            return this.onlineTime = ""
-          } else {
-            this.onlineTime = ""
-            let nowTime = res.data[0].currentTime
-            let lastTime = res.data[0].lastActivityTime
-            const diffInMills = nowTime - lastTime
-            if(diffInMills/1000 < 300){
-              return this.onlineTime = "在线"
-            } else{
-              return this.onlineTime = "上次上线于" + this.$root.formatTimeS(res.data[0].lastActivityTime)
+          this.onlineTime = "";
+          if (
+            res.data[0].lastActivityTime === 0 ||
+            this.chatUser.name === "嗨聊记事本"
+          ) {
+            return (this.onlineTime = "");
+          } else {            
+            this.onlineTime = "";
+            let nowTime = res.data[0].currentTime;
+            let lastTime = res.data[0].lastActivityTime;
+
+            const diffInMills = nowTime - lastTime;
+            if (diffInMills / 1000 < 300) {
+              return (this.onlineTime = "在线");
+            } else {
+              return (this.isOnline =
+                "上次上线于" + this.$root.formatTimeS(lastTime));
             }
-          }           
+          }
         }
       });
     },
@@ -703,40 +863,43 @@ export default {
         if (res.code === 200) {
           this.setTopMsgShow(true);
           this.isTopMsgShow = false;
-          this.getPinList()
+          this.getPinList();
         }
       });
     },
-    scrollBar(val){
-      this.isScrollbar = val
+    scrollBar(val) {
+      this.isScrollbar = val;
     },
     getPinList() {
-      let params={
-        toChatId:this.chatUser.toChatId,
-        order:1,
-      }
+      let params = {
+        toChatId: this.chatUser.toChatId,
+        order: 1,
+      };
       pinList(params).then((res) => {
         if (res.code === 200) {
           this.pinDataList = res.data;
-          this.pinDataList.forEach((list)=>{
-            this.messageData.forEach((data)=>{
-              if(data.chatType !== "SRV_CHAT_PIN"){
-                if(list.historyId === data.historyId){
+          this.pinDataList.forEach((list) => {
+            this.messageData.forEach((data) => {
+              if (data.chatType !== "SRV_CHAT_PIN") {
+                if (list.historyId === data.historyId) {
                   data.isPing = true;
                 }
               }
-            })
-          })
-          if(this.pinDataList.length !== 0){
+            });
+          });
+          if (this.pinDataList.length !== 0) {
             if (this.pinDataList[0].chatType === "SRV_USER_AUDIO") {
               this.pinMsg = "語音訊息";
-            } else if(this.pinDataList[0].chatType === "SRV_USER_FILE"){
-              this.pinMsg = this.fileData(this.isBase64(this.pinDataList[0].chat.text),"content");   
+            } else if (this.pinDataList[0].chatType === "SRV_USER_FILE") {
+              this.pinMsg = this.fileData(
+                this.isBase64(this.pinDataList[0].chat.text),
+                "content"
+              );
             } else {
               this.pinMsg = this.pinDataList[0].chat.text;
             }
           }
-          !this.isScrollbar ? this.$root.gotoBottom() : false
+          !this.isScrollbar ? this.$root.gotoBottom() : false;
         }
       });
     },
@@ -745,54 +908,47 @@ export default {
       this.messageData = this.messageData.filter((item) => {
         return item.historyId !== data.historyId;
       });
-      this.getHiChatDataList();
+      this.$root.getHiChatDataList();
     },
     deleteMessage(type) {
-      this.historyIdData = []
-      this.checkDataList.forEach(el => {
-        this.historyIdData.push(el.historyId)
+      this.historyIdData = [];
+      this.checkDataList.forEach((el) => {
+        this.historyIdData.push(el.historyId);
       });
-      let parmas = {
+      let params = {
         fullDelete: type === "all", // 是否完整删除,搭配historyId
         haveOtherChat: type === "only", // 是否有不是自己的訊息
         historyId: this.historyIdData, // 历史记录ID
-        toChatId: this.checkDataList[0].toChatId // 删除目标ID
-      }
-      deleteRecentChatMul(parmas)
+        toChatId: this.checkDataList[0].toChatId, // 删除目标ID
+      };
+      deleteRecentChatMul(params)
         .then((res) => {
           if (res.code === 200) {
-            if(res.data.isCompletely){
+            if (res.data.isCompletely) {
               this.$message({ message: "訊息删除成功", type: "success" });
-            }else{
+            } else {
               this.$message({ message: "部分訊息無法刪除", type: "warning" });
             }
-            this.isChooseDeleteShow = false
+            this.isChooseDeleteShow = false;
             this.closeChooseAction();
             this.$root.gotoBottom();
-          } 
+          }
         })
         .catch((err) => {
           this.$message({ message: err, type: "error" });
         });
-    },        
-    getUserId(data) {
-      let id = data.toChatId.replace("u", "");
-      getSearchById({ id }).then((res) => {
-        if (res.data.id === localStorage.getItem("id")) {
-          this.userData.name = "嗨聊记事本";
-          this.userData.icon = require("./../../../static/images/image_savemessage.png");
-        } else {
-          this.userData.username = res.data.username;
-        }
-        this.setChatUser(this.userData);
-      });
     },
-    noIconShow(iconData) {
-      if ([undefined, null, ""].includes(iconData.icon)) {
-        return require("./../../../static/images/image_user_defult.png");
-      } else {
-        return iconData.icon;
+    noIconShow(iconData, key) {
+      if(iconData.chatId === "u" +  this.myUserInfo.id || iconData.toChatId === "u" +  this.myUserInfo.id){
+       return require("./../../../static/images/image_savemessage.png");
       }
+      return showIcon(iconData, key);
+    },
+    userName(name){
+      if(name.chatId === "u" +  this.myUserInfo.id || name.toChatId === "u" +  this.myUserInfo.id){
+       return "嗨聊记事本"
+      }
+      return name.name
     },
     // 訊息統一格式
     messageList(data) {
@@ -809,36 +965,45 @@ export default {
         icon: data.chat.icon,
         name: data.chat.name,
         nickName: data.chat.nickName,
-        isRplay: [null,undefined].includes(data.replyChat) ? null : data.replyChat,
-        isPing:false,
-        fileSize:data.chat.fileSize !== undefined ? data.chat.fileSize : "",
+        isReply: data.replyChat,
+        isPing: false,
+        fileSize: data.chat.fileSize ? data.chat.fileSize : "",
+        contactCard: data.chat.contactCard,
       };
+      this.messageReorganization(this.chatRoomMsg);
     },
     // 訊息過濾比對名稱
-    messageReorganization(data){
-      if (data.toChatId === this.chatUser.toChatId) {
+    messageReorganization(data) {
+      const isReply = data.isReply
+      const sameId = data.userChatId === this.chatUser.toChatId
+      if (sameId) {
         data.name = this.chatUser.name;
         data.icon = this.chatUser.icon;
         data.nickName = this.chatUser.name;
+        data.isCustomerService = this.chatUser.isCustomerService;
       } else {
         data.name = this.myUserInfo.nickname;
         data.icon = this.myUserInfo.icon;
+        data.nickName = this.myUserInfo.nickname;
+        data.isCustomerService = this.myUserInfo.isCustomerService;
       }
-      if (data.isRplay !== null) {
-        if (data.isRplay.fromChatId === this.chatUser.toChatId) {
-          data.isRplay.name = this.chatUser.name;
-          data.isRplay.icon = this.chatUser.icon;
-          data.isRplay.nickName = this.chatUser.name;
+      if (isReply) {
+        if (data.isReply.fromChatId === this.chatUser.toChatId) {
+          data.isReply.name = this.chatUser.name;
+          data.isReply.icon = this.chatUser.icon;
+          data.isReply.nickName = this.chatUser.name;
+          data.isReply.isCustomerService = this.chatUser.isCustomerService;
         } else {
-          data.isRplay.name = this.myUserInfo.nickname;
-          data.isRplay.icon = this.myUserInfo.icon;
-          data.isRplay.nickName = this.myUserInfo.nickname;
+          data.isReply.name = this.myUserInfo.nickname;
+          data.isReply.icon = this.myUserInfo.icon;
+          data.isReply.nickName = this.myUserInfo.nickname;
+          data.isReply.isCustomerService = this.myUserInfo.isCustomerService;
         }
       }
-    },    
+    },
     //判斷是否base64
     isBase64(data) {
-      return AESBase64(data, this.aesKey ,this.aesIv)
+      return AESBase64(data, this.aesKey, this.aesIv);
     },
     infoMsgShow() {
       this.setMsgInfoPage({ pageShow: true, type: "" });
@@ -846,7 +1011,7 @@ export default {
         infoMsgShow: true,
         infoMsgNav: "ContactPage",
         infoMsgChat: true,
-        infoMsgMap: "address"
+        infoMsgMap: "address",
       });
     },
     // 已讀
@@ -861,7 +1026,7 @@ export default {
     audioAction() {
       let audioEl = document.getElementById("notify-receive-audio");
       const playPromise = audioEl.play();
-      if (playPromise !== undefined) {
+      if (playPromise) {
         playPromise
           .then((_) => {
             audioEl.src = ""; // 移除src, 防止之后播放空白音频
@@ -875,53 +1040,64 @@ export default {
           });
       }
     },
-    scrollHistory(val){
-      this.getChatHistoryMessage(val)
+    scrollHistory(val) {
+      this.getChatHistoryMessage(val);
     },
     //獲取歷史訊息
-    getChatHistoryMessage(data){
-      this.loading = true
-      let params={
-        toChatId:this.chatUser.toChatId,
-        historyId:data === undefined ? "":data,
-        order:0,
-        pageSize: 200,
-      }
+    getChatHistoryMessage(data) {
+      this.loading = true;
+      let params = {
+        toChatId: this.chatUser.toChatId,
+        historyId: data ? data : "",
+        order: 0,
+        pageSize: 50,
+      };
       getChatHistory(params).then((res) => {
-        if(res.code === 200 ){
-          let historyMsgList = Object.freeze(res.data)
-          this.readMsg = historyMsgList.filter((el) => el.chat.toChatId === "u" + localStorage.getItem("id"));   
-          this.historyMsgLength = historyMsgList.length
-          if (historyMsgList.length > 0 && this.readMsg.length > 0) this.readMsgShow(this.readMsg[0]);
-          if (this.device === "pc") this.getHiChatDataList();           
+        if (res.code === 200) {
+          const historyMsgList = Object.freeze(res.data);
+          
+          this.readMsg = historyMsgList.filter(
+            (el) => el.chat.toChatId === "u" + localStorage.getItem("id")
+          );
+          this.historyMsgLength = historyMsgList.length;
+          if (historyMsgList.length > 0 && this.readMsg.length > 0)
+            this.readMsgShow(this.readMsg[0]);
+          if (this.device === "pc") this.$root.getHiChatDataList();
           historyMsgList.forEach((el) => {
             this.messageList(el);
-            this.messageReorganization(this.chatRoomMsg)
             this.messageData.unshift(this.chatRoomMsg);
+            this.getHistoryStorage(this.messageData)
           });
-          this.loading = false
-        }    
-      })
+          this.loading = false;
+        }
+      });
     },
     // 收取 socket 回来讯息 (全局讯息)
     handleGetMessage(msg) {
       this.setWsRes(JSON.parse(msg));
       let userInfo = JSON.parse(msg);
       switch (userInfo.chatType) {
+        case "SRV_ERROR_MSG":
+          let message = resStatus[userInfo.text]
+          this.$message({ message: message, type: "error" });
+          break;        
         // 发送影片照片讯息成功
         // 发送讯息成功
+        case "SRV_USER_SEND":
         case "SRV_USER_IMAGE":
         case "SRV_USER_AUDIO":
-        case "SRV_USER_SEND":
-        case "SRV_USER_FILE":  
-        case "SRV_CHAT_PIN":       
+        case "SRV_USER_FILE":
+        case "SRV_CONTACT_CARD":
+        case "SRV_CHAT_PIN":
           if (userInfo.toChatId === this.chatUser.toChatId) {
             this.messageList(userInfo);
-            this.messageReorganization(this.chatRoomMsg)
             this.messageData.push(this.chatRoomMsg);
+            this.getHistoryStorage(this.messageData)
             if (this.hichatNav.num === 1) this.readMsgShow(userInfo);
-            if (this.device === "pc") this.getHiChatDataList();
-            if (userInfo.chat.fromChatId !== "u" + JSON.parse(localStorage.getItem("id"))) {
+            if (
+              userInfo.chat.fromChatId !==
+              "u" + JSON.parse(localStorage.getItem("id"))
+            ) {
               this.audioAction();
             }
           }
@@ -933,7 +1109,9 @@ export default {
               res.isPing = false;
             }
           });
-          break;          
+          this.getPinList();
+
+          break;
         // 已讀
         case "SRV_MSG_READ":
           if (userInfo.toChatId === this.chatUser.toChatId) {
@@ -947,7 +1125,9 @@ export default {
               return (res.message.content = this.isBase64(userInfo.chat.text));
             }
           });
-          this.getHiChatDataList();
+          this.getHistoryStorage(this.messageData)
+          this.$root.getHiChatDataList();
+          this.getPinList();
           break;
         // 刪除訊息
         case "SRV_CHAT_DEL":
@@ -956,31 +1136,38 @@ export default {
               this.messageData.splice(index, 1);
             }
           });
-          this.getHiChatDataList();
+          this.$root.getHiChatDataList();
+          this.getPinList();
+
           break;
         //多選刪除
         case "SRV_CHAT_MUL_DEL":
-          this.messageData = this.messageData.filter(item => !userInfo.targetArray.includes(item.historyId))
-          this.checkDataList = this.checkDataList.filter(item => !userInfo.targetArray.includes(item.historyId))
-          this.getHiChatDataList();
-          break    
+          this.messageData = this.messageData.filter(
+            (item) => !userInfo.targetArray.includes(item.historyId)
+          );
+          this.checkDataList = this.checkDataList.filter(
+            (item) => !userInfo.targetArray.includes(item.historyId)
+          );
+          this.$root.getHiChatDataList();
+          this.getPinList();
+
+          break;
       }
     },
     addUser(data) {
-      let parmas = {
+      let params = {
         contactId: data.toChatId.replace("u", ""),
-        name: data.name,
       };
-      addContactUser(parmas)
+      addContactUser(params)
         .then((res) => {
           if (res.code === 200) {
             this.successDialogShow = true;
             data.isContact = true;
             this.setChatUser(data);
-            this.setNavGo("address")
-            this.$root.getMaybeKnow()
+            this.setNavGo("address");
+            this.$root.getMaybeKnow();
             if (this.device === "pc") {
-              this.getHiChatDataList();
+              this.$root.getHiChatDataList();
             }
           } else {
             this.$message({ message: res.message, type: "error" });
@@ -991,22 +1178,24 @@ export default {
           return false;
         });
     },
-    deleteRecent(data,key) {
-      let parmas = {
+    deleteRecent(data, key) {
+      let params = {
         fullDelete: key !== "stranger",
         historyId: "",
         toChatId: data.toChatId,
       };
-      deleteRecentChat(parmas)
+      deleteRecentChat(params)
         .then((res) => {
           if (res.code === 200) {
             this.deleteDialogShow = false;
             localStorage.removeItem("userData");
+            const roomData = this.chatUser
+            removeStorage(roomData,'history');
             if (this.device === "pc") {
-              this.setNavGo("address")
+              this.setNavGo("address");
               this.setChatUser({});
-              this.getHiChatDataList();
-            } else if (this.device === "moblie") {
+              this.$root.getHiChatDataList();
+            } else if (this.device === "mobile") {
               this.$router.push({ path: "/Address" });
             }
           }
@@ -1015,7 +1204,11 @@ export default {
           this.$message({ message: err, type: "error" });
         });
     },
- 
+    returnIsBlock(data) {
+      this.isBlockDialogShow = false;
+      this.$root.getHiChatDataList();
+      this.setChatUser(data);
+    },
     blockSubmitBtn(data) {
       if (data.isBlock) {
         let blockIdList = [data.toChatId.replace("u", "")];
@@ -1023,9 +1216,9 @@ export default {
           .then((res) => {
             if (res.code === 200) {
               data.isBlock = false;
-              this.isBlockDialogShow = false;
-              this.getHiChatDataList();
-              this.setChatUser(data);
+              this.returnIsBlock(data);
+            } else {
+              this.$message({ message: res.message, type: "error" });
             }
           })
           .catch((err) => {
@@ -1038,9 +1231,7 @@ export default {
           .then((res) => {
             if (res.code === 200) {
               data.isBlock = true;
-              this.isBlockDialogShow = false;
-              this.getHiChatDataList();
-              this.setChatUser(data);
+              this.returnIsBlock(data);
             } else {
               this.$message({ message: res.message, type: "error" });
             }
@@ -1058,14 +1249,14 @@ export default {
           if (res.code === 200) {
             this.isDeleteContactDialogShow = false;
             data.isContact = false;
-            this.getHiChatDataList();
+            this.$root.getHiChatDataList();
             this.setChatUser({});
-            this.setNavGo("address")
-            this.newContact = this.myContactDataList.filter((el)=>{
-              return data.forChatId !== "u"+ el.contactId
-            })
-            this.setMyContactDataList(this.newContact)
-            this.$root.getMaybeKnow()
+            this.setNavGo("address");
+            this.newContact = this.myContactDataList.filter((el) => {
+              return data.forChatId !== "u" + el.contactId;
+            });
+            this.setMyContactDataList(this.newContact);
+            this.$root.getMaybeKnow();
           }
         })
         .catch((err) => {
@@ -1073,18 +1264,8 @@ export default {
           return false;
         });
     },
-    setNavGo(type){
+    setNavGo(type) {
       this.setHichatNav({ type: type, num: 1 });
-    },    
-    getHiChatDataList() {
-      let chatMsgKey = {
-        chatType: "CLI_RECENT_CHAT",
-        id: Math.random(),
-        tokenType: 0,
-        token: getToken("token"),
-        deviceId: localStorage.getItem("UUID"),
-      };
-      Socket.send(chatMsgKey);
     },
     back() {
       this.$router.back(-1);
@@ -1100,25 +1281,17 @@ export default {
 
 <style lang="scss" scoped>
 .wrapper {
-  // min-height: 100vh;
-  // min-height: webkit-fill-available;
   overflow: hidden;
   width: 100%;
   background-color: #eef7fb;
   overflow: hidden;
   .el-container {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-
     .el-aside,
     .el-main {
       display: flex;
       flex-direction: column;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-      /deep/.el-row {
+      ::v-deep.el-row {
         float: right;
         .el-button {
           background-image: linear-gradient(#579fff, #3481e8);
@@ -1180,18 +1353,20 @@ export default {
           color: #10686e;
           font-weight: 600;
           text-align: center;
-          .online-text{
+          .online-text {
             font-size: 12px;
             font-weight: normal;
-            margin-top:3px;
+            margin-top: 3px;
           }
         }
         .home-user-photo,
-        .home-user-search {
+        .home-user-search,
+        .home-user-phone {
           width: 2em;
           height: 2em;
           border-radius: 10px;
-          // background-color: #fff;
+          border-radius: 10px;
+          background-color: #fff;
           background-size: 50%;
           background-position: center;
           background-repeat: no-repeat;
@@ -1199,8 +1374,14 @@ export default {
         .home-user-search {
           margin-right: 10px;
           position: absolute;
-          right: 50px;
+          right: 87px;
           background-image: url("./../../../static/images/search_icon.png");
+        }
+        .home-user-phone {
+          margin-right: 10px;
+          position: absolute;
+          right: 50px;
+          background-image: url("./../../../static/images/phone.png");
         }
         .home-photo-link {
           position: absolute;
@@ -1239,6 +1420,31 @@ export default {
         letter-spacing: 1px;
       }
     }
+    .phone-box {
+      position: absolute;
+      top: 60px;
+      width: 100%;
+      height: 60px;
+      background: #fff;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      z-index: 9;
+      .phone-box-left,
+      .phone-box-right {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        img {
+          width: 1.2em;
+          margin-bottom: 5px;
+        }
+        .phone-box-text {
+          color: #ff6900;
+          font-size: 15px;
+        }
+      }
+    }
     .PC-header {
       position: relative;
       padding: 0;
@@ -1260,7 +1466,6 @@ export default {
             background-position: center;
             background-repeat: no-repeat;
           }
-          
         }
         .home-header-title {
           margin: 0 auto;
@@ -1284,7 +1489,7 @@ export default {
           cursor: pointer;
         }
         .home-user-more {
-          background-image: url("./../../../static/images/pc/more.svg");
+          background-image: url("./../../../static/images/pc/more.png");
           cursor: pointer;
         }
         .home-photo-link {
@@ -1293,7 +1498,7 @@ export default {
           display: flex;
           align-items: center;
           cursor: pointer;
-          .online-text{
+          .online-text {
             font-size: 12px;
             font-weight: normal;
             margin-top: 3px;
@@ -1303,12 +1508,17 @@ export default {
             overflow: hidden;
             img {
               top: 0;
+              width: 2em;
               height: 2em;
               border-radius: 6px;
               width: inherit;
             }
+            .service-icon{
+              width: 2em;
+              height: 2em;
+            }
           }
-          
+
           span {
             font-size: 15px;
             padding-left: 10px;
@@ -1401,7 +1611,8 @@ export default {
     }
   }
 }
-.disabled-user,.checkbox-btn {
+.disabled-user,
+.checkbox-btn {
   height: 55px;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
@@ -1410,13 +1621,13 @@ export default {
   align-items: center;
   padding: 0 10px;
 }
-.disabled-user{
+.disabled-user {
   background-color: rgba(225, 225, 225, 0.85);
 }
-.checkbox-btn{
+.checkbox-btn {
   background-color: #ffffff;
-  img{
-    height:1.5em;
+  img {
+    height: 1.5em;
   }
 }
 
@@ -1431,55 +1642,52 @@ export default {
   padding: 0 10px;
   cursor: pointer;
 }
-.hichat-moblie{
-  .top-msg-bottom{
+.hichat-mobile {
+  .top-msg-bottom {
     height: 55px;
   }
-  .el-dialog-choose-delete{
-  /deep/.el-dialog {
-    margin: 0 auto;
-    background: rgba(0, 0, 0, 0);
-    box-sizing: border-box;
-    box-shadow:none;
-    width: 50%;
-    .el-dialog__header{
-      padding: 0;
-      padding-bottom: 0;
-    }
-    .el-dialog__body{
-      padding: 20px 30px 0 30px;
-      .loginOut-box{
-        background: #ffffff;
-        border-radius: 10px;
-        .el-button{
-          width: 100%;
-          border-radius: 0px;
-          border:0;
-          background: #ffffff00;
-          color: #ee5253;
-          padding: 20px;
-          &:nth-child(2){
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
+  .el-dialog-choose-delete {
+    ::v-deep.el-dialog {
+      margin: 0 auto;
+      background: rgba(0, 0, 0, 0);
+      box-sizing: border-box;
+      box-shadow: none;
+      width: 50%;
+      .el-dialog__header {
+        padding: 0;
+        padding-bottom: 0;
+      }
+      .el-dialog__body {
+        padding: 20px 30px 0 30px;
+        .loginOut-box {
+          background: #ffffff;
+          border-radius: 10px;
+          .el-button {
+            width: 100%;
+            border-radius: 0px;
+            border: 0;
+            background: #ffffff00;
+            color: #ee5253;
+            padding: 20px;
+            &:nth-child(2) {
+              border-top: 1px solid rgba(0, 0, 0, 0.05);
+            }
           }
-
-        }
-        .el-button + .el-button{
-          margin-left: 0;
+          .el-button + .el-button {
+            margin-left: 0;
+          }
         }
       }
-
-    }
-    .dialog-footer{
-      justify-content: center !important;
-      .el-button{
-        width: 100% !important;;
-        color:rgba(0, 0, 0, 0.4)
+      .dialog-footer {
+        justify-content: center !important;
+        .el-button {
+          width: 100% !important;
+          color: rgba(0, 0, 0, 0.4);
+        }
       }
     }
-  }
   }
 }
-
 
 .hichat-pc {
   .disabled-user {
@@ -1493,18 +1701,18 @@ export default {
     color: #959393;
     align-items: center;
     padding: 0 10px;
-    img{
-      height:1.5em;
+    img {
+      height: 1.5em;
       margin-left: 5px;
       cursor: pointer;
     }
-    span{
+    span {
       margin: 0 auto;
-      color:rgba(0, 0, 0, 0.8);
+      color: rgba(0, 0, 0, 0.8);
       letter-spacing: 2px;
     }
   }
-  .el-dialog-choose-delete{
+  .el-dialog-choose-delete {
     z-index: 2001;
     position: absolute;
     top: 0;
@@ -1515,59 +1723,57 @@ export default {
     flex-direction: row;
     background: rgba(0, 0, 0, 0.6);
     align-items: center;
-    /deep/.el-dialog{
-      margin-top:0 !important;
-      .el-dialog__header{
+    ::v-deep.el-dialog {
+      margin-top: 0 !important;
+      .el-dialog__header {
         padding: 0;
         padding-bottom: 0;
-        border-bottom:0;
+        border-bottom: 0;
       }
-      .el-dialog__body{
+      .el-dialog__body {
         padding: 20px 30px 0 30px !important;
-        border-bottom:0;
+        border-bottom: 0;
         text-align: center;
-        .loginOut-box{
+        .loginOut-box {
           background: #ffffff;
           border-radius: 10px;
           display: flex;
           flex-direction: column;
-          .choose-delete-title{
+          .choose-delete-title {
             color: rgba(0, 0, 0, 0.8);
-            margin:0 0 20px 0;
+            margin: 0 0 20px 0;
           }
           img {
             height: 5em;
             margin-bottom: 1.2em;
           }
-          .el-button{
+          .el-button {
             width: 100%;
             padding: 15px 0 !important;
             margin-bottom: 10px;
           }
-          .el-button + .el-button{
+          .el-button + .el-button {
             margin-left: 0;
           }
         }
-
       }
-      .el-dialog__footer{
+      .el-dialog__footer {
         padding: 0 30px 20px 30px;
-        
-        .dialog-footer{
+
+        .dialog-footer {
           justify-content: center !important;
-          .el-button.footer-button{
-            width: 100% !important;;
-            color:rgba(0, 0, 0, 0.4);
+          .el-button.footer-button {
+            width: 100% !important;
+            color: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(0, 0, 0, 0.4) !important;
-            font-size:15px;
+            font-size: 15px;
             padding: 15px 0 !important;
             &:nth-child(1) {
               border-radius: 10px !important;
             }
           }
-        }   
+        }
       }
-      
     }
   }
 }
@@ -1575,7 +1781,7 @@ export default {
 ::-webkit-scrollbar {
   width: 10px;
 }
-/deep/.el-dialog-loginOut {
+::v-deep.el-dialog-loginOut {
   overflow: auto;
   .el-dialog {
     position: relative;
@@ -1642,13 +1848,11 @@ export default {
   }
   .top-msg-right {
     height: 1.2em;
-    
   }
 }
-.close-choose{
-  font-size: 17px;
+.close-choose {
+  font-size: 16px;
   cursor: pointer;
 }
-
 
 </style>

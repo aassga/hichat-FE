@@ -3,7 +3,7 @@ import { axios } from '../libs/axios/api.request'
 //登录
 export const login = data => {
   let postData = {
-    url: '/api/sso/cnLogin',
+    url: '/api/sso/loginByPhone',
     method: 'post',
     data
   }
@@ -22,7 +22,7 @@ export const logout = data => {
 //註冊
 export const register = data => {
   let postData = {
-    url: '/api/sso/cnRegister',
+    url: '/api/sso/registerByPhone',
     method: 'post',
     data
   }
@@ -32,7 +32,7 @@ export const register = data => {
 // 產生驗證碼
 export const genAuthCode = (params) => {
   let postData = {
-    url: '/api/sso/genCnPhoneAuthCode',
+    url: '/api/sso/genPhoneAuthCode',
     method: 'get',
     params
   }
@@ -41,7 +41,17 @@ export const genAuthCode = (params) => {
 // 忘記密碼
 export const forgetPassword = data => {
   let postData = {
-    url: '/api/sso/cnForgetPassword',
+    url: '/api/sso/forgetPasswordByPhone',
+    method: 'post',
+    data
+  }
+  return axios.request(postData)
+}
+
+// 刪除帳號
+export const deleteUser = data => {
+  let postData = {
+    url: '/api/sso/deleteUser',
     method: 'post',
     data
   }
@@ -51,7 +61,7 @@ export const forgetPassword = data => {
 // 解鎖密碼
 export const unlockUser = data => {
   let postData = {
-    url: '/api/sso/cnUnlockUser',
+    url: '/api/sso/unlockUserByPhone',
     method: 'post',
     data
   }
@@ -61,18 +71,32 @@ export const unlockUser = data => {
 // 修改密碼
 export const updatePassword = data => {
   let postData = {
-    url: '/api/sso/cnUpdatePassword',
+    url: '/api/sso/updatePasswordByPhone',
     method: 'post',
     data
   }
   return axios.request(postData)
 }
 
+// 修改密碼
+export const updateDeviceInfo = data => {
+  let postData = {
+    url: '/api/sso/updateDeviceInfo',
+    method: 'post',
+    data
+  };
+  return axios.request(postData);
+}
 
-
-
-
-
+// 國際碼列表
+export const getCountryList = (params) => {
+  let postData = {
+    url: '/api/sso/getCountryList',
+    method: 'get',
+    params
+  }
+  return axios.request(postData)
+}
 
 
 
